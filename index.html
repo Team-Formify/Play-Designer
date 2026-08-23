@@ -95,7 +95,52 @@
     #psFoot{font-family:var(--mono);font-size:7.5pt;letter-spacing:.08em;text-transform:uppercase;
       color:#666;margin:3mm 0 0}
   }
-  #printTitle,#printSheet{display:none}
+  #printTitle,#printSheet,#bookSheets,#tallySheet{display:none}
+
+  @media print{
+    body[data-print="book"] .fieldbox,body[data-print="book"] #printSheet,
+    body[data-print="book"] #printTitle,
+    body[data-print="tally"] .fieldbox,body[data-print="tally"] #printSheet,
+    body[data-print="tally"] #printTitle{display:none!important}
+    body[data-print="book"] #bookSheets{display:block!important}
+    body[data-print="tally"] #tallySheet{display:block!important}
+
+    .bookSheet{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+    .bookSheet:last-child{break-after:auto;page-break-after:auto}
+    .bookTitle{font-family:var(--display);font-weight:800;text-transform:uppercase;
+      letter-spacing:.03em;font-size:17pt;margin:0 0 3mm;color:#000}
+    .bookField svg{width:auto!important;height:96mm!important;max-width:100%;
+      margin:0 auto;display:block}
+    .bookSheet table{width:100%;border-collapse:collapse;margin-top:4mm}
+    .bookSheet td{border-bottom:.4pt solid #999;padding:1.05mm 2mm;font-size:10pt;color:#000;
+      vertical-align:baseline;line-height:1.15}
+    .bookSheet td.ps-row{font-family:var(--mono);font-size:7.5pt;letter-spacing:.1em;
+      text-transform:uppercase;border-bottom:0;padding:2.2mm 0 .7mm;font-weight:700}
+    .bookSheet td.ps-pos{font-family:var(--mono);font-size:9.5pt;width:16mm;letter-spacing:.06em}
+    .bookSheet td.ps-num{font-family:var(--mono);font-size:9.5pt;width:12mm;text-align:right}
+    .bookSheet td.ps-x{width:8mm;font-family:var(--mono);font-size:8pt;font-weight:700}
+    .bookSheet td.ps-none{font-style:italic;color:#666}
+
+    #tallySheet h1{font-family:var(--display);font-weight:800;text-transform:uppercase;
+      letter-spacing:.03em;font-size:17pt;margin:0 0 1mm;color:#000}
+    #tallySheet .sub{font-family:var(--mono);font-size:8pt;letter-spacing:.08em;
+      text-transform:uppercase;color:#444;margin:0 0 3mm}
+    #tallySheet .meta{display:flex;gap:8mm;margin:0 0 4mm;font-size:10pt;color:#000}
+    #tallySheet .meta span{border-bottom:.6pt solid #000;flex:1;padding-bottom:1mm}
+    #tallyTable{width:100%;border-collapse:collapse}
+    #tallyTable th{font-family:var(--mono);font-size:7pt;letter-spacing:.06em;text-transform:uppercase;
+      color:#444;font-weight:400;border-bottom:.6pt solid #000;padding:0 1mm 1.2mm;text-align:center}
+    #tallyTable th.who,#tallyTable td.who{text-align:left;width:42mm}
+    #tallyTable td{border-bottom:.4pt solid #bbb;padding:1.55mm 1mm;font-size:9.5pt;color:#000}
+    #tallyTable td.who{font-size:10pt}
+    #tallyTable td.box{border:.4pt solid #999;width:7mm}
+    #tallyTable td.tot{border:.6pt solid #000;width:12mm}
+    #tallyTable td.units{font-family:var(--mono);font-size:7.5pt;color:#444;letter-spacing:.04em}
+    #tallyTable tr.ten td{background:#efefef}
+    #tallyTable tr.ten td.who{font-weight:700}
+    #tallyFoot{font-family:var(--mono);font-size:7pt;letter-spacing:.04em;text-transform:uppercase;
+      color:#555;margin:3mm 0 0;line-height:1.5}
+  }
 
   .flag{display:flex;gap:9px;align-items:baseline;padding:8px 0;
     border-bottom:1px solid rgba(237,235,224,.12);font-size:14px}
@@ -222,7 +267,9 @@
     <button class="btn" id="mirror">Mirror L/R</button>
     <button class="btn" id="flipAll">Flip ALL plays</button>
     <button class="btn" id="fillNames">Fill names</button>
-    <button class="btn gold" id="print">Print / PDF</button>
+    <button class="btn gold" id="print">Print this play</button>
+    <button class="btn" id="printBook">Print all plays</button>
+    <button class="btn" id="printTally">10-play sheet</button>
   </div>
 
   <div class="row" role="group" aria-label="Name labels">
@@ -261,6 +308,9 @@
       <button class="btn" id="addName">Add</button>
     </div>
   </div>
+
+  <div id="bookSheets" aria-hidden="true"></div>
+  <div id="tallySheet" aria-hidden="true"></div>
 
   <div id="gdList" hidden></div>
   <p id="gdHint" hidden>Swipe the field to change units</p>
@@ -1085,9 +1135,80 @@ function paintPrintSheet(p){
     '  \u00b7  X = X-man, front two lines or the LOS';
 }
 
+/* Build every play as its own sheet by walking the plays through the live
+   renderer and snapshotting the SVG each time. Reuses drawField exactly, so a
+   book sheet can never drift from what the single-play sheet shows. */
+function buildBook(){
+  var box=document.getElementById('bookSheets'); if(!box)return;
+  box.innerHTML='';
+  var keep=curId;
+  unitOrder().forEach(function(k){
+    curId=k;
+    drawField();
+    var p=plays[k];
+    var sheet=document.createElement('div'); sheet.className='bookSheet';
+    var h=document.createElement('div'); h.className='bookTitle'; h.textContent=p.name;
+    var fld=document.createElement('div'); fld.className='bookField';
+    fld.innerHTML=svg.outerHTML;
+    var cl=fld.querySelector('svg'); if(cl)cl.removeAttribute('id');   // no duplicate ids
+    sheet.appendChild(h); sheet.appendChild(fld);
+    paintPrintSheet(p);
+    var t=document.createElement('table');
+    t.innerHTML='<tbody>'+document.querySelector('#psTable tbody').innerHTML+'</tbody>';
+    sheet.appendChild(t);
+    box.appendChild(sheet);
+  });
+  curId=keep;
+}
+
+/* The 10-play sheet is a form, not a report: the league wants it on paper, so
+   this prints the roster with boxes to tick and a total to write in. What the
+   app knows — which units each boy is on — is printed alongside so the counting
+   starts from something rather than nothing. */
+function buildTally(){
+  var box=document.getElementById('tallySheet'); if(!box)return;
+  var ord=unitOrder();
+  var rows=TEAM.map(function(t){
+    var on=ord.filter(function(k){
+      return plays[k].players.some(function(q){return q.team==='o'&&q.name===t.l;});
+    }).map(function(k){return ord.indexOf(k)+1;});
+    return {t:t,on:on};
+  }).sort(function(a,b){
+    return (b.t.t?1:0)-(a.t.t?1:0) || a.on.length-b.on.length || a.t.l.localeCompare(b.t.l);
+  });
+
+  var h='<h1>Minimum play count</h1>'+
+    '<p class="sub">Lehi 8th grade \u00b7 special teams \u00b7 every boy needs 10</p>'+
+    '<div class="meta"><span>Opponent</span><span>Date</span><span>Final</span></div>'+
+    '<table id="tallyTable"><thead><tr>'+
+    '<th class="who">Player</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>'+
+    '<th>Total</th><th>Units he is on</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h+='<tr'+(r.t.t?' class="ten"':'')+'>'+
+       '<td class="who">'+esc(r.t.l)+(r.t.n?' '+esc(r.t.n):'')+
+         (r.t.x?' \u00b7 X':'')+(r.t.t?' \u00b7 10PL':'')+'</td>'+
+       '<td class="box"></td><td class="box"></td><td class="box"></td><td class="box"></td>'+
+       '<td class="tot"></td>'+
+       '<td class="units">'+(r.on.length?r.on.join(' '):'\u2014')+'</td></tr>';
+  });
+  h+='</tbody></table><p id="tallyFoot">'+
+     '10 plays minimum \u00b7 16 / 13 / 12 if up 21+ after Q1 / Q2 / Q3 \u00b7 special teams snaps count<br>'+
+     '10PL = starts on neither offence nor defence \u00b7 X = X-man<br>'+
+     ord.map(function(k,i){return (i+1)+' '+plays[k].name;}).join('  \u00b7  ')+
+     '</p>';
+  box.innerHTML=h;
+}
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
 /* Printing swaps the palette and redraws, then puts it back. */
 function beforePrint(){ printing=true; drawField(); }
-function afterPrint(){ printing=false; drawField(); }
+function afterPrint(){
+  printing=false;
+  document.body.setAttribute('data-print','play');
+  var bk=document.getElementById('bookSheets'); if(bk)bk.innerHTML='';
+  drawField();
+}
 window.addEventListener('beforeprint',beforePrint);
 window.addEventListener('afterprint',afterPrint);
 if(window.matchMedia){
@@ -1264,7 +1385,17 @@ document.getElementById('flipAll').onclick=function(){
   document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
   save();draw();
 };
-document.getElementById('print').onclick=function(){window.print();};
+function doPrint(what){
+  document.body.setAttribute('data-print',what);
+  printing=true;
+  if(what==='book')buildBook();
+  else if(what==='tally')buildTally();
+  drawField();
+  window.print();
+}
+document.getElementById('print').onclick=function(){doPrint('play');};
+document.getElementById('printBook').onclick=function(){doPrint('book');};
+document.getElementById('printTally').onclick=function(){doPrint('tally');};
 document.getElementById('fillNames').onclick=function(){
   var p=cur();
   // Slug first, always. The old version matched on display name, so renaming a
@@ -1842,6 +1973,7 @@ function downloadBackup(){
   document.getElementById('playName').value=cur().name;
   document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
   document.querySelectorAll('.mode.lbl[data-v]').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.v===fitMode);});
+  document.body.setAttribute('data-print','play');
   document.getElementById('hint').textContent=HINTS.move;
   (function(){
     function blocked(){
