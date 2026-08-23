@@ -205,6 +205,18 @@
   </div>
 
   <div class="sec">
+    <h2>Fix the names, then send it back</h2>
+    <div class="panel"><p>Set the names and spots the way you actually want them, then export.
+    That file <b>is</b> the playbook &mdash; drop it in the repo or send it over and the app ships
+    your version. No code change, and you never have to describe an alignment to anyone.</p></div>
+    <div class="row">
+      <button class="btn gold" id="doSource">Export as playbook source</button>
+      <button class="btn" id="doSourceCopy">Copy as text</button>
+    </div>
+    <p class="count" id="srcNote"></p>
+  </div>
+
+  <div class="sec">
     <h2>Back up your work</h2>
     <div class="panel"><p>Your plays live in this browser on this device only. Download a copy now and then &mdash;
     that file is the one thing that survives a cleared browser, a wiped phone, or a new one.</p></div>
@@ -619,6 +631,7 @@ function drawField(){
   });
 
   updateCount();
+  try{sourceNote();}catch(e){}
   document.getElementById('printTitle').textContent=p.name;
 }
 
@@ -945,6 +958,8 @@ document.querySelectorAll('.mode.lbl[data-v]').forEach(function(b){
   };
 });
 document.getElementById('doDownload').onclick=downloadBackup;
+document.getElementById('doSource').onclick=function(){exportSource(true);};
+document.getElementById('doSourceCopy').onclick=function(){exportSource(false);};
 document.getElementById('doRestore').onclick=function(){
   restoreBackup(document.getElementById('bakSel').value);
 };
@@ -1226,6 +1241,84 @@ function restoreBackup(key){
     });
   });
 }
+/* ---------- export as playbook source ----------
+   Turns whatever is on this device back into special-teams-plays.json. That file
+   is the source of truth, so exporting it and dropping it in the repo makes his
+   corrections the shipped version — no code change, and no need to describe an
+   alignment to anyone. */
+function toSourceJSON(){
+  function r(n){return Math.round(n);}
+  var out={
+    schema:1,
+    generated:new Date().toISOString().slice(0,10),
+    field:PLAYDATA.field||{width:420,height:500,sidelineLeft:14,sidelineRight:406,yardsWide:53.3},
+    roster:TEAM.map(function(t){
+      return{last:t.l,first:t.f||'',number:t.n||'',xman:!!t.x,offense:t.o||'',defense:t.d||''};
+    }),
+    plays:[]
+  };
+  var used={};
+  Object.keys(plays).sort(function(a,b){
+    return rank(plays[a])-rank(plays[b])||(plays[a].name||'').localeCompare(plays[b].name||'');
+  }).forEach(function(k,i){
+    var src=plays[k];
+    // A play flipped on screen must be written out the way it is stored, or the
+    // flip gets baked into the source and doubles next time.
+    var p=JSON.parse(JSON.stringify(src));
+    if(p.flipped){
+      p.players.forEach(function(q){q.y=VB.h-q.y;});
+      (p.routes||[]).forEach(function(rt){rt.points.forEach(function(t){t.y=VB.h-t.y;});});
+      p.los=VB.h-p.los;
+    }
+    var idmap={}, ps=[], rs=[];
+    p.players.forEach(function(q,n){
+      var nid='p'+n; idmap[q.id]=nid;
+      ps.push({id:nid,team:q.team==='x'?'them':'us',label:q.label||'',
+               player:q.name||'',x:r(q.x),y:r(q.y)});
+    });
+    (p.routes||[]).forEach(function(rt){
+      if(!idmap[rt.playerId]||!rt.points||!rt.points.length)return;
+      rs.push({playerId:idmap[rt.playerId],
+               points:rt.points.map(function(t){return{x:r(t.x),y:r(t.y)};})});
+    });
+    var slug=p.slug||'custom';
+    if(used[slug]){var n2=2; while(used[slug+'-'+n2])n2++; slug=slug+'-'+n2;}
+    used[slug]=1;
+    out.plays.push({slug:slug,name:p.name||'Untitled play',order:i+1,
+      lineOfScrimmage:r(p.los),lineLabel:p.losLabel||'',players:ps,routes:rs});
+  });
+  return out;
+}
+function sourceNote(){
+  var d=toSourceJSON(), spots=0, named=0;
+  d.plays.forEach(function(p){p.players.forEach(function(q){
+    if(q.team==='us'){spots++; if(q.player)named++;}
+  });});
+  var el=document.getElementById('srcNote');
+  if(el)el.innerHTML=d.plays.length+' plays \u00b7 <b>'+named+'</b> of '+spots+' spots named'+
+    (named<spots?' \u00b7 '+(spots-named)+' still blank':'');
+  return d;
+}
+function exportSource(download){
+  var d=sourceNote(), body=JSON.stringify(d,null,2);
+  var box=document.getElementById('ioBox');
+  if(box)box.value=body;
+  if(!download){
+    try{box.focus();box.select();document.execCommand('copy');}catch(e){}
+    alert('Copied. Paste it into special-teams-plays.json, or send it over.');
+    return;
+  }
+  try{
+    var url=URL.createObjectURL(new Blob([body],{type:'application/json'}));
+    var a=document.createElement('a');
+    a.href=url; a.download='special-teams-plays.json'; a.style.display='none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+  }catch(e){
+    alert('This browser would not hand over a file. The full text is in the box below \u2014 copy it instead.');
+  }
+}
+
 function downloadBackup(){
   var body=stateJSON(), d=new Date();
   function pad(x){return (x<10?'0':'')+x;}
