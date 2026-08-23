@@ -34,6 +34,37 @@ it was broken once and cost him hours of re-entry. Treat them as hard constraint
 
 ---
 
+## Working with Dom
+
+He talks, you change the repo. He is on a phone, usually mid-thought, and writes short.
+Read the whole message before acting — he often corrects a premise in passing ("those are
+plays I made", "I have two kick returns"), and that correction matters more than the
+request around it.
+
+Standing decisions. Do not relitigate these:
+
+- **He is the special teams coach and the only user.** Nothing goes toward sharing,
+  accounts, multi-user, or making it work for other teams.
+- **The app is for practice and planning. Print is the game-day output.** He barely uses
+  a device on a sideline. Anything meant for game day has to be printable.
+- **Personnel is his.** Who lines up where is a coaching decision, not a code decision.
+  Seed a draft if he asks, say plainly that it is a draft, and do not question it again.
+  Same for the written jobs and the generated routes — drafts he corrects.
+- **The league hands him the minimum-play form at kickoff.** Do not build one.
+- Names read as last name and number, on the field and in the boys' app.
+
+How his work reaches you: edits live in `localStorage` on his device, not in the repo.
+The badge under the export buttons says whether this device matches the repo. Either he
+taps **Save to repo** (needs `GITHUB_TOKEN` and `SAVE_SECRET` on Vercel), or he taps
+**Export as file** and pastes it into the chat and you commit it. If he describes a change
+to a play you cannot see in the JSON, that is why — ask for the export before assuming
+the data is wrong.
+
+Verify in a browser, not by reading. Every real bug this project has produced —
+the save badge lying, the game-day bar leaking onto the normal screen, names stacked
+unreadably on a kickoff, lanes crossing each other — was invisible in the source and
+obvious in a screenshot or a measurement.
+
 ## The league: UYFC, 8th grade
 
 These rules constrain what plays are legal. Verify against the current UYFC rulebook
