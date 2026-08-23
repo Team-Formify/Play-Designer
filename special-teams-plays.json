@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated": "2026-08-21",
+  "generated": "2026-08-23",
   "field": {
     "width": 420,
     "height": 500,
@@ -1786,6 +1786,152 @@
           "label": "LR",
           "player": "Pace",
           "x": 175,
+          "y": 356
+        }
+      ],
+      "routes": []
+    },
+    {
+      "slug": "kick-return-5-4-2",
+      "name": "Kick Return — 5-4-2",
+      "order": 10,
+      "lineOfScrimmage": 60,
+      "lineLabel": "THEIR FREE KICK LINE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "them",
+          "label": "",
+          "player": "",
+          "x": 380,
+          "y": 38
+        },
+        {
+          "id": "p1",
+          "team": "them",
+          "label": "",
+          "player": "",
+          "x": 310,
+          "y": 38
+        },
+        {
+          "id": "p2",
+          "team": "them",
+          "label": "",
+          "player": "",
+          "x": 240,
+          "y": 38
+        },
+        {
+          "id": "p3",
+          "team": "them",
+          "label": "",
+          "player": "",
+          "x": 170,
+          "y": 38
+        },
+        {
+          "id": "p4",
+          "team": "them",
+          "label": "",
+          "player": "",
+          "x": 100,
+          "y": 38
+        },
+        {
+          "id": "p5",
+          "team": "them",
+          "label": "",
+          "player": "",
+          "x": 30,
+          "y": 38
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "H1",
+          "player": "Bagley",
+          "x": 46,
+          "y": 126
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "H2",
+          "player": "Steinke",
+          "x": 128,
+          "y": 126
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "H3",
+          "player": "Bearnson",
+          "x": 210,
+          "y": 126
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "H4",
+          "player": "Prasad",
+          "x": 292,
+          "y": 126
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "H5",
+          "player": "Severts",
+          "x": 374,
+          "y": 126
+        },
+        {
+          "id": "p11",
+          "team": "us",
+          "label": "LB",
+          "player": "Black",
+          "x": 68,
+          "y": 230
+        },
+        {
+          "id": "p12",
+          "team": "us",
+          "label": "LM",
+          "player": "Paulich",
+          "x": 152,
+          "y": 230
+        },
+        {
+          "id": "p13",
+          "team": "us",
+          "label": "RM",
+          "player": "Debenham",
+          "x": 268,
+          "y": 230
+        },
+        {
+          "id": "p14",
+          "team": "us",
+          "label": "RB",
+          "player": "Archuletta",
+          "x": 352,
+          "y": 230
+        },
+        {
+          "id": "p15",
+          "team": "us",
+          "label": "LR",
+          "player": "Pace",
+          "x": 175,
+          "y": 356
+        },
+        {
+          "id": "p16",
+          "team": "us",
+          "label": "RR",
+          "player": "Scott",
+          "x": 245,
           "y": 356
         }
       ],

@@ -89,7 +89,7 @@ defense needs one starter, currently Bagley.
 
 ---
 
-## The nine plays
+## The ten plays
 
 Order in the dropdown is by game phase. Data lives in `PRESETS` inside `index.html`;
 a normalized copy is in `special-teams-plays.json`.
@@ -107,6 +107,8 @@ a normalized copy is in `special-teams-plays.json`.
 8. **Kickoff — Onside** — kangaroo kick right (2+ bounces; pop-ups are illegal). 6 right,
    4 left of the kicker.
 9. **Kick Return — 5-2-2-2** — five up front doubling as the hands team.
+10. **Kick Return — 5-4-2** — same hands team and same deep pair, but the four blockers
+    align on one row instead of in two pairs. Dom runs both returns.
 
 **Orientation:** punt and kickoff plays are mirrored left-to-right relative to the coach's
 handwritten sheets; punt returns are not. This is deliberate and was arrived at painfully.
