@@ -83,6 +83,15 @@
   .count.bad b{color:var(--warm)}
   .count.bad{color:var(--warm)}
   .count.ok{color:#8FD19E}
+  #setupBox{margin-top:12px;border:1px solid rgba(229,138,107,.4);border-radius:6px;padding:12px 14px;
+    background:rgba(229,138,107,.06)}
+  .setup-h{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--warm);margin:0 0 10px}
+  ol.setup{margin:0;padding-left:20px;font-size:14px;line-height:1.5}
+  ol.setup li{margin-bottom:10px}
+  ol.setup code{font-family:var(--mono);font-size:12.5px;background:var(--deep);
+    padding:1px 5px;border-radius:3px}
+  ol.setup a{color:var(--gold)}
 
   /* One play, one sheet: title, diagram, lineup. Black on white. */
   @page{size:letter portrait;margin:12mm}
@@ -417,6 +426,27 @@
     </div>
     <p class="count" id="srcNote"></p>
     <p class="count" id="repoNote"></p>
+
+    <div id="setupBox" hidden>
+      <p class="setup-h">Turn on Save to repo &mdash; about four minutes, once</p>
+      <ol class="setup">
+        <li><b>Make a GitHub token.</b>
+          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Open the page &#8599;</a><br>
+          Resource owner <b>Team-Formify</b> &middot; Repository access <b>Only select repositories</b> &rarr; <b>Play-Designer</b> &middot;
+          Permissions &rarr; <b>Contents: Read and write</b>. Generate, then copy it &mdash; it starts <code>github_pat_</code>
+          and GitHub only shows it once.</li>
+        <li><b>Put it on Vercel.</b>
+          <a href="https://vercel.com/dashboard" target="_blank" rel="noopener">Open Vercel &#8599;</a><br>
+          Play-Designer &rarr; Settings &rarr; Environment Variables. Add <code>GITHUB_TOKEN</code> = the token you copied,
+          and <code>SAVE_SECRET</code> = any passphrase you will remember.</li>
+        <li><b>Check the branch.</b> Settings &rarr; Git &rarr; Production Branch.
+          If it is not <code>main</code>, add one more variable <code>GITHUB_BRANCH</code> set to whatever it says.</li>
+        <li><b>Redeploy.</b> Deployments &rarr; the top one &rarr; &#8943; &rarr; Redeploy.
+          Variables only apply to new deployments.</li>
+      </ol>
+      <div class="row"><button class="btn" id="checkSetup">Check if it is on</button></div>
+      <p class="count" id="setupResult"></p>
+    </div>
   </div>
 
   <div class="sec">
@@ -1831,6 +1861,7 @@ function writeNow(){
     storageBlocked=false; paintDot();
     noteBackup(body);
     publishForLearn();
+    scheduleRepoSave();
   }).catch(function(){
     storageBlocked=true; paintDot();
   });
@@ -2060,15 +2091,17 @@ function paintRepo(){
     el.textContent='Could not reach the published playbook, so I cannot tell what is unsaved. Export to be safe.';
     return; }
   if(!d.total){ el.className='count ok';
-    el.innerHTML='\u2713 Everything on this device matches the repo.'; return; }
+    el.innerHTML='\u2713 Everything on this device is in the repo.'; return; }
   var bits=[];
   if(d.changed.length)bits.push('<b>'+d.changed.length+'</b> changed: '+d.changed.join(', '));
   if(d.added.length)bits.push('<b>'+d.added.length+'</b> new: '+d.added.join(', '));
   if(d.removed.length)bits.push('<b>'+d.removed.length+'</b> deleted here: '+d.removed.join(', '));
   if(d.roster)bits.push('roster edited');
   el.className='count bad';
+  var armed=false; try{armed=!!localStorage.getItem('pd-repo-secret');}catch(e){}
   el.innerHTML='<b>Not in the repo yet</b> \u2014 '+bits.join(' \u00b7 ')+
-    '. Export and send it over, or it only exists on this device.';
+    (armed?'. Saving on its own in a moment.'
+          :'. Export and send it over, or turn on Save to repo below.');
 }
 
 function sourceNote(){
@@ -2113,25 +2146,52 @@ function saveSecret(ask){
   }
   return v;
 }
-function saveToRepo(){
-  var btn=document.getElementById('doRepo'), el=document.getElementById('repoNote');
-  var secret=saveSecret(true);
+/* Auto-save. He should never have to press anything: once the endpoint is set up,
+   an edit schedules a commit and it happens on its own. Debounced so a burst of
+   dragging is one commit, and the endpoint refuses a no-op, so idling costs
+   nothing. If the tab closes before it fires, the next load notices the device
+   and the repo disagree and commits then — nothing gets stranded. */
+var repoTimer=null, repoBusy=false, REPO_IDLE=45000;
+function scheduleRepoSave(){
+  var s=null; try{ s=localStorage.getItem('pd-repo-secret'); }catch(e){}
+  if(!s)return;                                  // not set up; stay quiet
+  clearTimeout(repoTimer);
+  repoTimer=setTimeout(function(){ saveToRepo({auto:true}); },REPO_IDLE);
+}
+function repoStatus(txt,cls){
+  var el=document.getElementById('repoNote');
+  if(el){ el.className='count '+(cls||''); el.innerHTML=txt; }
+}
+function saveToRepo(opts){
+  opts=opts||{};
+  if(repoBusy){ if(opts.auto)scheduleRepoSave(); return; }
+  var btn=document.getElementById('doRepo');
+  var secret=saveSecret(!opts.auto);
   if(!secret)return;
   var body;
   try{ body=JSON.stringify(toSourceJSON()); }
   catch(e){ alert('Could not build the playbook to send.'); return; }
+  repoBusy=true;
   btn.disabled=true; var was=btn.textContent; btn.textContent='Saving\u2026';
+  if(opts.auto)repoStatus('Saving to the repo\u2026');
   fetch('/api/save-playbook',{method:'POST',
       headers:{'Content-Type':'application/json','x-save-secret':secret},body:body})
     .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
     .then(function(res){
-      btn.disabled=false; btn.textContent=was;
+      repoBusy=false; btn.disabled=false; btn.textContent=was;
       if(!res.ok){
         if(res.status===401){ try{localStorage.removeItem('pd-repo-secret');}catch(e){} }
-        alert(res.j&&res.j.error?res.j.error:('Save failed ('+res.status+').'));
+        if(res.status===501||res.status===404||res.status===405){
+          document.getElementById('setupBox').hidden=false;
+          if(!opts.auto)document.getElementById('setupBox').scrollIntoView({block:'nearest'});
+        }
+        var msg=(res.j&&res.j.error)?res.j.error:('Save failed ('+res.status+').');
+        if(opts.auto)repoStatus('<b>Not saved to the repo</b> \u2014 '+esc(msg)+
+          ' Your work is safe on this device.','bad');
+        else alert(msg);
         return;
       }
-      alert(res.j.message||'Saved.');
+      if(!opts.auto)alert(res.j.message||'Saved.');
       // Re-read what is now published so the badge tells the truth again.
       return fetch('special-teams-plays.json',{cache:'no-store'})
         .then(function(r){return r.json();})
@@ -2139,11 +2199,44 @@ function saveToRepo(){
         .catch(function(){});
     })
     .catch(function(){
-      btn.disabled=false; btn.textContent=was;
-      alert('Could not reach the server. If you are offline, use Export as file instead.');
+      repoBusy=false; btn.disabled=false; btn.textContent=was;
+      if(opts.auto){ repoStatus('<b>Could not reach the server</b> \u2014 will try again '+
+        'after your next edit. Your work is safe on this device.','bad'); scheduleRepoSave(); }
+      else alert('Could not reach the server. If you are offline, use Export as file instead.');
     });
 }
-document.getElementById('doRepo').onclick=saveToRepo;
+document.getElementById('doRepo').onclick=function(){saveToRepo({});};
+
+/* Ask the endpoint what state it is in, so "is it on yet" has an answer instead of
+   a guess. Sends no passphrase on purpose: 401 means it is configured and just
+   wants the right one, 501 means the variables are still missing. */
+function checkSetup(quiet){
+  var box=document.getElementById('setupBox'), out=document.getElementById('setupResult');
+  return fetch('/api/save-playbook',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:'{}'})
+    .then(function(r){
+      /* Only a 401 proves the endpoint is live and configured — it means it read
+         the request and wanted a passphrase. 501 is "variables missing"; 404 and
+         405 mean there is no endpoint there at all. Anything else, assume not on:
+         claiming it works when it does not is the worse failure. */
+      var on=(r.status===401);
+      box.hidden=on;
+      if(!quiet){
+        out.className='count '+(on?'ok':'bad');
+        out.textContent = on ? '\u2713 It is on. Your changes will save themselves from now on.'
+          : (r.status===404||r.status===405)
+            ? 'No save endpoint on this deploy yet \u2014 redeploy after adding the variables.'
+            : 'Not on yet \u2014 the two variables are missing, or it has not been redeployed since you added them.';
+      }
+      return on;
+    })
+    .catch(function(){
+      if(!quiet){ out.className='count bad';
+        out.textContent='Could not reach the server. Are you online?'; }
+      return false;
+    });
+}
+document.getElementById('checkSetup').onclick=function(){checkSetup(false);};
 
 function downloadBackup(){
   var body=stateJSON(), d=new Date();
@@ -2326,6 +2419,14 @@ function downloadBackup(){
   document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
   document.querySelectorAll('.mode.lbl[data-v]').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.v===fitMode);});
   document.body.setAttribute('data-print','play');
+  try{ checkSetup(true); }catch(e){}
+  /* Anything left unsaved when the tab last closed gets committed now. */
+  setTimeout(function(){
+    try{
+      var d=repoDiff();
+      if(d&&d.total&&localStorage.getItem('pd-repo-secret'))saveToRepo({auto:true});
+    }catch(e){}
+  },2500);
   (function(){
     var f=document.getElementById('lineupSec');
     f.open=lineupOpen;
