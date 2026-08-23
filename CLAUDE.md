@@ -137,7 +137,13 @@ uncluttered and the boys get a link that cannot edit anything. Three modes: **Wa
 animates each man along his route with a scrub bar; **Line me up** asks where a spot
 lines up and scores the tap by distance in yards; **My job** is multiple choice built
 from the written jobs. Names show as last name and number, same as the field diagram.
-It fetches the JSON — no embedded fallback, because it is only ever used from the URL.
+It fetches the JSON, and prefers `pd-source` from `localStorage` when it is there.
+`index.html` writes that key on every save (and on load), so on Dom's own device the
+boys' page shows his live edits instead of the shipped playbook — otherwise nothing he
+changed would ever appear there. A player on his own phone has no `pd-source` and gets
+the published version, which is the point: his edits reach them when he exports and it
+ships. A note under the field says which is showing, with a button to switch, and an
+open boys tab updates the moment he saves in the other one.
 
 ```
 index.html

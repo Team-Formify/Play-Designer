@@ -1825,6 +1825,7 @@ function writeNow(){
     if(seq>savedSeq)savedSeq=seq;
     storageBlocked=false; paintDot();
     noteBackup(body);
+    publishForLearn();
   }).catch(function(){
     storageBlocked=true; paintDot();
   });
@@ -1843,6 +1844,15 @@ window.addEventListener('beforeunload',flushSave);
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='hidden')flushSave();
 });
+
+/* learn.html is a separate page on the same origin, so it can read this. Without
+   it the boys' side keeps showing the playbook as shipped and none of his edits
+   appear there. Written in the source shape so learn.html needs no converter of
+   its own, and best effort — a failure here must never fail a real save. */
+function publishForLearn(){
+  try{ STORE.set('pd-source',JSON.stringify(toSourceJSON())).catch(function(){}); }
+  catch(e){}
+}
 
 /* ---------- rolling backups ----------
    Everything lives in one key on one origin. Clearing site data, or iOS evicting

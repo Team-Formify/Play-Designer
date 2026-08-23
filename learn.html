@@ -64,6 +64,12 @@
   input[type=range]{width:100%;margin-top:12px;accent-color:var(--gold)}
   .load{padding:40px 14px;text-align:center;color:var(--soft)}
   .hide{display:none!important}
+  .src{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--soft);margin:8px 0 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .src b{color:var(--gold);font-weight:500}
+  .src button{background:transparent;color:var(--soft);border:1px solid rgba(237,235,224,.22);
+    border-radius:4px;padding:3px 8px;font-family:inherit;font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;cursor:pointer}
 </style>
 </head>
 <body>
@@ -82,6 +88,7 @@
 
   <div class="fieldbox"><svg id="field" viewBox="0 0 420 500" role="img" aria-label="Play"></svg></div>
   <p class="load" id="loading">Loading the playbook…</p>
+  <p class="src" id="srcNote"></p>
 
   <div id="watchUI" class="hide">
     <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Scrub the play">
@@ -293,7 +300,36 @@ function drawField(opts){
 }
 </script>
 <script>
-/* ---------- loading ---------- */
+/* ---------- loading ----------
+   The coach's app writes pd-source to localStorage on every save. Same origin, so
+   we can read it and show the boys exactly what he has on his device right now.
+   A player on his own phone has no pd-source and gets the published playbook,
+   which is correct — his edits reach them when he exports and it ships. */
+var SRC='local', PUBLISHED=null;
+function localSource(){
+  try{
+    var raw=localStorage.getItem('pd-source');
+    if(!raw)return null;
+    var d=JSON.parse(raw);
+    return (d&&d.plays&&d.plays.length)?d:null;
+  }catch(e){ return null; }
+}
+function paintSrc(){
+  var el=document.getElementById('srcNote');
+  if(SRC==='local'){
+    el.innerHTML='Showing <b>coach\u2019s edits from this device</b>';
+    var b=document.createElement('button'); b.textContent='Show published';
+    b.onclick=function(){ SRC='published'; indexData(PUBLISHED); };
+    el.appendChild(b);
+  }else{
+    el.innerHTML='Showing the <b>published playbook</b>';
+    if(localSource()){
+      var b2=document.createElement('button'); b2.textContent='Show coach\u2019s edits';
+      b2.onclick=function(){ SRC='local'; indexData(localSource()); };
+      el.appendChild(b2);
+    }
+  }
+}
 function indexData(d){
   DATA=d; BY_SLUG={}; ROSTER={};
   (d.roster||[]).forEach(function(r){ROSTER[r.last]=r;});
@@ -306,12 +342,29 @@ function indexData(d){
   play=d.plays[0];
   sel.onchange=function(){ play=BY_SLUG[sel.value]; startMode(); };
   document.getElementById('loading').classList.add('hide');
+  paintSrc();
   startMode();
 }
+/* If he has the coach's app open in another tab, a save lands here immediately. */
+window.addEventListener('storage',function(e){
+  if(e.key!=='pd-source'||SRC!=='local')return;
+  var d=localSource(); if(!d)return;
+  var keep=play&&play.slug;
+  indexData(d);
+  if(keep&&BY_SLUG[keep]){ play=BY_SLUG[keep];
+    document.getElementById('playSel').value=keep; startMode(); }
+});
 fetch('special-teams-plays.json',{cache:'no-store'})
   .then(function(r){return r.json();})
-  .then(indexData)
+  .then(function(d){
+    PUBLISHED=d;
+    var mine=localSource();
+    SRC=mine?'local':'published';
+    indexData(mine||d);
+  })
   .catch(function(){
+    var mine=localSource();
+    if(mine){ PUBLISHED=null; SRC='local'; indexData(mine); return; }
     document.getElementById('loading').textContent=
       'Could not load the playbook. Check you are online and reload.';
   });
