@@ -303,116 +303,6 @@
           "y": 340,
           "role": "PUNTER",
           "job": "Catch it, two steps, get it off. After the kick you are the safety, so stay behind the ball and be ready to make the tackle."
-        },
-        {
-          "id": "p11",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 56,
-          "y": 162
-        },
-        {
-          "id": "p12",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 364,
-          "y": 162
-        },
-        {
-          "id": "p13",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 130,
-          "y": 166
-        },
-        {
-          "id": "p14",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 165,
-          "y": 166
-        },
-        {
-          "id": "p15",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 195,
-          "y": 166
-        },
-        {
-          "id": "p16",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 225,
-          "y": 166
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 255,
-          "y": 166
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 290,
-          "y": 166
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 170,
-          "y": 138
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 250,
-          "y": 138
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 205,
-          "y": 58
         }
       ],
       "routes": [
@@ -595,10 +485,11 @@
       "howItWorks": "Spread punt. Wide splits force them to spread out too, which cuts down the rush angles at the punter. Everybody blocks first and covers second — the ball is gone in about two seconds, so protection is short and then all eleven are in coverage lanes. The gunners are the only two who release straight away; their landmark is three yards outside the returner so he cannot get to the sideline.",
       "aim": {
         "x": 92,
-        "y": 158,
+        "y": 95,
         "from": "P",
         "label": "PUNT HERE — OUTSIDE THE NUMBERS, 35 YARDS"
-      }
+      },
+      "mirrorOf": "punt-return-purple-d"
     },
     {
       "slug": "villanova-fake-from-std-punt",
@@ -716,116 +607,6 @@
           "y": 340,
           "role": "DECOY",
           "job": "Sell it. Fake the catch, fake the handoff to the wing crossing, and keep your eyes downfield so nobody reads you."
-        },
-        {
-          "id": "p11",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 56,
-          "y": 162
-        },
-        {
-          "id": "p12",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 364,
-          "y": 162
-        },
-        {
-          "id": "p13",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 130,
-          "y": 166
-        },
-        {
-          "id": "p14",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 165,
-          "y": 166
-        },
-        {
-          "id": "p15",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 195,
-          "y": 166
-        },
-        {
-          "id": "p16",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 225,
-          "y": 166
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 255,
-          "y": 166
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 290,
-          "y": 166
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 170,
-          "y": 138
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 250,
-          "y": 138
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 205,
-          "y": 58
         }
       ],
       "routes": [
@@ -944,10 +725,11 @@
       "howItWorks": "A fake out of the base punt, so it has to look identical until the snap is gone. The snap goes to the protector instead of the punter. He fakes the toss back, the punter fakes a handoff to the wing crossing behind him, and the protector breaks the other way with the ball. Everything sells for two counts — a lineman who releases early gives it away.",
       "aim": {
         "x": 96,
-        "y": 168,
+        "y": 105,
         "from": "PP",
         "label": "BALL GOES HERE — OUTSIDE THE SEAL, GET THE STICKS"
-      }
+      },
+      "mirrorOf": "punt-return-purple-d"
     },
     {
       "slug": "punt-return-purple-d",
@@ -956,94 +738,6 @@
       "lineOfScrimmage": 126,
       "lineLabel": "LINE OF SCRIMMAGE",
       "players": [
-        {
-          "id": "p0",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 40,
-          "y": 126
-        },
-        {
-          "id": "p1",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 380,
-          "y": 126
-        },
-        {
-          "id": "p2",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 150,
-          "y": 126
-        },
-        {
-          "id": "p3",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 180,
-          "y": 126
-        },
-        {
-          "id": "p4",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 210,
-          "y": 126
-        },
-        {
-          "id": "p5",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 240,
-          "y": 126
-        },
-        {
-          "id": "p6",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 270,
-          "y": 126
-        },
-        {
-          "id": "p7",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 178,
-          "y": 92
-        },
-        {
-          "id": "p8",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 210,
-          "y": 92
-        },
-        {
-          "id": "p9",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 242,
-          "y": 92
-        },
-        {
-          "id": "p10",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 210,
-          "y": 30
-        },
         {
           "id": "p11",
           "team": "us",
@@ -1285,7 +979,8 @@
         "x": 108,
         "y": 246,
         "label": "RETURN HERE — UP BEHIND THE WALL"
-      }
+      },
+      "mirrorOf": "std-punt"
     },
     {
       "slug": "punt-return-white-d",
@@ -1294,94 +989,6 @@
       "lineOfScrimmage": 126,
       "lineLabel": "LINE OF SCRIMMAGE",
       "players": [
-        {
-          "id": "p0",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 40,
-          "y": 126
-        },
-        {
-          "id": "p1",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 380,
-          "y": 126
-        },
-        {
-          "id": "p2",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 150,
-          "y": 126
-        },
-        {
-          "id": "p3",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 180,
-          "y": 126
-        },
-        {
-          "id": "p4",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 210,
-          "y": 126
-        },
-        {
-          "id": "p5",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 240,
-          "y": 126
-        },
-        {
-          "id": "p6",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 270,
-          "y": 126
-        },
-        {
-          "id": "p7",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 178,
-          "y": 92
-        },
-        {
-          "id": "p8",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 210,
-          "y": 92
-        },
-        {
-          "id": "p9",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 242,
-          "y": 92
-        },
-        {
-          "id": "p10",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 210,
-          "y": 30
-        },
         {
           "id": "p11",
           "team": "us",
@@ -1623,7 +1230,8 @@
         "x": 108,
         "y": 246,
         "label": "RETURN HERE — UP BEHIND THE WALL"
-      }
+      },
+      "mirrorOf": "std-punt"
     },
     {
       "slug": "kickoff-check-me",
@@ -1741,116 +1349,6 @@
           "y": 410,
           "role": "SAFETY",
           "job": "You are the last man. Stay behind everyone, never pass the ball, and make the tackle if he gets through. If you miss, he scores."
-        },
-        {
-          "id": "p11",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 70,
-          "y": 292
-        },
-        {
-          "id": "p12",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 140,
-          "y": 292
-        },
-        {
-          "id": "p13",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 210,
-          "y": 292
-        },
-        {
-          "id": "p14",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 280,
-          "y": 292
-        },
-        {
-          "id": "p15",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 350,
-          "y": 292
-        },
-        {
-          "id": "p16",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 110,
-          "y": 250
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 175,
-          "y": 250
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 245,
-          "y": 250
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 310,
-          "y": 250
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 160,
-          "y": 180
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 260,
-          "y": 180
         }
       ],
       "howItWorks": "Ten across, level with the kicker, so the whole unit times its run-up together and crosses the free kick line at full speed at the same moment. Every man has a lane and stays in it — coverage breaks down when someone runs around a block instead of through his lane. The kicker is the safety and stays behind the ball the whole way.",
@@ -1861,7 +1359,7 @@
           "how": "The kick we want: high, to the corner, landing inside their 10. Everybody sprints his lane and keeps his shoulders square. Nobody passes the BALL men.",
           "aim": {
             "x": 330,
-            "y": 268,
+            "y": 196,
             "from": "K",
             "label": "KICK HERE — DEEP CORNER, INSIDE THE 10"
           },
@@ -2017,7 +1515,7 @@
           "how": "High and short, about 25 yards, dropped in front of their deep men so one of their blockers has to catch it. Less field to cover: the whole line squeezes toward the ball and the outside men tighten instead of running past it.",
           "aim": {
             "x": 300,
-            "y": 300,
+            "y": 228,
             "from": "K",
             "label": "POOCH — HIGH AND SHORT, IN FRONT OF THEIR DEEP MEN"
           },
@@ -2026,12 +1524,12 @@
               "playerId": "p10",
               "points": [
                 {
-                  "x": 210,
-                  "y": 355
+                  "x": 212,
+                  "y": 320
                 },
                 {
                   "x": 230,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2039,12 +1537,12 @@
               "playerId": "p0",
               "points": [
                 {
-                  "x": 376,
-                  "y": 355
+                  "x": 374,
+                  "y": 319
                 },
                 {
                   "x": 351,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2052,12 +1550,12 @@
               "playerId": "p1",
               "points": [
                 {
-                  "x": 341,
-                  "y": 355
+                  "x": 340,
+                  "y": 319
                 },
                 {
                   "x": 324,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2066,11 +1564,11 @@
               "points": [
                 {
                   "x": 305,
-                  "y": 355
+                  "y": 319
                 },
                 {
                   "x": 298,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2078,12 +1576,12 @@
               "playerId": "p3",
               "points": [
                 {
-                  "x": 269,
-                  "y": 355
+                  "x": 270,
+                  "y": 319
                 },
                 {
                   "x": 273,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2091,12 +1589,12 @@
               "playerId": "p4",
               "points": [
                 {
-                  "x": 233,
-                  "y": 355
+                  "x": 235,
+                  "y": 319
                 },
                 {
                   "x": 246,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2104,12 +1602,12 @@
               "playerId": "p5",
               "points": [
                 {
-                  "x": 187,
-                  "y": 355
+                  "x": 190,
+                  "y": 319
                 },
                 {
                   "x": 213,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2117,12 +1615,12 @@
               "playerId": "p6",
               "points": [
                 {
-                  "x": 151,
-                  "y": 355
+                  "x": 155,
+                  "y": 319
                 },
                 {
                   "x": 187,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2130,12 +1628,12 @@
               "playerId": "p7",
               "points": [
                 {
-                  "x": 115,
-                  "y": 355
+                  "x": 119,
+                  "y": 319
                 },
                 {
                   "x": 161,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2143,12 +1641,12 @@
               "playerId": "p8",
               "points": [
                 {
-                  "x": 79,
-                  "y": 355
+                  "x": 84,
+                  "y": 319
                 },
                 {
                   "x": 135,
-                  "y": 300
+                  "y": 228
                 }
               ]
             },
@@ -2156,12 +1654,12 @@
               "playerId": "p9",
               "points": [
                 {
-                  "x": 44,
-                  "y": 355
+                  "x": 50,
+                  "y": 319
                 },
                 {
                   "x": 109,
-                  "y": 300
+                  "y": 228
                 }
               ]
             }
@@ -2173,7 +1671,7 @@
           "how": "Low and hard along the ground so their front line has to field it, not their returner. It is a live ball: the middle five attack it, the outside men hold their lanes in case it is picked up and brought back.",
           "aim": {
             "x": 250,
-            "y": 308,
+            "y": 284,
             "from": "K",
             "label": "SQUIB — LOW AND HARD, ON THE GROUND BY THEIR 35"
           },
@@ -2183,11 +1681,11 @@
               "points": [
                 {
                   "x": 210,
-                  "y": 359
+                  "y": 348
                 },
                 {
                   "x": 224,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2196,11 +1694,11 @@
               "points": [
                 {
                   "x": 376,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 324,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2209,11 +1707,11 @@
               "points": [
                 {
                   "x": 341,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 302,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2222,11 +1720,11 @@
               "points": [
                 {
                   "x": 305,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 281,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2235,11 +1733,11 @@
               "points": [
                 {
                   "x": 269,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 260,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2248,11 +1746,11 @@
               "points": [
                 {
                   "x": 233,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 238,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2261,11 +1759,11 @@
               "points": [
                 {
                   "x": 187,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 211,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2274,11 +1772,11 @@
               "points": [
                 {
                   "x": 151,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 189,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2287,11 +1785,11 @@
               "points": [
                 {
                   "x": 115,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 168,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2300,11 +1798,11 @@
               "points": [
                 {
                   "x": 79,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 147,
-                  "y": 308
+                  "y": 284
                 }
               ]
             },
@@ -2313,17 +1811,18 @@
               "points": [
                 {
                   "x": 44,
-                  "y": 359
+                  "y": 347
                 },
                 {
                   "x": 125,
-                  "y": 308
+                  "y": 284
                 }
               ]
             }
           ]
         }
-      ]
+      ],
+      "mirrorOf": "kick-return-5-2-2-2"
     },
     {
       "slug": "cluster-kickoff-huddle-to-twins",
@@ -2441,116 +1940,6 @@
           "y": 444,
           "role": "SAFETY",
           "job": "You are the last man. Stay behind the ball the whole way, never pass it, and make the tackle if he breaks through."
-        },
-        {
-          "id": "p11",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 70,
-          "y": 296
-        },
-        {
-          "id": "p12",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 140,
-          "y": 296
-        },
-        {
-          "id": "p13",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 210,
-          "y": 296
-        },
-        {
-          "id": "p14",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 280,
-          "y": 296
-        },
-        {
-          "id": "p15",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 350,
-          "y": 296
-        },
-        {
-          "id": "p16",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 110,
-          "y": 254
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 175,
-          "y": 254
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 245,
-          "y": 254
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 310,
-          "y": 254
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 160,
-          "y": 184
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 260,
-          "y": 184
         }
       ],
       "howItWorks": "The ten huddle inside the numbers instead of spreading out. They hold until the kicker starts his approach, then break to their lanes. It makes the return team guess, and it forces them to compress in case of an onside, which takes blockers away from the return. Fast kids on this one — they have further to travel to the outside lanes.",
@@ -2561,7 +1950,7 @@
           "how": "The pairs break for the sidelines as the kicker starts his approach, and the kick goes deep to a corner away from their best returner. The huddle makes them stay home in case it is onside, so the field is wider than it looks.",
           "aim": {
             "x": 330,
-            "y": 280,
+            "y": 200,
             "from": "K",
             "label": "KICK HERE — DEEP CORNER, AWAY FROM THEIR BEST RETURNER"
           },
@@ -2717,7 +2106,7 @@
           "how": "Same break, shorter kick. The pairs still get to the sidelines but stop their sprint at the ball instead of running past it, and the middle lanes come up hard under the catch.",
           "aim": {
             "x": 300,
-            "y": 308,
+            "y": 232,
             "from": "K",
             "label": "POOCH — HIGH AND SHORT, IN FRONT OF THEIR DEEP MEN"
           },
@@ -2778,12 +2167,12 @@
               "playerId": "p1",
               "points": [
                 {
-                  "x": 225,
-                  "y": 330
+                  "x": 227,
+                  "y": 292
                 },
                 {
                   "x": 237,
-                  "y": 308
+                  "y": 232
                 }
               ]
             },
@@ -2791,12 +2180,12 @@
               "playerId": "p2",
               "points": [
                 {
-                  "x": 203,
-                  "y": 332
+                  "x": 207,
+                  "y": 294
                 },
                 {
                   "x": 220,
-                  "y": 308
+                  "y": 232
                 }
               ]
             },
@@ -2804,12 +2193,12 @@
               "playerId": "p5",
               "points": [
                 {
-                  "x": 214,
-                  "y": 342
+                  "x": 220,
+                  "y": 304
                 },
                 {
                   "x": 233,
-                  "y": 308
+                  "y": 232
                 }
               ]
             },
@@ -2817,12 +2206,12 @@
               "playerId": "p6",
               "points": [
                 {
-                  "x": 191,
-                  "y": 344
+                  "x": 199,
+                  "y": 306
                 },
                 {
                   "x": 216,
-                  "y": 308
+                  "y": 232
                 }
               ]
             },
@@ -2830,12 +2219,12 @@
               "playerId": "p8",
               "points": [
                 {
-                  "x": 225,
-                  "y": 355
+                  "x": 229,
+                  "y": 317
                 },
                 {
                   "x": 241,
-                  "y": 308
+                  "y": 232
                 }
               ]
             },
@@ -2843,12 +2232,12 @@
               "playerId": "p9",
               "points": [
                 {
-                  "x": 201,
-                  "y": 355
+                  "x": 206,
+                  "y": 317
                 },
                 {
                   "x": 223,
-                  "y": 308
+                  "y": 232
                 }
               ]
             },
@@ -2857,11 +2246,11 @@
               "points": [
                 {
                   "x": 210,
-                  "y": 376
+                  "y": 338
                 },
                 {
                   "x": 230,
-                  "y": 308
+                  "y": 232
                 }
               ]
             }
@@ -2873,7 +2262,7 @@
           "how": "The one to call if they have a returner we cannot tackle. It goes on the ground at their front line while our pairs are already moving, so we are on top of it before they have it clean.",
           "aim": {
             "x": 250,
-            "y": 314,
+            "y": 288,
             "from": "K",
             "label": "SQUIB — LOW AND HARD, ON THE GROUND BY THEIR 35"
           },
@@ -2935,11 +2324,11 @@
               "points": [
                 {
                   "x": 223,
-                  "y": 332
+                  "y": 320
                 },
                 {
                   "x": 230,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -2947,12 +2336,12 @@
               "playerId": "p2",
               "points": [
                 {
-                  "x": 201,
-                  "y": 335
+                  "x": 204,
+                  "y": 322
                 },
                 {
                   "x": 217,
-                  "y": 314
+                  "y": 288
                 }
               ]
             },
@@ -2960,12 +2349,12 @@
               "playerId": "p5",
               "points": [
                 {
-                  "x": 214,
-                  "y": 345
+                  "x": 216,
+                  "y": 332
                 },
                 {
                   "x": 227,
-                  "y": 314
+                  "y": 288
                 }
               ]
             },
@@ -2973,12 +2362,12 @@
               "playerId": "p6",
               "points": [
                 {
-                  "x": 191,
-                  "y": 347
+                  "x": 193,
+                  "y": 334
                 },
                 {
                   "x": 213,
-                  "y": 314
+                  "y": 288
                 }
               ]
             },
@@ -2987,11 +2376,11 @@
               "points": [
                 {
                   "x": 225,
-                  "y": 358
+                  "y": 345
                 },
                 {
                   "x": 233,
-                  "y": 314
+                  "y": 288
                 }
               ]
             },
@@ -3000,11 +2389,11 @@
               "points": [
                 {
                   "x": 201,
-                  "y": 358
+                  "y": 345
                 },
                 {
                   "x": 219,
-                  "y": 314
+                  "y": 288
                 }
               ]
             },
@@ -3013,17 +2402,18 @@
               "points": [
                 {
                   "x": 210,
-                  "y": 379
+                  "y": 366
                 },
                 {
                   "x": 224,
-                  "y": 314
+                  "y": 288
                 }
               ]
             }
           ]
         }
-      ]
+      ],
+      "mirrorOf": "kick-return-5-2-2-2"
     },
     {
       "slug": "cluster-ko-10-play",
@@ -3141,116 +2531,6 @@
           "y": 444,
           "role": "SAFETY",
           "job": "You are the last man. Stay behind the ball the whole way, never pass it, and make the tackle if he breaks through."
-        },
-        {
-          "id": "p11",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 70,
-          "y": 296
-        },
-        {
-          "id": "p12",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 140,
-          "y": 296
-        },
-        {
-          "id": "p13",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 210,
-          "y": 296
-        },
-        {
-          "id": "p14",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 280,
-          "y": 296
-        },
-        {
-          "id": "p15",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 350,
-          "y": 296
-        },
-        {
-          "id": "p16",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 110,
-          "y": 254
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 175,
-          "y": 254
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 245,
-          "y": 254
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 310,
-          "y": 254
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 160,
-          "y": 184
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 260,
-          "y": 184
         }
       ],
       "howItWorks": "Same huddle and same break as Cluster Speed, run with the boys who need snaps. The X-men stay interior, which is where the league requires them and also the shortest run. The huddle does the work here — it buys the coverage a half second because the return team cannot see who is going where until the kicker moves.",
@@ -3261,7 +2541,7 @@
           "how": "Deep and down the middle, because the middle is the easiest place for a young unit to fit. Everybody has a lane and nobody has to make a decision on the run.",
           "aim": {
             "x": 210,
-            "y": 278,
+            "y": 200,
             "from": "K",
             "label": "KICK HERE — DEEP AND DOWN THE MIDDLE"
           },
@@ -3417,7 +2697,7 @@
           "how": "High and short so it lands on one of their blockers instead of their returner. Short field, so nobody outruns the ball — get to it and get square.",
           "aim": {
             "x": 250,
-            "y": 306,
+            "y": 232,
             "from": "K",
             "label": "POOCH — HIGH AND SHORT, IN FRONT OF THEIR DEEP MEN"
           },
@@ -3478,12 +2758,12 @@
               "playerId": "p1",
               "points": [
                 {
-                  "x": 221,
-                  "y": 329
+                  "x": 222,
+                  "y": 292
                 },
                 {
                   "x": 226,
-                  "y": 306
+                  "y": 232
                 }
               ]
             },
@@ -3491,12 +2771,12 @@
               "playerId": "p2",
               "points": [
                 {
-                  "x": 200,
-                  "y": 331
+                  "x": 202,
+                  "y": 294
                 },
                 {
                   "x": 209,
-                  "y": 306
+                  "y": 232
                 }
               ]
             },
@@ -3504,12 +2784,12 @@
               "playerId": "p5",
               "points": [
                 {
-                  "x": 214,
-                  "y": 341
+                  "x": 217,
+                  "y": 304
                 },
                 {
                   "x": 222,
-                  "y": 306
+                  "y": 232
                 }
               ]
             },
@@ -3517,12 +2797,12 @@
               "playerId": "p6",
               "points": [
                 {
-                  "x": 191,
-                  "y": 343
+                  "x": 195,
+                  "y": 306
                 },
                 {
                   "x": 205,
-                  "y": 306
+                  "y": 232
                 }
               ]
             },
@@ -3530,12 +2810,12 @@
               "playerId": "p8",
               "points": [
                 {
-                  "x": 225,
-                  "y": 354
+                  "x": 226,
+                  "y": 317
                 },
                 {
                   "x": 230,
-                  "y": 306
+                  "y": 232
                 }
               ]
             },
@@ -3543,12 +2823,12 @@
               "playerId": "p9",
               "points": [
                 {
-                  "x": 201,
-                  "y": 354
+                  "x": 203,
+                  "y": 317
                 },
                 {
                   "x": 212,
-                  "y": 306
+                  "y": 232
                 }
               ]
             },
@@ -3557,11 +2837,11 @@
               "points": [
                 {
                   "x": 210,
-                  "y": 375
+                  "y": 338
                 },
                 {
                   "x": 219,
-                  "y": 306
+                  "y": 232
                 }
               ]
             }
@@ -3573,7 +2853,7 @@
           "how": "On the ground at their front line. It is a live ball and it is the play most likely to give this group a takeaway, so everybody runs to the football.",
           "aim": {
             "x": 210,
-            "y": 312,
+            "y": 288,
             "from": "K",
             "label": "SQUIB — LOW AND HARD, ON THE GROUND BY THEIR 35"
           },
@@ -3635,11 +2915,11 @@
               "points": [
                 {
                   "x": 218,
-                  "y": 332
+                  "y": 320
                 },
                 {
                   "x": 216,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -3647,12 +2927,12 @@
               "playerId": "p2",
               "points": [
                 {
-                  "x": 198,
-                  "y": 334
+                  "x": 199,
+                  "y": 322
                 },
                 {
                   "x": 202,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -3661,11 +2941,11 @@
               "points": [
                 {
                   "x": 214,
-                  "y": 344
+                  "y": 332
                 },
                 {
                   "x": 213,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -3673,12 +2953,12 @@
               "playerId": "p6",
               "points": [
                 {
-                  "x": 191,
-                  "y": 346
+                  "x": 192,
+                  "y": 334
                 },
                 {
                   "x": 198,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -3687,11 +2967,11 @@
               "points": [
                 {
                   "x": 225,
-                  "y": 357
+                  "y": 345
                 },
                 {
                   "x": 219,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -3700,11 +2980,11 @@
               "points": [
                 {
                   "x": 201,
-                  "y": 357
+                  "y": 345
                 },
                 {
                   "x": 204,
-                  "y": 312
+                  "y": 288
                 }
               ]
             },
@@ -3713,17 +2993,18 @@
               "points": [
                 {
                   "x": 210,
-                  "y": 378
+                  "y": 366
                 },
                 {
                   "x": 210,
-                  "y": 312
+                  "y": 288
                 }
               ]
             }
           ]
         }
-      ]
+      ],
+      "mirrorOf": "kick-return-5-4-2"
     },
     {
       "slug": "onside-kick-kangaroo-right",
@@ -3841,116 +3122,6 @@
           "y": 356,
           "role": "SHIELD",
           "job": "Widest man on the kick side. Nobody gets around you to the ball."
-        },
-        {
-          "id": "p11",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 100,
-          "y": 268
-        },
-        {
-          "id": "p12",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 160,
-          "y": 268
-        },
-        {
-          "id": "p13",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 220,
-          "y": 268
-        },
-        {
-          "id": "p14",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 280,
-          "y": 268
-        },
-        {
-          "id": "p15",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 340,
-          "y": 268
-        },
-        {
-          "id": "p16",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 130,
-          "y": 232
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 210,
-          "y": 232
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 290,
-          "y": 232
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 150,
-          "y": 192
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 270,
-          "y": 192
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 210,
-          "y": 146
         }
       ],
       "routes": [
@@ -4000,7 +3171,8 @@
         "y": 262,
         "from": "K",
         "label": "KICK HERE — 11 YARDS, SECOND BOUNCE HEAD HIGH"
-      }
+      },
+      "mirrorOf": "kick-return-5-2-2-2"
     },
     {
       "slug": "kick-return-5-2-2-2",
@@ -4009,54 +3181,6 @@
       "lineOfScrimmage": 60,
       "lineLabel": "THEIR FREE KICK LINE",
       "players": [
-        {
-          "id": "p0",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 380,
-          "y": 38
-        },
-        {
-          "id": "p1",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 310,
-          "y": 38
-        },
-        {
-          "id": "p2",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 240,
-          "y": 38
-        },
-        {
-          "id": "p3",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 170,
-          "y": 38
-        },
-        {
-          "id": "p4",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 100,
-          "y": 38
-        },
-        {
-          "id": "p5",
-          "team": "them",
-          "label": null,
-          "player": null,
-          "x": 30,
-          "y": 38
-        },
         {
           "id": "p6",
           "team": "us",
@@ -4166,56 +3290,6 @@
           "y": 356,
           "role": "RETURNER",
           "job": "Catch it clean, then pick a side and go. One cut, then straight. Do not dance."
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 65,
-          "y": 38
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 135,
-          "y": 38
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 205,
-          "y": 38
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 275,
-          "y": 38
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 345,
-          "y": 38
         }
       ],
       "routes": [
@@ -4368,7 +3442,8 @@
         "x": 96,
         "y": 208,
         "label": "RETURN HERE — UP THE SIDELINE BEHIND THE WALL"
-      }
+      },
+      "mirrorOf": "kickoff-check-me"
     },
     {
       "slug": "kick-return-5-4-2",
@@ -4377,54 +3452,6 @@
       "lineOfScrimmage": 60,
       "lineLabel": "THEIR FREE KICK LINE",
       "players": [
-        {
-          "id": "p0",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "x": 380,
-          "y": 38
-        },
-        {
-          "id": "p1",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "x": 310,
-          "y": 38
-        },
-        {
-          "id": "p2",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "x": 240,
-          "y": 38
-        },
-        {
-          "id": "p3",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "x": 170,
-          "y": 38
-        },
-        {
-          "id": "p4",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "x": 100,
-          "y": 38
-        },
-        {
-          "id": "p5",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "x": 30,
-          "y": 38
-        },
         {
           "id": "p6",
           "team": "us",
@@ -4534,56 +3561,6 @@
           "y": 356,
           "role": "RETURNER",
           "job": "Yours or his — either catch it or lead him. Do not both go for it."
-        },
-        {
-          "id": "p17",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 65,
-          "y": 38
-        },
-        {
-          "id": "p18",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 135,
-          "y": 38
-        },
-        {
-          "id": "p19",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 205,
-          "y": 38
-        },
-        {
-          "id": "p20",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 275,
-          "y": 38
-        },
-        {
-          "id": "p21",
-          "team": "them",
-          "label": "",
-          "player": "",
-          "role": "",
-          "job": "",
-          "x": 345,
-          "y": 38
         }
       ],
       "routes": [
@@ -4736,7 +3713,8 @@
         "x": 196,
         "y": 214,
         "label": "RETURN HERE — STRAIGHT UP THE MIDDLE BEHIND THE FOUR"
-      }
+      },
+      "mirrorOf": "kickoff-check-me"
     }
   ],
   "glossary": [

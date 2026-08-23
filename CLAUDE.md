@@ -229,12 +229,26 @@ and landed on the line label. It is draggable in move mode only, edits in the Se
 player panel, exports with the playbook, and counts toward `playFingerprint` so moving it
 shows up in the repo badge. Delete mode cannot touch it; only its own Remove button does.
 
-**The other team.** `team:'them'` (`'x'` in memory) has always existed on the returns.
-All ten plays now carry a likely opposing look, and a **Them** toggle shows or hides it —
-default off, because it is a guess about them, not a fact about us, and it doubles what is
-on the field. Hidden opponents do not widen `computeView`, are not hit-testable, and are
-drawn underneath our eleven so our circles are never covered. Those alignments are drafts,
-same as the jobs and the routes.
+**The other team is one of his own plays.** His idea, and it removed a whole category of
+guesswork. A kickoff and a kick return are the two sides of the same snap, so the likely
+opposing look on one *is* the other. Each play names a `mirrorOf` slug; `themOf(p)` reflects
+that play's eleven across the line of scrimmage and flips it left-to-right — their left is
+our right — scaled to fit the host play's depth. Nothing is stored: there is no opponent
+data to overwrite, to lose, or to keep in sync, and when he edits a return the kickoff it
+faces changes with it. Only Onside has no true counterpart; it borrows the 5-2-2-2 hands
+team. A **Them** toggle shows or hides them, default off in the coach's app and on in the
+boys' animation. Hidden opponents do not widen `computeView`; they are never hit-testable,
+because they belong to another play and are edited there; and they are drawn underneath our
+eleven so our circles are never covered. Older saves may still carry `team:'x'` players from
+when they were seeded — those are left alone and simply ignored.
+
+**Matchups.** Because the other team is a real play, every opposing man has a label, a lane
+and a written job. `matchups(p)` pairs each of our eleven with the nearest of theirs,
+best-pair-first so two of ours cannot claim the same man while a third goes unmatched.
+Selecting a player lights up the man he has to beat and draws the line between them; the
+Selected panel and the printed handout name the matchup; the boys' **My job** answers with
+*who you are across from*, *what he will try*, and *how you beat him* — all three read off
+his own two sheets rather than invented. All 110 spots resolve.
 
 **Print is the game-day output.** The app is a practice and planning tool; Dom barely
 uses a device on the sideline. Three modes, routed by `data-print` on `<body>`:
@@ -342,8 +356,8 @@ doing its job, not a bug.
 - **The three kicks are drafts, and so is the coverage on two of them.** Deep is his
   own routes, untouched. Pooch and Squib are generated from it, so the angles are a
   starting point, not a scheme. Which three kicks a unit should even carry is his call.
-- **The opposing alignments are drafts.** A plausible look, not scouted. Their punt-return
-  front, their kick-return front and hands team, their onside hands team.
+- ~~The opposing alignments are drafts.~~ Gone — they are his own paired plays now. What is
+  still his call is **which play faces which** (`mirrorOf`), and the onside borrow.
 - **Onside personnel is a draft.** Assigned so the three men under the kick are the
   surest hands and all four ten-play boys get a snap. His call to change.
 - The written jobs are drafts. Punt-return wall/hold-up spots and both cluster kickoffs
