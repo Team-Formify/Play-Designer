@@ -95,15 +95,12 @@
     #psFoot{font-family:var(--mono);font-size:7.5pt;letter-spacing:.08em;text-transform:uppercase;
       color:#666;margin:3mm 0 0}
   }
-  #printTitle,#printSheet,#bookSheets,#tallySheet{display:none}
+  #printTitle,#printSheet,#bookSheets{display:none}
 
   @media print{
     body[data-print="book"] .fieldbox,body[data-print="book"] #printSheet,
-    body[data-print="book"] #printTitle,
-    body[data-print="tally"] .fieldbox,body[data-print="tally"] #printSheet,
-    body[data-print="tally"] #printTitle{display:none!important}
+    body[data-print="book"] #printTitle{display:none!important}
     body[data-print="book"] #bookSheets{display:block!important}
-    body[data-print="tally"] #tallySheet{display:block!important}
 
     .bookSheet{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
     .bookSheet:last-child{break-after:auto;page-break-after:auto}
@@ -121,25 +118,6 @@
     .bookSheet td.ps-x{width:8mm;font-family:var(--mono);font-size:8pt;font-weight:700}
     .bookSheet td.ps-none{font-style:italic;color:#666}
 
-    #tallySheet h1{font-family:var(--display);font-weight:800;text-transform:uppercase;
-      letter-spacing:.03em;font-size:17pt;margin:0 0 1mm;color:#000}
-    #tallySheet .sub{font-family:var(--mono);font-size:8pt;letter-spacing:.08em;
-      text-transform:uppercase;color:#444;margin:0 0 3mm}
-    #tallySheet .meta{display:flex;gap:8mm;margin:0 0 4mm;font-size:10pt;color:#000}
-    #tallySheet .meta span{border-bottom:.6pt solid #000;flex:1;padding-bottom:1mm}
-    #tallyTable{width:100%;border-collapse:collapse}
-    #tallyTable th{font-family:var(--mono);font-size:7pt;letter-spacing:.06em;text-transform:uppercase;
-      color:#444;font-weight:400;border-bottom:.6pt solid #000;padding:0 1mm 1.2mm;text-align:center}
-    #tallyTable th.who,#tallyTable td.who{text-align:left;width:42mm}
-    #tallyTable td{border-bottom:.4pt solid #bbb;padding:1.55mm 1mm;font-size:9.5pt;color:#000}
-    #tallyTable td.who{font-size:10pt}
-    #tallyTable td.box{border:.4pt solid #999;width:7mm}
-    #tallyTable td.tot{border:.6pt solid #000;width:12mm}
-    #tallyTable td.units{font-family:var(--mono);font-size:7.5pt;color:#444;letter-spacing:.04em}
-    #tallyTable tr.ten td{background:#efefef}
-    #tallyTable tr.ten td.who{font-weight:700}
-    #tallyFoot{font-family:var(--mono);font-size:7pt;letter-spacing:.04em;text-transform:uppercase;
-      color:#555;margin:3mm 0 0;line-height:1.5}
   }
 
   .flag{display:flex;gap:9px;align-items:baseline;padding:8px 0;
@@ -162,6 +140,7 @@
   #unitGrid td.tot{font-family:var(--mono);color:var(--soft)}
   #unitGrid tr.none td{color:var(--warm)}
   #unitGrid td.who{position:relative}
+  #outWho,#inWho{flex:1;min-width:0;max-width:none}
   #unitGrid tr.none td.tot{color:var(--warm);font-weight:700}
   .lgd{font-family:var(--mono);font-size:10.5px;line-height:1.7;color:var(--soft);margin:10px 0 0}
   @media print{#flagSec,#gridSec{display:none!important}}
@@ -269,7 +248,6 @@
     <button class="btn" id="fillNames">Fill names</button>
     <button class="btn gold" id="print">Print this play</button>
     <button class="btn" id="printBook">Print all plays</button>
-    <button class="btn" id="printTally">10-play sheet</button>
   </div>
 
   <div class="row" role="group" aria-label="Name labels">
@@ -310,7 +288,6 @@
   </div>
 
   <div id="bookSheets" aria-hidden="true"></div>
-  <div id="tallySheet" aria-hidden="true"></div>
 
   <div id="gdList" hidden></div>
   <p id="gdHint" hidden>Swipe the field to change units</p>
@@ -326,6 +303,19 @@
     <div class="panel"><p>Checked against the UYFC notes in the project brief, correct as of the
     2026 preseason. These are prompts to look again, not rulings &mdash; verify anything that
     matters against the current rulebook.</p></div>
+  </div>
+
+  <div class="sec" id="swapSec">
+    <h2>Someone&rsquo;s out</h2>
+    <div class="panel"><p>A boy misses practice or a game and you have to find him on four
+    units. Pick who&rsquo;s out and who takes his place and it happens everywhere at once.
+    A backup is taken first, so it&rsquo;s undoable from the list below.</p></div>
+    <div class="row">
+      <select id="outWho" aria-label="Who is out"></select>
+      <select id="inWho" aria-label="Who takes his place"></select>
+    </div>
+    <p class="count" id="swapNote"></p>
+    <div class="row"><button class="btn gold" id="doSwap">Swap on every unit</button></div>
   </div>
 
   <div class="sec" id="gridSec">
@@ -821,7 +811,7 @@ function updateCount(){
 }
 
 function draw(){ drawField(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays();
-  paintFlags(); paintGrid(); }
+  paintFlags(); paintGrid(); paintSwap(); }
 
 function paintLineup(){
   var p=cur(), box=document.getElementById('lineup');
@@ -989,6 +979,85 @@ function paintFlags(){
     d.appendChild(a); d.appendChild(b); box.appendChild(d);
   });
 }
+
+/* ---------- someone is out ----------
+   Replacing a boy meant finding him on four units by hand, on a phone, at the
+   moment you least want to be editing. This does the whole playbook in one go. */
+function unitsFor(name){
+  if(!name)return [];
+  return unitOrder().filter(function(k){
+    return plays[k].players.some(function(q){return q.team==='o'&&q.name===name;});
+  });
+}
+function swapPlan(out,inn){
+  var move=[], clash=[];
+  unitsFor(out).forEach(function(k){
+    // Putting him where he already is would give one unit the same boy twice.
+    if(inn&&plays[k].players.some(function(q){return q.team==='o'&&q.name===inn;}))clash.push(k);
+    else move.push(k);
+  });
+  return {move:move,clash:clash};
+}
+function paintSwap(){
+  var o=document.getElementById('outWho'), i=document.getElementById('inWho');
+  if(!o||!i)return;
+  var keepO=o.value, keepI=i.value;
+  function fill(sel,blank){
+    sel.innerHTML='';
+    var b=document.createElement('option'); b.value=''; b.textContent=blank; sel.appendChild(b);
+    TEAM.slice().sort(function(a,c){return a.l.localeCompare(c.l);}).forEach(function(t){
+      var n=unitsFor(t.l).length, op=document.createElement('option');
+      op.value=t.l;
+      op.textContent=t.l+(t.n?' '+t.n:'')+'  \u2014  '+n+' unit'+(n===1?'':'s');
+      sel.appendChild(op);
+    });
+  }
+  fill(o,'\u2014 who is out'); fill(i,'\u2014 who takes his place');
+  o.value=keepO; i.value=keepI;
+
+  var note=document.getElementById('swapNote'), out=o.value, inn=i.value;
+  if(!out){ note.textContent='Pick who is out.'; return; }
+  var p=swapPlan(out,inn);
+  var txt=out+' is on '+(p.move.length+p.clash.length)+' unit'+((p.move.length+p.clash.length)===1?'':'s')+'.';
+  if(inn){
+    txt+='  '+inn+' would take '+p.move.length+' of them';
+    if(p.clash.length)txt+=', and is already on the other '+p.clash.length+
+      ' ('+p.clash.map(function(k){return plays[k].name;}).join(', ')+') so those stay as they are';
+    txt+='.';
+  }
+  note.textContent=txt;
+}
+function doSwapNow(){
+  var out=document.getElementById('outWho').value,
+      inn=document.getElementById('inWho').value;
+  if(!out||!inn){alert('Pick who is out and who takes his place.');return;}
+  if(out===inn){alert('Those are the same boy.');return;}
+  var p=swapPlan(out,inn);
+  if(!p.move.length){
+    alert(p.clash.length? inn+' is already on every unit '+out+' is on. Nothing to change.'
+                        : out+' is not on any unit.');
+    return;
+  }
+  if(!confirm('Put '+inn+' in for '+out+' on '+p.move.length+' unit'+(p.move.length===1?'':'s')+'?\n\n'+
+              p.move.map(function(k){return '\u2022 '+plays[k].name;}).join('\n')+
+              '\n\nA backup is taken first.'))return;
+  bakWrite(stateJSON(),'pre-swap').then(function(){
+    var n=0;
+    p.move.forEach(function(k){
+      plays[k].players.forEach(function(q){
+        if(q.team==='o'&&q.name===out){ q.name=inn; q.fromPreset=0; n++; }
+      });
+    });
+    save(); draw();
+    alert(inn+' is in for '+out+' in '+n+' spot'+(n===1?'':'s')+' across '+
+          p.move.length+' unit'+(p.move.length===1?'':'s')+
+          (p.clash.length?'.\n\n'+p.clash.length+' left alone \u2014 '+inn+' was already on '+
+            (p.clash.length===1?'that unit':'those units')+'.':'.'));
+  });
+}
+document.getElementById('outWho').onchange=paintSwap;
+document.getElementById('inWho').onchange=paintSwap;
+document.getElementById('doSwap').onclick=doSwapNow;
 
 /* ---------- who is on what ----------
    Four units and 21 boys: the thing that is hard to hold in your head is who is
@@ -1161,43 +1230,6 @@ function buildBook(){
   curId=keep;
 }
 
-/* The 10-play sheet is a form, not a report: the league wants it on paper, so
-   this prints the roster with boxes to tick and a total to write in. What the
-   app knows — which units each boy is on — is printed alongside so the counting
-   starts from something rather than nothing. */
-function buildTally(){
-  var box=document.getElementById('tallySheet'); if(!box)return;
-  var ord=unitOrder();
-  var rows=TEAM.map(function(t){
-    var on=ord.filter(function(k){
-      return plays[k].players.some(function(q){return q.team==='o'&&q.name===t.l;});
-    }).map(function(k){return ord.indexOf(k)+1;});
-    return {t:t,on:on};
-  }).sort(function(a,b){
-    return (b.t.t?1:0)-(a.t.t?1:0) || a.on.length-b.on.length || a.t.l.localeCompare(b.t.l);
-  });
-
-  var h='<h1>Minimum play count</h1>'+
-    '<p class="sub">Lehi 8th grade \u00b7 special teams \u00b7 every boy needs 10</p>'+
-    '<div class="meta"><span>Opponent</span><span>Date</span><span>Final</span></div>'+
-    '<table id="tallyTable"><thead><tr>'+
-    '<th class="who">Player</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>'+
-    '<th>Total</th><th>Units he is on</th></tr></thead><tbody>';
-  rows.forEach(function(r){
-    h+='<tr'+(r.t.t?' class="ten"':'')+'>'+
-       '<td class="who">'+esc(r.t.l)+(r.t.n?' '+esc(r.t.n):'')+
-         (r.t.x?' \u00b7 X':'')+(r.t.t?' \u00b7 10PL':'')+'</td>'+
-       '<td class="box"></td><td class="box"></td><td class="box"></td><td class="box"></td>'+
-       '<td class="tot"></td>'+
-       '<td class="units">'+(r.on.length?r.on.join(' '):'\u2014')+'</td></tr>';
-  });
-  h+='</tbody></table><p id="tallyFoot">'+
-     '10 plays minimum \u00b7 16 / 13 / 12 if up 21+ after Q1 / Q2 / Q3 \u00b7 special teams snaps count<br>'+
-     '10PL = starts on neither offence nor defence \u00b7 X = X-man<br>'+
-     ord.map(function(k,i){return (i+1)+' '+plays[k].name;}).join('  \u00b7  ')+
-     '</p>';
-  box.innerHTML=h;
-}
 function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
@@ -1389,13 +1421,11 @@ function doPrint(what){
   document.body.setAttribute('data-print',what);
   printing=true;
   if(what==='book')buildBook();
-  else if(what==='tally')buildTally();
   drawField();
   window.print();
 }
 document.getElementById('print').onclick=function(){doPrint('play');};
 document.getElementById('printBook').onclick=function(){doPrint('book');};
-document.getElementById('printTally').onclick=function(){doPrint('tally');};
 document.getElementById('fillNames').onclick=function(){
   var p=cur();
   // Slug first, always. The old version matched on display name, so renaming a

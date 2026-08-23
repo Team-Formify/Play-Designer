@@ -149,8 +149,8 @@ index.html
 
 **Print is the game-day output.** The app is a practice and planning tool; Dom barely
 uses a device on the sideline. Three modes, routed by `data-print` on `<body>`:
-`play` (the current unit), `book` (all ten, one per page), `tally` (the minimum-play
-form he has to fill in and hand in). Anything meant for game day must be printable.
+`play` (the current unit) and `book` (all ten, one per page). Anything meant for game
+day must be printable.
 
 **Printing.** `beforeprint` (plus a `matchMedia('print')` listener) sets `printing`,
 redraws through `PAL_PRINT`, and `paintPrintSheet()` builds a plain table so the
@@ -200,8 +200,8 @@ repo as a standalone renderer for printed cards and is not yet wired into the ap
 - ~~Honest save badge~~, ~~rolling backups + download~~, ~~drop the webfonts~~,
   ~~split data from code~~, ~~fit the view to the play~~, ~~collision-placed labels~~,
   ~~export back out as source~~, ~~print stylesheet~~, ~~game-day mode~~ — done.
-- ~~Minimum-play sheet~~ — done, as print. The count is turned in on paper, so the app
-  prints the form rather than tallying on screen.
+- ~~Minimum-play sheet~~ — dropped. The league hands him the form at kickoff; the app's
+  job is the *planning* side, which the who's-on-what grid covers.
 - Per-player coaching notes attached to a spot, so the printed sheet carries assignments.
 - Multi-device sync. Supabase is the obvious fit but is explicitly **not** wanted for the
   2026 season. Revisit in the offseason.
