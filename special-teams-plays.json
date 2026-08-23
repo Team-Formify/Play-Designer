@@ -1346,7 +1346,7 @@
           "label": "R5",
           "player": "Prasad",
           "x": 386,
-          "y": 362,
+          "y": 410,
           "role": "BALL",
           "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
@@ -1356,7 +1356,7 @@
           "label": "R4",
           "player": "Bagley",
           "x": 348,
-          "y": 362,
+          "y": 410,
           "role": "CONTAIN",
           "job": "Nothing gets outside you. Stay wider than the returner the whole way. If he breaks out, that is on you. Squeeze him back to the middle."
         },
@@ -1366,7 +1366,7 @@
           "label": "R3",
           "player": "Bearnson",
           "x": 310,
-          "y": 362,
+          "y": 410,
           "role": "FORCE",
           "job": "Beat your blocker and turn the returner inside. You are the one who makes him choose, so get there fast and get skinny."
         },
@@ -1376,7 +1376,7 @@
           "label": "R2",
           "player": "Grover",
           "x": 272,
-          "y": 362,
+          "y": 410,
           "role": "ALLEY",
           "job": "Fill the gap between contain and the ball. Stay a step behind the front so you can see it, then close on whichever side he picks."
         },
@@ -1386,7 +1386,7 @@
           "label": "R1",
           "player": "Black",
           "x": 234,
-          "y": 362,
+          "y": 410,
           "role": "BALL",
           "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
@@ -1396,7 +1396,7 @@
           "label": "L1",
           "player": "Archuletta",
           "x": 186,
-          "y": 362,
+          "y": 410,
           "role": "BALL",
           "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
@@ -1406,7 +1406,7 @@
           "label": "L2",
           "player": "Pace",
           "x": 148,
-          "y": 362,
+          "y": 410,
           "role": "ALLEY",
           "job": "Fill the gap between contain and the ball. Stay a step behind the front so you can see it, then close on whichever side he picks."
         },
@@ -1416,7 +1416,7 @@
           "label": "L3",
           "player": "Paulich",
           "x": 110,
-          "y": 362,
+          "y": 410,
           "role": "FORCE",
           "job": "Beat your blocker and turn the returner inside. You are the one who makes him choose, so get there fast and get skinny."
         },
@@ -1426,7 +1426,7 @@
           "label": "L4",
           "player": "Scott",
           "x": 72,
-          "y": 362,
+          "y": 410,
           "role": "CONTAIN",
           "job": "Nothing gets outside you. Stay wider than the returner the whole way. If he breaks out, that is on you. Squeeze him back to the middle."
         },
@@ -1436,7 +1436,7 @@
           "label": "L5",
           "player": "Severts",
           "x": 34,
-          "y": 362,
+          "y": 410,
           "role": "BALL",
           "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
@@ -1453,11 +1453,24 @@
       ],
       "routes": [
         {
+          "playerId": "p10",
+          "points": [
+            {
+              "x": 210,
+              "y": 352
+            },
+            {
+              "x": 210,
+              "y": 293
+            }
+          ]
+        },
+        {
           "playerId": "p0",
           "points": [
             {
               "x": 376,
-              "y": 256
+              "y": 280
             },
             {
               "x": 365,
@@ -1470,7 +1483,7 @@
           "points": [
             {
               "x": 341,
-              "y": 256
+              "y": 280
             },
             {
               "x": 331,
@@ -1483,7 +1496,7 @@
           "points": [
             {
               "x": 305,
-              "y": 256
+              "y": 280
             },
             {
               "x": 298,
@@ -1496,7 +1509,7 @@
           "points": [
             {
               "x": 269,
-              "y": 256
+              "y": 280
             },
             {
               "x": 265,
@@ -1509,7 +1522,7 @@
           "points": [
             {
               "x": 233,
-              "y": 256
+              "y": 280
             },
             {
               "x": 231,
@@ -1522,7 +1535,7 @@
           "points": [
             {
               "x": 187,
-              "y": 256
+              "y": 280
             },
             {
               "x": 189,
@@ -1535,7 +1548,7 @@
           "points": [
             {
               "x": 151,
-              "y": 256
+              "y": 280
             },
             {
               "x": 155,
@@ -1548,7 +1561,7 @@
           "points": [
             {
               "x": 115,
-              "y": 256
+              "y": 280
             },
             {
               "x": 122,
@@ -1561,7 +1574,7 @@
           "points": [
             {
               "x": 79,
-              "y": 256
+              "y": 280
             },
             {
               "x": 89,
@@ -1574,24 +1587,11 @@
           "points": [
             {
               "x": 44,
-              "y": 256
+              "y": 280
             },
             {
               "x": 55,
               "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p10",
-          "points": [
-            {
-              "x": 210,
-              "y": 352
-            },
-            {
-              "x": 210,
-              "y": 293
             }
           ]
         }
