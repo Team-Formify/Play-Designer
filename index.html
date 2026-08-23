@@ -71,24 +71,31 @@
   .count b{color:var(--gold)}
   .count.bad b{color:var(--warm)}
 
+  /* One play, one sheet: title, diagram, lineup. Black on white. */
+  @page{size:letter portrait;margin:12mm}
   @media print{
-    header,.bar,.hint,.row,.panel,.chips,#schedLink{display:none!important}
-    .sec{display:none!important}
-    #lineupSec{display:block!important;border:0;margin-top:14px}
-    #lineupSec h2{color:#000;font-size:12px}
-    .lu{border-bottom:1px solid #ccc}
-    .lu .pos{color:#555}
-    .lu .who{color:#000}
-    .posIn,.whoIn{border:0!important;background:transparent!important;color:#000!important;
-      -webkit-appearance:none;appearance:none;padding:2px 0!important;font-size:12px!important}
-    .posIn{text-align:left!important;flex:0 0 58px}
-    .findBtn{display:none!important}
-    .grp{color:#555}
-    body{background:#fff;color:#000}
-    .fieldbox{background:#fff}
-    #printTitle{display:block!important;font-size:22px;font-weight:700;margin:0 0 10px;color:#000}
+    header,.bar,.hint,.row,.panel,.chips,#schedLink,.sec{display:none!important}
+    html,body{background:#fff!important;color:#000!important}
+    .wrap{max-width:none;padding:0}
+    #printTitle{display:block!important;font-family:var(--display);font-weight:800;
+      text-transform:uppercase;letter-spacing:.03em;font-size:17pt;margin:0 0 3mm;color:#000}
+    .fieldbox{background:#fff;border-radius:0;break-inside:avoid;page-break-inside:avoid}
+    /* Fixed height so the diagram can never push the lineup onto a second page. */
+    svg#field{width:auto!important;height:96mm!important;max-width:100%;margin:0 auto;display:block}
+    #printSheet{display:block!important;margin-top:4mm;break-inside:avoid;page-break-inside:avoid}
+    #psTable{width:100%;border-collapse:collapse}
+    #psTable td{border-bottom:.4pt solid #999;padding:1.05mm 2mm;font-size:10pt;color:#000;
+      vertical-align:baseline;line-height:1.15}
+    #psTable td.ps-row{font-family:var(--mono);font-size:7.5pt;letter-spacing:.1em;
+      text-transform:uppercase;color:#000;border-bottom:0;padding:2.2mm 0 .7mm;font-weight:700}
+    #psTable td.ps-pos{font-family:var(--mono);font-size:9.5pt;width:16mm;letter-spacing:.06em}
+    #psTable td.ps-num{font-family:var(--mono);font-size:9.5pt;width:12mm;text-align:right}
+    #psTable td.ps-x{width:8mm;font-family:var(--mono);font-size:8pt;font-weight:700}
+    #psTable td.ps-none{font-style:italic;color:#666}
+    #psFoot{font-family:var(--mono);font-size:7.5pt;letter-spacing:.08em;text-transform:uppercase;
+      color:#666;margin:3mm 0 0}
   }
-  #printTitle{display:none}
+  #printTitle,#printSheet{display:none}
   #saveDot{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--soft);padding:4px 8px;border-radius:10px;border:1px solid rgba(237,235,224,.2);white-space:nowrap}
   #saveDot.ok{color:#8FD19E;border-color:rgba(143,209,158,.45)}
@@ -185,6 +192,11 @@
       <input type="text" id="newNum" placeholder="#" autocomplete="off" style="flex:0 0 64px">
       <button class="btn" id="addName">Add</button>
     </div>
+  </div>
+
+  <div id="printSheet" aria-hidden="true">
+    <table id="psTable"><tbody></tbody></table>
+    <p id="psFoot"></p>
   </div>
 
   <div class="sec" id="lineupSec">
@@ -293,6 +305,18 @@ var VB={w:420,h:500};
    crop to the play and everything on screen roughly doubles in size. */
 var VIEW={x:0,y:0,w:420,h:500};
 var fitMode='fit';
+
+/* The diagram is drawn with inline colour attributes, which CSS cannot override,
+   so printing swaps the palette and redraws rather than trying to restyle it.
+   Print is black on white — no green block eating a cartridge. */
+var PAL_SCREEN={grass:'#1D3A31',chalk:'#EDEBE0',gold:'#E3B547',deep:'#13251F',hot:'#E58A6B',
+  gridOp:.09,hashOp:.2,sideOp:.3,themOp:.42,chipOp:.82,losChipOp:.72,leadOp:.42,
+  circleFill:'rgba(19,37,31,.55)',routeFill:'rgba(227,181,71,.28)',stroke:2};
+var PAL_PRINT={grass:'#FFFFFF',chalk:'#000000',gold:'#000000',deep:'#FFFFFF',hot:'#000000',
+  gridOp:.13,hashOp:.26,sideOp:.5,themOp:.8,chipOp:1,losChipOp:1,leadOp:.5,
+  circleFill:'#FFFFFF',routeFill:'#FFFFFF',stroke:1.6};
+var printing=false;
+function pal(){return printing?PAL_PRINT:PAL_SCREEN;}
 
 function computeView(p,lay){
   var full={x:0,y:0,w:VB.w,h:VB.h};
@@ -549,23 +573,24 @@ function drawField(){
   var lay=placeLabels(p);
   VIEW=computeView(p,lay);
   svg.setAttribute('viewBox',VIEW.x+' '+VIEW.y+' '+VIEW.w+' '+VIEW.h);
-  svg.appendChild(E('rect',{x:VIEW.x,y:VIEW.y,width:VIEW.w,height:VIEW.h,fill:'#1D3A31'}));
+  var C=pal();
+  svg.appendChild(E('rect',{x:VIEW.x,y:VIEW.y,width:VIEW.w,height:VIEW.h,fill:C.grass}));
 
   var g=E('g',{});
   for(var y=10;y<=VB.h-6;y+=28){
-    g.appendChild(E('line',{x1:14,x2:406,y1:y,y2:y,stroke:'#EDEBE0','stroke-opacity':.09}));
+    g.appendChild(E('line',{x1:14,x2:406,y1:y,y2:y,stroke:C.chalk,'stroke-opacity':C.gridOp}));
   }
   [14+126,406-126].forEach(function(hx){
     for(var y=10;y<=VB.h-6;y+=28){
-      g.appendChild(E('line',{x1:hx-3,x2:hx+3,y1:y,y2:y,stroke:'#EDEBE0','stroke-opacity':.2}));
+      g.appendChild(E('line',{x1:hx-3,x2:hx+3,y1:y,y2:y,stroke:C.chalk,'stroke-opacity':C.hashOp}));
     }
   });
-  g.appendChild(E('line',{x1:14,x2:14,y1:0,y2:VB.h,stroke:'#EDEBE0','stroke-opacity':.3,'stroke-width':2}));
-  g.appendChild(E('line',{x1:406,x2:406,y1:0,y2:VB.h,stroke:'#EDEBE0','stroke-opacity':.3,'stroke-width':2}));
+  g.appendChild(E('line',{x1:14,x2:14,y1:0,y2:VB.h,stroke:C.chalk,'stroke-opacity':C.sideOp,'stroke-width':2}));
+  g.appendChild(E('line',{x1:406,x2:406,y1:0,y2:VB.h,stroke:C.chalk,'stroke-opacity':C.sideOp,'stroke-width':2}));
   svg.appendChild(g);
 
   svg.appendChild(E('line',{x1:VIEW.x,x2:VIEW.x+VIEW.w,y1:p.los,y2:p.los,
-    stroke:'#E3B547','stroke-width':1.8,'stroke-dasharray':'6 4'}));
+    stroke:C.gold,'stroke-width':1.8,'stroke-dasharray':'6 4'}));
   if(p.losLabel){
     // Cropping brings the sideline in close, so this used to land on top of the
     // outside man. Take the first offset that clears every circle.
@@ -579,8 +604,8 @@ function drawField(){
       if(!clash){ly=offs[oi];break;}
     }
     svg.appendChild(E('rect',{x:lx-3,y:p.los+ly-8,width:lw,height:11,rx:2,
-      fill:'#13251F','fill-opacity':.72}));
-    var lt=E('text',{x:lx,y:p.los+ly,fill:'#E3B547',
+      fill:C.deep,'fill-opacity':C.losChipOp}));
+    var lt=E('text',{x:lx,y:p.los+ly,fill:C.gold,
       'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'letter-spacing':1});
     lt.textContent=p.losLabel; svg.appendChild(lt);
   }
@@ -591,7 +616,7 @@ function drawField(){
     if(!owner||!r.points.length)return;
     var d='M'+owner.x+','+owner.y;
     r.points.forEach(function(pt){d+=' L'+pt.x+','+pt.y;});
-    svg.appendChild(E('path',{d:d,fill:'none',stroke:'#E3B547','stroke-width':2,'stroke-linecap':'round'}));
+    svg.appendChild(E('path',{d:d,fill:'none',stroke:C.gold,'stroke-width':C.stroke,'stroke-linecap':'round'}));
     var last=r.points[r.points.length-1];
     var prev=r.points.length>1?r.points[r.points.length-2]:owner;
     var ang=Math.atan2(last.y-prev.y,last.x-prev.x);
@@ -599,7 +624,7 @@ function drawField(){
       svg.appendChild(E('line',{x1:last.x,y1:last.y,
         x2:last.x-9*Math.cos(ang)+s*Math.sin(ang),
         y2:last.y-9*Math.sin(ang)-s*Math.cos(ang),
-        stroke:'#E3B547','stroke-width':2,'stroke-linecap':'round'}));
+        stroke:C.gold,'stroke-width':C.stroke,'stroke-linecap':'round'}));
     });
   });
 
@@ -610,13 +635,13 @@ function drawField(){
     if(pl.team==='x'){
       [[-7,-7,7,7],[-7,7,7,-7]].forEach(function(d){
         grp.appendChild(E('line',{x1:pl.x+d[0],y1:pl.y+d[1],x2:pl.x+d[2],y2:pl.y+d[3],
-          stroke:'#EDEBE0','stroke-opacity':isSel?1:.42,'stroke-width':2.2,'stroke-linecap':'round'}));
+          stroke:C.chalk,'stroke-opacity':isSel?1:C.themOp,'stroke-width':2.2,'stroke-linecap':'round'}));
       });
     }else{
-      grp.appendChild(E('circle',{cx:pl.x,cy:pl.y,r:12,fill:isRt?'rgba(227,181,71,.28)':'rgba(19,37,31,.55)',
-        stroke:isSel||isRt?'#E58A6B':'#E3B547','stroke-width':isSel||isRt?2.6:2}));
+      grp.appendChild(E('circle',{cx:pl.x,cy:pl.y,r:12,fill:isRt?C.routeFill:C.circleFill,
+        stroke:(isSel||isRt)&&!printing?C.hot:C.gold,'stroke-width':(isSel||isRt)&&!printing?2.6:C.stroke}));
       if(pl.label){
-        var t=E('text',{x:pl.x,y:pl.y+3.4,'text-anchor':'middle',fill:'#E3B547',
+        var t=E('text',{x:pl.x,y:pl.y+3.4,'text-anchor':'middle',fill:C.gold,
           'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':9});
         t.textContent=pl.label; grp.appendChild(t);
       }
@@ -625,18 +650,18 @@ function drawField(){
       var d=info(pl.name);
       var L=lay[pl.id], lx=pl.x+L.dx, ly=pl.y+L.dy;
       grp.appendChild(E('rect',{x:lx-L.w/2,y:ly,width:L.w,height:12,rx:2,
-        fill:'#13251F','fill-opacity':.82}));
-      var n=E('text',{x:lx,y:ly+9,'text-anchor':'middle',fill:'#EDEBE0',
+        fill:C.deep,'fill-opacity':C.chipOp}));
+      var n=E('text',{x:lx,y:ly+9,'text-anchor':'middle',fill:C.chalk,
         'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':9.5,'letter-spacing':.2});
       n.textContent=L.text; grp.appendChild(n);
       // leader line whenever the name had to move off its default spot
       if(Math.abs(L.dx)>4||L.dy<0||L.dy>20){
         var ty=L.dy<0?ly+12:ly;
         grp.appendChild(E('line',{x1:pl.x,y1:pl.y+(L.dy<0?-12:12),x2:lx,y2:ty,
-          stroke:'#EDEBE0','stroke-opacity':.42}));
+          stroke:C.chalk,'stroke-opacity':C.leadOp}));
       }
       if(d.x){
-        var xb=E('text',{x:pl.x+15,y:pl.y-9,'text-anchor':'middle',fill:'#E58A6B',
+        var xb=E('text',{x:pl.x+15,y:pl.y-9,'text-anchor':'middle',fill:C.hot,
           'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'font-weight':'bold'});
         xb.textContent='X'; grp.appendChild(xb);
       }
@@ -648,6 +673,7 @@ function drawField(){
   updateCount();
   try{sourceNote();}catch(e){}
   document.getElementById('printTitle').textContent=p.name;
+  paintPrintSheet(p);
 }
 
 function updateCount(){
@@ -741,6 +767,58 @@ function paintLineup(){
       off.map(function(nm){var i2=info(nm);return i2.l+(i2.n?' '+i2.n:'')+(i2.x?' (X)':'');}).join(' \u00b7 ')+'</span>';
     box.appendChild(d);
   }
+}
+
+/* The printed lineup is its own plain table. The on-screen one is built from
+   <select> and <input>, which print as form controls and differ per browser. */
+function paintPrintSheet(p){
+  var tb=document.querySelector('#psTable tbody'); if(!tb)return;
+  tb.innerHTML='';
+  var ours=p.players.filter(function(q){return q.team==='o';});
+  var sorted=ours.slice().sort(function(a,b){return a.y-b.y||a.x-b.x;});
+  var bands=[],cb=null;
+  sorted.forEach(function(q){
+    if(!cb||Math.abs(q.y-cb.y)>26){cb={y:q.y,items:[]};bands.push(cb);}
+    cb.items.push(q);
+  });
+  bands.forEach(function(b){b.items.sort(function(a,c){return a.x-c.x;});});
+  function cell(row,cls,txt){
+    var td=document.createElement('td');
+    if(cls)td.className=cls;
+    td.textContent=txt;
+    row.appendChild(td); return td;
+  }
+  bands.forEach(function(b,i){
+    if(bands.length>1){
+      var hr=document.createElement('tr');
+      var td=cell(hr,'ps-row','Row '+(i+1));
+      td.colSpan=4; tb.appendChild(hr);
+    }
+    b.items.forEach(function(q){
+      var d=info(q.name), tr=document.createElement('tr');
+      cell(tr,'ps-pos',q.label||'\u2014');
+      cell(tr,q.name?'':'ps-none',q.name?((d.f?d.f+' ':'')+d.l):'not assigned');
+      cell(tr,'ps-num',d.n?'#'+d.n:'');
+      cell(tr,'ps-x',d.x?'X':'');
+      tb.appendChild(tr);
+    });
+  });
+  var blanks=ours.filter(function(q){return !q.name;}).length;
+  var f=document.getElementById('psFoot');
+  if(f)f.textContent=ours.length+' on the field'+(blanks?'  \u00b7  '+blanks+' not assigned':'')+
+    '  \u00b7  X = X-man, front two lines or the LOS';
+}
+
+/* Printing swaps the palette and redraws, then puts it back. */
+function beforePrint(){ printing=true; drawField(); }
+function afterPrint(){ printing=false; drawField(); }
+window.addEventListener('beforeprint',beforePrint);
+window.addEventListener('afterprint',afterPrint);
+if(window.matchMedia){
+  var mq=window.matchMedia('print');
+  var onMQ=function(e){ e.matches?beforePrint():afterPrint(); };
+  if(mq.addEventListener)mq.addEventListener('change',onMQ);
+  else if(mq.addListener)mq.addListener(onMQ);
 }
 
 /* ---------- coords ---------- */
