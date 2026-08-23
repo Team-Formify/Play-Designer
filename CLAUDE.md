@@ -139,7 +139,9 @@ index.html
 ├─ STORE         storage shim (window.storage → localStorage), rejects on failure
 ├─ save()        debounced write + honest badge; flushes on pagehide/visibilitychange
 ├─ backups       rolling local snapshots + download/restore
-├─ computeView() crops the viewBox to the play; placeLabels() keeps names clear
+├─ computeView() crops the viewBox to the play, capped at 2.4x so a tight cluster
+│                keeps its context; placeLabels() keeps names clear of circles,
+│                of each other, and of the line caption
 ├─ drawField()   renders the SVG; pal() swaps to black-on-white for printing
 ├─ toSourceJSON()writes the playbook back out as special-teams-plays.json
 ├─ game day      read-only, one unit, swipe/arrows to move between them
@@ -158,7 +160,9 @@ interactive `<select>` lineup never reaches paper. `@page` is letter portrait, t
 diagram is pinned to 96mm, and every play fits one sheet — re-check that with the PDF
 page count if you change either.
 
-**Game day.** `body.gd` hides all editing chrome. The field is read-only: `pointerdown`
+**Game day.** Its chrome is shown by `body.gd`, never by the `hidden` attribute — an
+id rule outranks the UA `[hidden]` rule, and that is exactly how the bar once leaked
+onto the normal screen. `body.gd` hides all editing chrome. The field is read-only: `pointerdown`
 returns early, so a swipe changes unit and nothing can be dragged by accident.
 
 **No webfonts.** Everything is a system font stack. This gets used on a sideline with no

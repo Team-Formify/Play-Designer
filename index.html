@@ -52,6 +52,17 @@
   .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
   .sec{margin-top:18px;border-top:1px solid rgba(237,235,224,.16);padding-top:14px}
   .sec h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 10px;font-weight:500}
+  details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+    margin:0 0 10px;-webkit-tap-highlight-color:transparent}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary .sh{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--gold);font-weight:500}
+  details.fold>summary .fx{margin-left:auto;font-family:var(--mono);font-size:10px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
+    border:1px solid rgba(237,235,224,.22);border-radius:4px;padding:3px 8px}
+  details.fold>summary .fx::after{content:'Hide'}
+  details.fold:not([open])>summary{margin-bottom:0}
+  details.fold:not([open])>summary .fx::after{content:'Show'}
 
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{font-size:13px;padding:7px 11px;border-radius:14px;border:1px solid rgba(237,235,224,.25);background:transparent;color:var(--chalk);cursor:pointer}
@@ -176,7 +187,7 @@
   @media print{#flagSec,#gridSec{display:none!important}}
 
   /* ---- game day: one unit, big, nothing to tap by accident ---- */
-  #gdBar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;
+  #gdBar{display:none;position:sticky;top:0;z-index:20;align-items:center;gap:8px;
     background:var(--board);padding:10px 10px;border-bottom:1px solid rgba(237,235,224,.16)}
   #gdName{flex:1;min-width:0;text-align:center;font-family:var(--display);font-weight:800;
     text-transform:uppercase;letter-spacing:.02em;font-size:19px;line-height:1.08;
@@ -190,7 +201,11 @@
     text-transform:uppercase;cursor:pointer}
   #gdHint{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
     color:var(--soft);text-align:center;margin:8px 0 0}
-  #gdList{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin-top:12px}
+  #gdList{display:none;grid-template-columns:1fr 1fr;gap:2px 14px;margin-top:12px}
+  #gdHint{display:none}
+  body.gd #gdBar{display:flex}
+  body.gd #gdList{display:grid}
+  body.gd #gdHint{display:block}
   .gdRow{display:flex;align-items:baseline;gap:9px;padding:7px 0;
     border-bottom:1px solid rgba(237,235,224,.12)}
   .gdRow .p{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--gold);
@@ -268,6 +283,11 @@
     <svg id="field" viewBox="0 0 420 500" role="img" aria-label="Play diagram"></svg>
   </div>
   <p class="hint" id="hint"></p>
+
+  <details class="sec fold" id="lineupSec" open>
+    <summary><span class="sh">Lineup &mdash; who goes where</span><span class="fx"></span></summary>
+    <div id="lineup"></div>
+  </details>
 
   <div class="row">
     <button class="btn" id="undo">Undo route</button>
@@ -366,11 +386,6 @@
     <p class="count" id="gridNote"></p>
     <div id="gridWrap"><table id="unitGrid"></table></div>
     <p class="lgd" id="gridLegend"></p>
-  </div>
-
-  <div class="sec" id="lineupSec">
-    <h2>Lineup &mdash; who goes where</h2>
-    <div id="lineup"></div>
   </div>
 
   <div class="sec">
@@ -502,8 +517,17 @@ function computeView(p,lay){
   var x0=Math.min.apply(null,xs)-18, x1=Math.max.apply(null,xs)+18;
   var y0=Math.min.apply(null,ys)-22, y1=Math.max.apply(null,ys)+24;
   var w=x1-x0, h=y1-y0, c;
-  if(w<240){c=(x0+x1)/2; x0=c-120; w=240;}
-  if(h<200){c=(y0+y1)/2; y0=c-100; h=200;}
+  if(w<300){c=(x0+x1)/2; x0=c-150; w=300;}
+  if(h<250){c=(y0+y1)/2; y0=c-125; h=250;}
+  /* A cluster kickoff is eleven boys inside the numbers — cropping to them alone
+     blows it up so far you lose where they are on the field. Cap how far in it
+     will ever go. */
+  var MAXZOOM=2.4, z=(VB.w*VB.h)/(w*h);
+  if(z>MAXZOOM){
+    var k=Math.sqrt(z/MAXZOOM);
+    c=x0+w/2; w*=k; x0=c-w/2;
+    c=y0+h/2; h*=k; y0=c-h/2;
+  }
   // keep it phone-shaped: never taller than 1.35:1, never wider than 2.2:1
   if(h/w>1.35){c=x0+w/2; w=h/1.35; x0=c-w/2;}
   if(w/h>2.2){c=y0+h/2; h=w/2.2; y0=c-h/2;}
@@ -518,11 +542,30 @@ function rectsOverlap(a,b){
 /* Place every name so it clears the player circles and the names already placed.
    The old version only staggered alternate men in a row, which is why BLACK and
    BEARNSON ended up underneath the wings on the punt sheets. */
+/* Where the line caption ends up, worked out before the names are placed so it can
+   be treated as something to avoid. */
+function losLabelRect(p){
+  if(!p.losLabel)return null;
+  var lw=p.losLabel.length*5.6+6, lx=VIEW.x+6, ly=-6, offs=[-6,-25,20,36];
+  for(var i=0;i<offs.length;i++){
+    var rr={x:lx-3,y:p.los+offs[i]-8,w:lw,h:11};
+    var clash=p.players.some(function(q){
+      return rectsOverlap(rr,{x:q.x-15,y:q.y-15,w:30,h:30});
+    });
+    if(!clash){ly=offs[i];break;}
+  }
+  return {x:lx-3,y:p.los+ly-8,w:lw,h:11,ly:ly,lx:lx};
+}
 function placeLabels(p){
   var FS=9.5, LH=12;
-  var obstacles=p.players.map(function(q){return{x:q.x-13,y:q.y-13,w:26,h:26};});
+  var obstacles=p.players.map(function(q){return{x:q.x-13,y:q.y-13,w:26,h:26,wt:10};});
+  var lr=losLabelRect(p);
+  // Sitting on the line caption reads worse than sitting anywhere else, so it costs more.
+  if(lr)obstacles.push({x:lr.x,y:lr.y,w:lr.w,h:lr.h,wt:18});
   var CAND=[[0,16],[0,28],[0,40],[34,16],[-34,16],[34,28],[-34,28],[0,52],
-            [0,-30],[0,-42],[48,-6],[-48,-6]];
+            [0,-30],[0,-42],[48,-6],[-48,-6],[0,64],[62,16],[-62,16],[0,-54],
+            [62,-6],[-62,-6],[46,40],[-46,40],[0,76],[0,-66],[78,16],[-78,16],
+            [0,88],[78,-6],[-78,-6],[46,-42],[-46,-42]];
   var out={};
   p.players.filter(function(q){return q.name&&q.team==='o';})
     .slice().sort(function(a,b){return a.y-b.y||a.x-b.x;})
@@ -539,15 +582,15 @@ function placeLabels(p){
         for(var ci=0;ci<CAND.length;ci++){
           var dx=CAND[ci][0], dy=CAND[ci][1];
           var rect={x:q.x+dx-w/2,y:q.y+dy,w:w,h:LH}, sc=0;
-          for(var oi=0;oi<obstacles.length;oi++) if(rectsOverlap(rect,obstacles[oi])) sc+=10;
-          sc+=ci*0.5+ti*2.5;                            // prefer the default spot and the full name
+          for(var oi=0;oi<obstacles.length;oi++) if(rectsOverlap(rect,obstacles[oi])) sc+=(obstacles[oi].wt||10);
+          sc+=ci*0.45+ti*7;                             // shortening a name is a last resort
           if(rect.x<VIEW.x+2)sc+=6;
           if(rect.x+rect.w>VIEW.x+VIEW.w-2)sc+=6;
           if(!best||sc<best.score)best={score:sc,text:t,dx:dx,dy:dy,w:w,rect:rect};
         }
       }
       out[q.id]=best;
-      obstacles.push(best.rect);
+      obstacles.push({x:best.rect.x,y:best.rect.y,w:best.rect.w,h:best.rect.h,wt:10});
     });
   return out;
 }
@@ -724,6 +767,7 @@ function rank(pl){
   return (d&&d.order)||99;
 }
 var lblMode='auto';
+var lineupOpen=true;
 var flipAll=false;
 
 function blank(name,slug){
@@ -761,21 +805,11 @@ function drawField(){
 
   svg.appendChild(E('line',{x1:VIEW.x,x2:VIEW.x+VIEW.w,y1:p.los,y2:p.los,
     stroke:C.gold,'stroke-width':1.8,'stroke-dasharray':'6 4'}));
-  if(p.losLabel){
-    // Cropping brings the sideline in close, so this used to land on top of the
-    // outside man. Take the first offset that clears every circle.
-    var lw=p.losLabel.length*5.6+6, lx=VIEW.x+6, ly=-6;
-    var offs=[-6,-25,20,36];
-    for(var oi=0;oi<offs.length;oi++){
-      var rr={x:lx-3,y:p.los+offs[oi]-8,w:lw,h:11};
-      var clash=p.players.some(function(q){
-        return rectsOverlap(rr,{x:q.x-15,y:q.y-15,w:30,h:30});
-      });
-      if(!clash){ly=offs[oi];break;}
-    }
-    svg.appendChild(E('rect',{x:lx-3,y:p.los+ly-8,width:lw,height:11,rx:2,
+  var LR=losLabelRect(p);
+  if(LR){
+    svg.appendChild(E('rect',{x:LR.x,y:LR.y,width:LR.w,height:11,rx:2,
       fill:C.deep,'fill-opacity':C.losChipOp}));
-    var lt=E('text',{x:lx,y:p.los+ly,fill:C.gold,
+    var lt=E('text',{x:LR.lx,y:p.los+LR.ly,fill:C.gold,
       'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'letter-spacing':1});
     lt.textContent=p.losLabel; svg.appendChild(lt);
   }
@@ -1772,7 +1806,8 @@ document.getElementById('playSel').onchange=function(e){
 var saveTimer=null, saveSeq=0, savedSeq=0, storageBlocked=false;
 
 function stateJSON(){
-  return JSON.stringify({plays:plays,curId:curId,team:TEAM,flipAll:flipAll,fitMode:fitMode,build:BUILD});
+  return JSON.stringify({plays:plays,curId:curId,team:TEAM,flipAll:flipAll,fitMode:fitMode,
+    lineupOpen:lineupOpen,build:BUILD});
 }
 function paintDot(){
   var dot=document.getElementById('saveDot'); if(!dot)return;
@@ -2033,6 +2068,7 @@ function downloadBackup(){
           if(d.team&&d.team.length){TEAM=d.team;ROSTER=TEAM.map(function(q){return q.l;});}
           if(d.flipAll)flipAll=true;
           if(d.fitMode==='full'||d.fitMode==='fit')fitMode=d.fitMode;
+          if(typeof d.lineupOpen==='boolean')lineupOpen=d.lineupOpen;
           savedBuild=d.build||0;
           loaded=true;
         }
@@ -2176,6 +2212,11 @@ function downloadBackup(){
   document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
   document.querySelectorAll('.mode.lbl[data-v]').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.v===fitMode);});
   document.body.setAttribute('data-print','play');
+  (function(){
+    var f=document.getElementById('lineupSec');
+    f.open=lineupOpen;
+    f.addEventListener('toggle',function(){ lineupOpen=f.open; save(); });
+  })();
   document.getElementById('hint').textContent=HINTS.move;
   (function(){
     function blocked(){
