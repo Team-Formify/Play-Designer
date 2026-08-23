@@ -134,6 +134,7 @@ function computeView(p,extra){
   p.players.forEach(function(q){xs.push(q.x);ys.push(q.y);});
   (p.routes||[]).forEach(function(r){(r.points||[]).forEach(function(t){xs.push(t.x);ys.push(t.y);});});
   ys.push(p.lineOfScrimmage);
+  if(p.aim){xs.push(p.aim.x);ys.push(p.aim.y);}
   if(extra)extra.forEach(function(t){xs.push(t.x);ys.push(t.y);});
   var x0=Math.min.apply(null,xs)-30, x1=Math.max.apply(null,xs)+30;
   var y0=Math.min.apply(null,ys)-40, y1=Math.max.apply(null,ys)+60;
@@ -167,6 +168,14 @@ var CAND=[[0,16],[0,28],[0,40],[34,16],[-34,16],[34,28],[-34,28],[0,52],
 function placeLabels(people){
   var FS=9.5, LH=12, out={};
   var obstacles=people.map(function(m){return{x:m.x-13,y:m.y-13,w:26,h:26};});
+  if(play&&play.aim){
+    obstacles.push({x:play.aim.x-14,y:play.aim.y-14,w:28,h:28});
+    if(play.aim.label){
+      var dd=play.aim.label.indexOf('\u2014');
+      var aw=(dd>0?Math.max(dd,play.aim.label.length-dd-1):play.aim.label.length)*4.9+8;
+      obstacles.push({x:play.aim.x-aw/2,y:play.aim.y+15,w:aw,h:dd>0?25:12});
+    }
+  }
   people.filter(function(m){return m.q.team==='us'&&m.q.player;})
     .slice().sort(function(a,b){return a.y-b.y||a.x-b.x;})
     .forEach(function(m){
@@ -246,6 +255,50 @@ function drawField(opts){
       svg.appendChild(E('path',{d:d,fill:'none',stroke:'#E3B547','stroke-opacity':.28,
         'stroke-width':2,'stroke-linecap':'round'}));
     });
+  }
+  /* Where the ball is meant to end up. Same mark the coach places, drawn the same
+     way, so the picture the boys learn from is the picture on his sheet. */
+  if(opts.aim&&p.aim){
+    var a=p.aim;
+    if(a.from){
+      var src=ours(p).filter(function(q){return q.label===a.from;})[0];
+      if(src){
+        var dx=a.x-src.x, dy=a.y-src.y, len=Math.hypot(dx,dy)||1;
+        var ex2=a.x-dx/len*12, ey2=a.y-dy/len*12, bow=len*0.13;
+        svg.appendChild(E('path',{d:'M'+src.x+','+src.y+' Q'+
+          ((src.x+ex2)/2-dy/len*bow)+','+((src.y+ey2)/2+dx/len*bow)+' '+ex2+','+ey2,
+          fill:'none',stroke:'#E58A6B','stroke-width':1.6,'stroke-opacity':.8,
+          'stroke-dasharray':'2 5','stroke-linecap':'round'}));
+      }
+    }
+    svg.appendChild(E('circle',{cx:a.x,cy:a.y,r:9.5,fill:'none',stroke:'#E58A6B','stroke-width':1.9}));
+    [[-14,0,14,0],[0,-14,0,14]].forEach(function(d){
+      svg.appendChild(E('line',{x1:a.x+d[0],y1:a.y+d[1],x2:a.x+d[2],y2:a.y+d[3],
+        stroke:'#E58A6B','stroke-width':1.6,'stroke-linecap':'round'}));
+    });
+    svg.appendChild(E('circle',{cx:a.x,cy:a.y,r:2.4,fill:'#E58A6B'}));
+    if(a.label){
+      /* Same two-line caption as the coach's app: one long line runs off the side
+         of a cropped view, and lands on the line-of-scrimmage caption. */
+      var dash=a.label.indexOf('\u2014'), lines=[a.label];
+      if(dash>0){
+        var l1=a.label.slice(0,dash).trim(), l2=a.label.slice(dash+1).trim();
+        if(l1&&l2)lines=[l1,l2];
+      }
+      var w2=lines.reduce(function(m,l){return Math.max(m,l.length*4.9+8);},0);
+      var hh=lines.length*11+3;
+      var cx3=Math.max(VIEW.x+3,Math.min(a.x-w2/2,VIEW.x+VIEW.w-w2-3));
+      var cy3=(a.y+18+hh<VIEW.y+VIEW.h)?a.y+15:a.y-15-hh;
+      if(cy3<VIEW.y+2||cy3+hh>VIEW.y+VIEW.h-2)cy3=Math.max(VIEW.y+2,Math.min(a.y+15,VIEW.y+VIEW.h-hh-2));
+      if(cy3<p.lineOfScrimmage+9&&cy3+hh>p.lineOfScrimmage-9)cy3=p.lineOfScrimmage-9-hh;
+      svg.appendChild(E('rect',{x:cx3,y:cy3,width:w2,height:hh,rx:2,
+        fill:'#13251F','fill-opacity':.82,stroke:'#E58A6B','stroke-width':.8,'stroke-opacity':.5}));
+      lines.forEach(function(ln,i){
+        var at=E('text',{x:cx3+w2/2,y:cy3+10+i*11,'text-anchor':'middle',fill:'#E58A6B',
+          'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace','font-size':8,'letter-spacing':.4});
+        at.textContent=ln; svg.appendChild(at);
+      });
+    }
   }
   (opts.marks||[]).forEach(function(m){ svg.appendChild(m); });
   var people=opts.people||p.players.map(function(q){return{q:q,x:q.x,y:q.y};});
@@ -396,7 +449,7 @@ function buildPaths(){
   paths=play.players.map(function(q){return {q:q,path:pathOf(play,q)};});
 }
 function frameAt(t){
-  drawField({routes:true,names:true,view:watchView,
+  drawField({routes:true,names:true,aim:true,view:watchView,
     people:paths.map(function(e){
       var pt=e.q.team==='them'?{x:e.q.x,y:e.q.y}:atT(e.path,t);
       return {q:e.q,x:pt.x,y:pt.y};
@@ -414,7 +467,9 @@ function startWatch(){
   document.getElementById('watchNote').innerHTML=
     (play.howItWorks?'<b>'+esc(play.name)+'</b> \u2014 '+esc(play.howItWorks)+'<br><br>':'<b>'+esc(play.name)+'</b> \u2014 ')+
     moving+' of '+ours(play).length+
-    ' men have a path. Drag the slider to walk through it a step at a time.';
+    ' men have a path. Drag the slider to walk through it a step at a time.'+
+    (play.aim&&play.aim.label?'<br><br>The crosshair is where the ball is meant to end up: <b>'+
+      esc(play.aim.label)+'</b>':'');
   frameAt(0);
   watchView=VIEW;          // then lock it so the view does not jitter as they run
 }
@@ -535,7 +590,7 @@ function nextQuiz(){
     document.getElementById('quizAsk').innerHTML= quizTried
       ? '<b>Done.</b> '+quizScore+' of '+quizTried+' right.'
       : 'Nobody on this unit has a job written yet. Try another play.';
-    drawField({names:true});
+    drawField({names:true,aim:true});
     return;
   }
   quizCur=quizQueue.shift();

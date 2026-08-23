@@ -187,12 +187,30 @@ index.html
 ├─ computeView() crops the viewBox to the play, capped at 2.4x so a tight cluster
 │                keeps its context; placeLabels() keeps names clear of circles,
 │                of each other, and of the line caption
+├─ drawAim()     the target mark — where the ball is meant to end up
 ├─ drawField()   renders the SVG; pal() swaps to black-on-white for printing
 ├─ toSourceJSON()writes the playbook back out as special-teams-plays.json
 ├─ game day      read-only, one unit, swipe/arrows to move between them
 ├─ paintLineup() editable position/name list under the field
 └─ migration     runs on load: rename, seed-if-empty, never delete
 ```
+
+**The target mark.** Each play carries an optional `aim` — `{x, y, label, from}` — drawn
+as a crosshair where the ball is supposed to end up. On a kicking unit `from` names the
+player it leaves (`P`, `K`, `PP`) and a dashed arc traces the flight; on a return there is
+no `from`, because the returner's own route already shows the path. `aimCapRect()` breaks
+the caption at the em dash into two lines, clamps it inside the view, and keeps it off the
+line of scrimmage and its caption — a single long line ran off the side of a cropped view
+and landed on the line label. It is draggable in move mode only, edits in the Selected
+player panel, exports with the playbook, and counts toward `playFingerprint` so moving it
+shows up in the repo badge. Delete mode cannot touch it; only its own Remove button does.
+
+**The other team.** `team:'them'` (`'x'` in memory) has always existed on the returns.
+All ten plays now carry a likely opposing look, and a **Them** toggle shows or hides it —
+default off, because it is a guess about them, not a fact about us, and it doubles what is
+on the field. Hidden opponents do not widen `computeView`, are not hit-testable, and are
+drawn underneath our eleven so our circles are never covered. Those alignments are drafts,
+same as the jobs and the routes.
 
 **Print is the game-day output.** The app is a practice and planning tool; Dom barely
 uses a device on the sideline. Three modes, routed by `data-print` on `<body>`:
@@ -292,6 +310,13 @@ doing its job, not a bug.
   The lanes (BALL CONTAIN FORCE ALLEY BALL | SAFETY | BALL ALLEY FORCE CONTAIN BALL) are
   mapped by **where the man stands**, not by his number, so they land on the same eleven
   bodies either way. Flipping the numbering is a one-line data edit if he prefers his.
+- **The target marks are drafts.** Where each unit is trying to put the ball is a coaching
+  decision. Seeded so every unit has one; the onside mark sits on their restraining line
+  because the kick has to travel ten yards, which is the one that is geometry rather than
+  preference. The rest — corner or middle on a kickoff, which sideline on a return — are
+  his to move.
+- **The opposing alignments are drafts.** A plausible look, not scouted. Their punt-return
+  front, their kick-return front and hands team, their onside hands team.
 - **Onside personnel is a draft.** Assigned so the three men under the kick are the
   surest hands and all four ten-play boys get a snap. His call to change.
 - The written jobs are drafts. Punt-return wall/hold-up spots and both cluster kickoffs
