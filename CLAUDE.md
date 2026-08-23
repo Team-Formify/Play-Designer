@@ -4,8 +4,9 @@ Interactive play designer for a **Lehi Youth Football 8th grade** special teams 
 Dom is the assistant coach running special teams. This tool designs, stores, and prints
 the four kicking units plus variants.
 
-Current state: `index.html` plus `special-teams-plays.json`. No build step, no
-dependencies, deploys as a static site.
+Current state: `index.html` (the coach's tool), `learn.html` (the boys' version) and
+`special-teams-plays.json`, which both read. No build step, no dependencies, deploys as
+a static site.
 
 ---
 
@@ -130,6 +131,13 @@ block; `--check` exits non-zero if the two have drifted. That is a maintenance c
 not a build step — running the app needs nothing.
 
 The roster lives in the JSON too, and seeds `TEAM` only when the user has none saved.
+
+**`learn.html` is for the players.** Same JSON, its own page, so the coaching tool stays
+uncluttered and the boys get a link that cannot edit anything. Three modes: **Watch it**
+animates each man along his route with a scrub bar; **Line me up** asks where a spot
+lines up and scores the tap by distance in yards; **My job** is multiple choice built
+from the written jobs. Names show as last name and number, same as the field diagram.
+It fetches the JSON — no embedded fallback, because it is only ever used from the URL.
 
 ```
 index.html

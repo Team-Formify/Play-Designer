@@ -85,7 +85,7 @@
   /* One play, one sheet: title, diagram, lineup. Black on white. */
   @page{size:letter portrait;margin:12mm}
   @media print{
-    header,.bar,.hint,.row,.panel,.chips,#schedLink,.sec{display:none!important}
+    header,.bar,.hint,.row,.panel,.chips,#schedLink,#learnLink,.sec{display:none!important}
     html,body{background:#fff!important;color:#000!important}
     .wrap{max-width:none;padding:0}
     #printTitle{display:block!important;font-family:var(--display);font-weight:800;
@@ -259,6 +259,7 @@
   <span id="saveDot" title="save status">saved</span>
   <button class="btn" id="newPlay">+ New</button>
   <button class="btn gold" id="gdOn">Game day</button>
+  <a class="btn" href="learn.html" id="learnLink">For the boys &#8599;</a>
   <a class="btn" id="schedLink" target="_blank" rel="noopener noreferrer" hidden>Schedule &#8599;</a>
 </header>
 
