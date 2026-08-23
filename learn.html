@@ -437,10 +437,26 @@ function drawField(opts){
       }
       var w2=lines.reduce(function(m,l){return Math.max(m,l.length*4.9+8);},0);
       var hh=lines.length*11+3;
-      var cx3=Math.max(VIEW.x+3,Math.min(a.x-w2/2,VIEW.x+VIEW.w-w2-3));
-      var cy3=(a.y+18+hh<VIEW.y+VIEW.h)?a.y+15:a.y-15-hh;
-      if(cy3<VIEW.y+2||cy3+hh>VIEW.y+VIEW.h-2)cy3=Math.max(VIEW.y+2,Math.min(a.y+15,VIEW.y+VIEW.h-hh-2));
-      if(cy3<p.lineOfScrimmage+9&&cy3+hh>p.lineOfScrimmage-9)cy3=p.lineOfScrimmage-9-hh;
+      /* Same dodge as the coach's app: on an offensive play the eleven are packed
+         round the ball and a caption placed under the mark lands on five of them. */
+      var men=ours(p);
+      function hits(rx,ry){
+        if(ry<VIEW.y+2||ry+hh>VIEW.y+VIEW.h-2)return true;
+        if(ry<p.lineOfScrimmage+9&&ry+hh>p.lineOfScrimmage-9)return true;
+        return men.some(function(q){
+          return !(rx+w2<=q.x-14||q.x+14<=rx||ry+hh<=q.y-14||q.y+14<=ry);
+        });
+      }
+      var cx3=Math.max(VIEW.x+3,Math.min(a.x-w2/2,VIEW.x+VIEW.w-w2-3)), cy3=a.y+15, placed=false;
+      [a.y+15,a.y-15-hh,a.y+30,a.y-32].forEach(function(ty){
+        if(placed)return;
+        [0,-46,46,-92,92].forEach(function(dx){
+          if(placed)return;
+          var rx=Math.max(VIEW.x+3,Math.min(a.x-w2/2+dx,VIEW.x+VIEW.w-w2-3));
+          if(!hits(rx,ty)){cx3=rx;cy3=ty;placed=true;}
+        });
+      });
+      if(!placed)cy3=Math.max(VIEW.y+2,Math.min(a.y+15,VIEW.y+VIEW.h-hh-2));
       svg.appendChild(E('rect',{x:cx3,y:cy3,width:w2,height:hh,rx:2,
         fill:'#13251F','fill-opacity':.82,stroke:'#E58A6B','stroke-width':.8,'stroke-opacity':.5}));
       lines.forEach(function(ln,i){

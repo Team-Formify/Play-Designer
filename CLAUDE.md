@@ -148,6 +148,21 @@ Do not "fix" it without asking.
 
 ---
 
+**Offense and defense.** Added because he asked to run normal plays through the same
+machine, and the machine turned out to be play-agnostic: `mirrorOf`, the matchups, the
+collisions, the animation and the print modes all work on a run play with no change.
+Each play carries a `phase` — `special`, `offense` or `defense` — and the dropdown groups
+by it so the ten kicking units stay together and first; a play with no phase counts as
+special, which is where every play lived before phases existed. **Game day stays special
+teams only** (`gdOrder()` filters on phase): on a sideline his job is the four units.
+`Offense — Base` and `Defense — Purple` face each other. Personnel is straight off the
+roster's own depth listings and the starting eleven named above; the alignments, routes
+and jobs are drafts. One real compromise: **the offensive line splits are drawn wider than
+they are**, because a player circle is 24px across and a true two-foot split would draw
+five men on top of each other. The vertical scale is already not to scale for the same
+reason. An offensive interior is still busier than a kicking unit — that is honest, not a
+bug, but this app was built for men spread across a field.
+
 ## Architecture
 
 Vanilla JS, SVG, no dependencies, no build.

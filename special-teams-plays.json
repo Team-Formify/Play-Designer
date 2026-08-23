@@ -489,7 +489,8 @@
         "from": "P",
         "label": "PUNT HERE — OUTSIDE THE NUMBERS, 35 YARDS"
       },
-      "mirrorOf": "punt-return-purple-d"
+      "mirrorOf": "punt-return-purple-d",
+      "phase": "special"
     },
     {
       "slug": "villanova-fake-from-std-punt",
@@ -729,7 +730,8 @@
         "from": "PP",
         "label": "BALL GOES HERE — OUTSIDE THE SEAL, GET THE STICKS"
       },
-      "mirrorOf": "punt-return-purple-d"
+      "mirrorOf": "punt-return-purple-d",
+      "phase": "special"
     },
     {
       "slug": "punt-return-purple-d",
@@ -980,7 +982,8 @@
         "y": 246,
         "label": "RETURN HERE — UP BEHIND THE WALL"
       },
-      "mirrorOf": "std-punt"
+      "mirrorOf": "std-punt",
+      "phase": "special"
     },
     {
       "slug": "punt-return-white-d",
@@ -1231,7 +1234,8 @@
         "y": 246,
         "label": "RETURN HERE — UP BEHIND THE WALL"
       },
-      "mirrorOf": "std-punt"
+      "mirrorOf": "std-punt",
+      "phase": "special"
     },
     {
       "slug": "kickoff-check-me",
@@ -1822,7 +1826,8 @@
           ]
         }
       ],
-      "mirrorOf": "kick-return-5-2-2-2"
+      "mirrorOf": "kick-return-5-2-2-2",
+      "phase": "special"
     },
     {
       "slug": "cluster-kickoff-huddle-to-twins",
@@ -2413,7 +2418,8 @@
           ]
         }
       ],
-      "mirrorOf": "kick-return-5-2-2-2"
+      "mirrorOf": "kick-return-5-2-2-2",
+      "phase": "special"
     },
     {
       "slug": "cluster-ko-10-play",
@@ -3004,7 +3010,8 @@
           ]
         }
       ],
-      "mirrorOf": "kick-return-5-4-2"
+      "mirrorOf": "kick-return-5-4-2",
+      "phase": "special"
     },
     {
       "slug": "onside-kick-kangaroo-right",
@@ -3172,7 +3179,8 @@
         "from": "K",
         "label": "KICK HERE — 11 YARDS, SECOND BOUNCE HEAD HIGH"
       },
-      "mirrorOf": "kick-return-5-2-2-2"
+      "mirrorOf": "kick-return-5-2-2-2",
+      "phase": "special"
     },
     {
       "slug": "kick-return-5-2-2-2",
@@ -3443,7 +3451,8 @@
         "y": 208,
         "label": "RETURN HERE — UP THE SIDELINE BEHIND THE WALL"
       },
-      "mirrorOf": "kickoff-check-me"
+      "mirrorOf": "kickoff-check-me",
+      "phase": "special"
     },
     {
       "slug": "kick-return-5-4-2",
@@ -3714,7 +3723,566 @@
         "y": 214,
         "label": "RETURN HERE — STRAIGHT UP THE MIDDLE BEHIND THE FOUR"
       },
-      "mirrorOf": "kickoff-check-me"
+      "mirrorOf": "kickoff-check-me",
+      "phase": "special"
+    },
+    {
+      "slug": "offense-base",
+      "name": "Offense — Base",
+      "order": 11,
+      "phase": "offense",
+      "lineOfScrimmage": 250,
+      "lineLabel": "LINE OF SCRIMMAGE",
+      "mirrorOf": "defense-purple",
+      "howItWorks": "Base run to the right off the right guard. The line steps playside together and works up to the linebackers, the tight end seals the end inside, and the fullback leads through the first daylight. The back presses the line before he cuts so the hole has time to open. Both receivers release and block the corner — a run breaks for real yards only when somebody outside blocks somebody.",
+      "aim": {
+        "x": 272,
+        "y": 182,
+        "label": "RUN HERE — OFF THE RIGHT GUARD’S HIP",
+        "from": ""
+      },
+      "players": [
+        {
+          "id": "o1",
+          "team": "us",
+          "label": "X",
+          "player": "Wentzel",
+          "role": "STALK",
+          "job": "Release like it is a pass, then find the corner and get between him and the ball. Do not cut him — run your feet and stay in front.",
+          "x": 56,
+          "y": 250
+        },
+        {
+          "id": "o2",
+          "team": "us",
+          "label": "LT",
+          "player": "Paulich",
+          "role": "BACKSIDE",
+          "job": "Step to the man on your inside shoulder and cut off anything crossing behind the play. Nobody chases this from the back side.",
+          "x": 156,
+          "y": 250
+        },
+        {
+          "id": "o3",
+          "team": "us",
+          "label": "LG",
+          "player": "Mitchell",
+          "role": "COMBO",
+          "job": "Step right with the centre, hit the man on him together, then one of you comes off to the linebacker. First one who feels the down man give comes off.",
+          "x": 183,
+          "y": 250
+        },
+        {
+          "id": "o4",
+          "team": "us",
+          "label": "C",
+          "player": "Rowley",
+          "role": "COMBO",
+          "job": "Snap it and step right at the same time. Get your head across the man playside and work the double with the guard.",
+          "x": 210,
+          "y": 250
+        },
+        {
+          "id": "o5",
+          "team": "us",
+          "label": "RG",
+          "player": "Bullock",
+          "role": "PLAYSIDE",
+          "job": "This is your hole. Step to the man over you, get your head across his playside shoulder and drive him off the ball. Do not go around him.",
+          "x": 237,
+          "y": 250
+        },
+        {
+          "id": "o6",
+          "team": "us",
+          "label": "RT",
+          "player": "Debenham",
+          "role": "PLAYSIDE",
+          "job": "Step with the guard and take the man on your outside shoulder. Keep your feet moving and stay square — you are the outside wall of the hole.",
+          "x": 264,
+          "y": 250
+        },
+        {
+          "id": "o7",
+          "team": "us",
+          "label": "Y",
+          "player": "Pace",
+          "role": "SEAL",
+          "job": "Down block on the end. Head inside, hips around, and turn him away from the hole. If nobody is there, climb to the linebacker.",
+          "x": 291,
+          "y": 250
+        },
+        {
+          "id": "o8",
+          "team": "us",
+          "label": "Z",
+          "player": "Scott",
+          "role": "STALK",
+          "job": "Release outside, find the corner and wall him off from the ball. Yours is the block that turns eight yards into a touchdown.",
+          "x": 364,
+          "y": 250
+        },
+        {
+          "id": "o9",
+          "team": "us",
+          "label": "QB",
+          "player": "Reary",
+          "role": "HAND OFF",
+          "job": "Open right, put the ball in his belly deep, then carry out the fake away from the play. Sell it — the backside end is watching you, not him.",
+          "x": 210,
+          "y": 274
+        },
+        {
+          "id": "o10",
+          "team": "us",
+          "label": "F",
+          "player": "Black",
+          "role": "LEAD",
+          "job": "Take the first daylight past the guard and run through the first defender who shows in it. You are looking for the linebacker.",
+          "x": 184,
+          "y": 300
+        },
+        {
+          "id": "o11",
+          "team": "us",
+          "label": "H",
+          "player": "Grover",
+          "role": "BALL",
+          "job": "Take it deep, press the line so the hole has time to open, then cut off the fullback and get north. One cut and go — do not dance.",
+          "x": 210,
+          "y": 322
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "o1",
+          "points": [
+            {
+              "x": 64,
+              "y": 214
+            },
+            {
+              "x": 74,
+              "y": 188
+            }
+          ]
+        },
+        {
+          "playerId": "o2",
+          "points": [
+            {
+              "x": 163,
+              "y": 238
+            },
+            {
+              "x": 169,
+              "y": 228
+            }
+          ]
+        },
+        {
+          "playerId": "o3",
+          "points": [
+            {
+              "x": 192,
+              "y": 238
+            },
+            {
+              "x": 200,
+              "y": 228
+            }
+          ]
+        },
+        {
+          "playerId": "o4",
+          "points": [
+            {
+              "x": 220,
+              "y": 238
+            },
+            {
+              "x": 229,
+              "y": 228
+            }
+          ]
+        },
+        {
+          "playerId": "o5",
+          "points": [
+            {
+              "x": 248,
+              "y": 238
+            },
+            {
+              "x": 257,
+              "y": 228
+            }
+          ]
+        },
+        {
+          "playerId": "o6",
+          "points": [
+            {
+              "x": 275,
+              "y": 238
+            },
+            {
+              "x": 284,
+              "y": 228
+            }
+          ]
+        },
+        {
+          "playerId": "o7",
+          "points": [
+            {
+              "x": 302,
+              "y": 242
+            },
+            {
+              "x": 312,
+              "y": 234
+            }
+          ]
+        },
+        {
+          "playerId": "o8",
+          "points": [
+            {
+              "x": 356,
+              "y": 214
+            },
+            {
+              "x": 346,
+              "y": 188
+            }
+          ]
+        },
+        {
+          "playerId": "o9",
+          "points": [
+            {
+              "x": 194,
+              "y": 282
+            },
+            {
+              "x": 172,
+              "y": 292
+            }
+          ]
+        },
+        {
+          "playerId": "o10",
+          "points": [
+            {
+              "x": 210,
+              "y": 272
+            },
+            {
+              "x": 240,
+              "y": 244
+            },
+            {
+              "x": 248,
+              "y": 222
+            }
+          ]
+        },
+        {
+          "playerId": "o11",
+          "points": [
+            {
+              "x": 218,
+              "y": 296
+            },
+            {
+              "x": 240,
+              "y": 262
+            },
+            {
+              "x": 256,
+              "y": 230
+            },
+            {
+              "x": 262,
+              "y": 198
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "defense-purple",
+      "name": "Defense — Purple",
+      "order": 12,
+      "phase": "defense",
+      "lineOfScrimmage": 250,
+      "lineLabel": "LINE OF SCRIMMAGE",
+      "mirrorOf": "offense-base",
+      "howItWorks": "The starting eleven in a 4-3. The four down linemen take their gap first and worry about the ball second; the three linebackers read the back and fill the gap the line does not have. Corners have the men outside them, the safeties play over the top and clean up anything that gets past the front seven. Nobody leaves his gap to chase — that is how a run that should be three yards becomes forty.",
+      "aim": {
+        "x": 250,
+        "y": 210,
+        "label": "MAKE IT HAPPEN HERE — AT THE LINE, NOT DOWNFIELD",
+        "from": ""
+      },
+      "players": [
+        {
+          "id": "d1",
+          "team": "us",
+          "label": "LDE",
+          "player": "Dalley",
+          "role": "CONTAIN",
+          "job": "You have the outside. Nothing gets around you — squeeze everything back inside to the help. If the ball goes away, chase from behind, never across.",
+          "x": 144,
+          "y": 266
+        },
+        {
+          "id": "d2",
+          "team": "us",
+          "label": "LDT",
+          "player": "Ruelas",
+          "role": "GAP",
+          "job": "Take the gap on your side of the centre and get in it hard. Beat the block with your hands, not by running around it.",
+          "x": 190,
+          "y": 266
+        },
+        {
+          "id": "d3",
+          "team": "us",
+          "label": "RDT",
+          "player": "Steinke",
+          "role": "GAP",
+          "job": "Same as the other tackle on your side. Get skinny, get through, and make the back go somewhere he did not plan.",
+          "x": 230,
+          "y": 266
+        },
+        {
+          "id": "d4",
+          "team": "us",
+          "label": "RDE",
+          "player": "Black",
+          "role": "CONTAIN",
+          "job": "Outside is yours. If the tight end tries to turn you in, fight back out. Keep the ball inside you.",
+          "x": 285,
+          "y": 266
+        },
+        {
+          "id": "d5",
+          "team": "us",
+          "label": "WILL",
+          "player": "Severts",
+          "role": "FLOW",
+          "job": "Read the back. When he goes away from you, do not run at him — take the cutback lane and wait. Most long runs come back to where you left.",
+          "x": 150,
+          "y": 300
+        },
+        {
+          "id": "d6",
+          "team": "us",
+          "label": "MIKE",
+          "player": "Archuletta",
+          "role": "FILL",
+          "job": "Read the back and fill the first hole that opens. Downhill, square, and take on the blocker with your inside shoulder so the ball has to go outside.",
+          "x": 210,
+          "y": 300
+        },
+        {
+          "id": "d7",
+          "team": "us",
+          "label": "SAM",
+          "player": "Debenham",
+          "role": "FLOW",
+          "job": "Read the tight end. If he blocks down, you have the outside behind the end. If he releases, you go with him.",
+          "x": 276,
+          "y": 300
+        },
+        {
+          "id": "d8",
+          "team": "us",
+          "label": "LCB",
+          "player": "Scott",
+          "role": "COVER",
+          "job": "You have the man out there. On a run, come up outside him and turn the ball back inside — never let him get around your outside shoulder.",
+          "x": 66,
+          "y": 292
+        },
+        {
+          "id": "d9",
+          "team": "us",
+          "label": "RCB",
+          "player": "Wentzel",
+          "role": "COVER",
+          "job": "Same on your side. Cover first, then run support outside-in once you know it is a run.",
+          "x": 358,
+          "y": 292
+        },
+        {
+          "id": "d10",
+          "team": "us",
+          "label": "SS",
+          "player": "Bagley",
+          "role": "ALLEY",
+          "job": "Fit in the alley between the corner and the linebackers. You are the extra man against the run and the help over the top against a pass.",
+          "x": 272,
+          "y": 346
+        },
+        {
+          "id": "d11",
+          "team": "us",
+          "label": "FS",
+          "player": "Pace",
+          "role": "LAST MAN",
+          "job": "You are the last one. Nothing gets behind you. Stay deeper than the deepest until you know where it is going, then come and get it.",
+          "x": 176,
+          "y": 358
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "d1",
+          "points": [
+            {
+              "x": 140,
+              "y": 248
+            },
+            {
+              "x": 138,
+              "y": 234
+            }
+          ]
+        },
+        {
+          "playerId": "d2",
+          "points": [
+            {
+              "x": 194,
+              "y": 248
+            },
+            {
+              "x": 200,
+              "y": 236
+            }
+          ]
+        },
+        {
+          "playerId": "d3",
+          "points": [
+            {
+              "x": 234,
+              "y": 248
+            },
+            {
+              "x": 240,
+              "y": 236
+            }
+          ]
+        },
+        {
+          "playerId": "d4",
+          "points": [
+            {
+              "x": 289,
+              "y": 248
+            },
+            {
+              "x": 291,
+              "y": 234
+            }
+          ]
+        },
+        {
+          "playerId": "d5",
+          "points": [
+            {
+              "x": 170,
+              "y": 276
+            },
+            {
+              "x": 188,
+              "y": 254
+            }
+          ]
+        },
+        {
+          "playerId": "d6",
+          "points": [
+            {
+              "x": 220,
+              "y": 276
+            },
+            {
+              "x": 236,
+              "y": 252
+            }
+          ]
+        },
+        {
+          "playerId": "d7",
+          "points": [
+            {
+              "x": 280,
+              "y": 276
+            },
+            {
+              "x": 286,
+              "y": 252
+            }
+          ]
+        },
+        {
+          "playerId": "d8",
+          "points": [
+            {
+              "x": 80,
+              "y": 268
+            },
+            {
+              "x": 98,
+              "y": 248
+            }
+          ]
+        },
+        {
+          "playerId": "d9",
+          "points": [
+            {
+              "x": 344,
+              "y": 268
+            },
+            {
+              "x": 326,
+              "y": 248
+            }
+          ]
+        },
+        {
+          "playerId": "d10",
+          "points": [
+            {
+              "x": 266,
+              "y": 308
+            },
+            {
+              "x": 252,
+              "y": 274
+            }
+          ]
+        },
+        {
+          "playerId": "d11",
+          "points": [
+            {
+              "x": 192,
+              "y": 320
+            },
+            {
+              "x": 214,
+              "y": 286
+            }
+          ]
+        }
+      ]
     }
   ],
   "glossary": [
