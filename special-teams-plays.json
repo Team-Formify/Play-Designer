@@ -1,0 +1,1795 @@
+{
+  "schema": 1,
+  "generated": "2026-08-21",
+  "field": {
+    "width": 420,
+    "height": 500,
+    "sidelineLeft": 14,
+    "sidelineRight": 406,
+    "yardsWide": 53.3
+  },
+  "roster": [
+    {
+      "last": "Archuletta",
+      "first": "Cree",
+      "number": "14",
+      "xman": false,
+      "offense": "QB / LG / X",
+      "defense": "MIKE"
+    },
+    {
+      "last": "Bagley",
+      "first": "Ledger",
+      "number": "27",
+      "xman": false,
+      "offense": "Z",
+      "defense": "LCB / SS"
+    },
+    {
+      "last": "Bearnson",
+      "first": "Ryker",
+      "number": "49",
+      "xman": false,
+      "offense": "RG / QB / Z / F / Y",
+      "defense": "SS"
+    },
+    {
+      "last": "Black",
+      "first": "Brave",
+      "number": "12",
+      "xman": false,
+      "offense": "F / Y",
+      "defense": "RDE / FS"
+    },
+    {
+      "last": "Bullock",
+      "first": "Tistyn",
+      "number": null,
+      "xman": true,
+      "offense": "RG",
+      "defense": "LDT"
+    },
+    {
+      "last": "Dalley",
+      "first": "Caleb",
+      "number": "17",
+      "xman": false,
+      "offense": "H / Y / F / RT",
+      "defense": "LDE"
+    },
+    {
+      "last": "Debenham",
+      "first": "Dolan",
+      "number": "16",
+      "xman": false,
+      "offense": "C / RT",
+      "defense": "SAM"
+    },
+    {
+      "last": "Grover",
+      "first": "Ja'corey",
+      "number": "55",
+      "xman": false,
+      "offense": "H",
+      "defense": "LCB / RCB"
+    },
+    {
+      "last": "Martinez",
+      "first": "Daxton",
+      "number": "22",
+      "xman": false,
+      "offense": "C / LT",
+      "defense": "LDT / RDT"
+    },
+    {
+      "last": "Mineer",
+      "first": "Mason",
+      "number": "47",
+      "xman": false,
+      "offense": "X",
+      "defense": "RCB"
+    },
+    {
+      "last": "Mitchell",
+      "first": "Cole",
+      "number": "48",
+      "xman": true,
+      "offense": "LG",
+      "defense": "RDT"
+    },
+    {
+      "last": "Pace",
+      "first": "Kyler",
+      "number": "10",
+      "xman": false,
+      "offense": "Y / H",
+      "defense": "FS"
+    },
+    {
+      "last": "Paulich",
+      "first": "Andrew",
+      "number": "35",
+      "xman": false,
+      "offense": "LT",
+      "defense": "RDE / LDT / MIKE"
+    },
+    {
+      "last": "Prasad",
+      "first": "Joseph",
+      "number": "67",
+      "xman": false,
+      "offense": "Z",
+      "defense": "LCB"
+    },
+    {
+      "last": "Reary",
+      "first": "Cache",
+      "number": "9",
+      "xman": false,
+      "offense": "QB",
+      "defense": "FS"
+    },
+    {
+      "last": "Rowley",
+      "first": "Mason",
+      "number": "73",
+      "xman": false,
+      "offense": "C",
+      "defense": "RDT"
+    },
+    {
+      "last": "Ruelas",
+      "first": "Jehudiel",
+      "number": "74",
+      "xman": true,
+      "offense": "RG",
+      "defense": "LDT"
+    },
+    {
+      "last": "Scott",
+      "first": "Rowan",
+      "number": "99",
+      "xman": false,
+      "offense": "Z",
+      "defense": "RCB / WILL"
+    },
+    {
+      "last": "Severts",
+      "first": "Cooper",
+      "number": "34",
+      "xman": false,
+      "offense": "Z",
+      "defense": "WILL / FS"
+    },
+    {
+      "last": "Steinke",
+      "first": "Zander",
+      "number": "33",
+      "xman": false,
+      "offense": "—",
+      "defense": "LDE / RDT / MIKE / SAM"
+    },
+    {
+      "last": "Wentzel",
+      "first": "Carter",
+      "number": "7",
+      "xman": false,
+      "offense": "X",
+      "defense": "RCB"
+    }
+  ],
+  "plays": [
+    {
+      "slug": "std-punt",
+      "name": "Punt — Base",
+      "order": 1,
+      "lineOfScrimmage": 190,
+      "lineLabel": "LINE OF SCRIMMAGE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "us",
+          "label": "S",
+          "player": "Paulich",
+          "x": 210,
+          "y": 190
+        },
+        {
+          "id": "p1",
+          "team": "us",
+          "label": "RGD",
+          "player": "Prasad",
+          "x": 248,
+          "y": 190
+        },
+        {
+          "id": "p2",
+          "team": "us",
+          "label": "LGD",
+          "player": "Steinke",
+          "x": 172,
+          "y": 190
+        },
+        {
+          "id": "p3",
+          "team": "us",
+          "label": "RT",
+          "player": "Bearnson",
+          "x": 286,
+          "y": 190
+        },
+        {
+          "id": "p4",
+          "team": "us",
+          "label": "LT",
+          "player": "Black",
+          "x": 134,
+          "y": 190
+        },
+        {
+          "id": "p5",
+          "team": "us",
+          "label": "RG",
+          "player": "Grover",
+          "x": 376,
+          "y": 190
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "LG",
+          "player": "Pace",
+          "x": 44,
+          "y": 190
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "RW",
+          "player": "Dalley",
+          "x": 280,
+          "y": 230
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "LW",
+          "player": "Scott",
+          "x": 140,
+          "y": 230
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "PP",
+          "player": "Archuletta",
+          "x": 192,
+          "y": 264
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "P",
+          "player": "Debenham",
+          "x": 210,
+          "y": 340
+        }
+      ],
+      "routes": []
+    },
+    {
+      "slug": "villanova-fake-from-std-punt",
+      "name": "Punt — Villanova Fake",
+      "order": 2,
+      "lineOfScrimmage": 190,
+      "lineLabel": "LINE OF SCRIMMAGE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "us",
+          "label": "S",
+          "player": "Paulich",
+          "x": 210,
+          "y": 190
+        },
+        {
+          "id": "p1",
+          "team": "us",
+          "label": "RGD",
+          "player": "Prasad",
+          "x": 248,
+          "y": 190
+        },
+        {
+          "id": "p2",
+          "team": "us",
+          "label": "LGD",
+          "player": "Steinke",
+          "x": 172,
+          "y": 190
+        },
+        {
+          "id": "p3",
+          "team": "us",
+          "label": "RT",
+          "player": "Bearnson",
+          "x": 286,
+          "y": 190
+        },
+        {
+          "id": "p4",
+          "team": "us",
+          "label": "LT",
+          "player": "Black",
+          "x": 134,
+          "y": 190
+        },
+        {
+          "id": "p5",
+          "team": "us",
+          "label": "RG",
+          "player": "Grover",
+          "x": 376,
+          "y": 190
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "LG",
+          "player": "Pace",
+          "x": 44,
+          "y": 190
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "RW",
+          "player": "Dalley",
+          "x": 280,
+          "y": 230
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "LW",
+          "player": "Scott",
+          "x": 140,
+          "y": 230
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "PP",
+          "player": "Archuletta",
+          "x": 192,
+          "y": 264
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "P",
+          "player": "Debenham",
+          "x": 210,
+          "y": 340
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "p9",
+          "points": [
+            {
+              "x": 224,
+              "y": 272
+            },
+            {
+              "x": 270,
+              "y": 258
+            },
+            {
+              "x": 316,
+              "y": 208
+            },
+            {
+              "x": 324,
+              "y": 120
+            },
+            {
+              "x": 320,
+              "y": 40
+            }
+          ]
+        },
+        {
+          "playerId": "p10",
+          "points": [
+            {
+              "x": 206,
+              "y": 306
+            },
+            {
+              "x": 188,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "playerId": "p8",
+          "points": [
+            {
+              "x": 172,
+              "y": 268
+            },
+            {
+              "x": 90,
+              "y": 276
+            },
+            {
+              "x": 38,
+              "y": 224
+            },
+            {
+              "x": 34,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "playerId": "p7",
+          "points": [
+            {
+              "x": 298,
+              "y": 206
+            },
+            {
+              "x": 312,
+              "y": 168
+            }
+          ]
+        },
+        {
+          "playerId": "p3",
+          "points": [
+            {
+              "x": 300,
+              "y": 176
+            },
+            {
+              "x": 316,
+              "y": 148
+            }
+          ]
+        },
+        {
+          "playerId": "p5",
+          "points": [
+            {
+              "x": 376,
+              "y": 120
+            },
+            {
+              "x": 358,
+              "y": 70
+            }
+          ]
+        },
+        {
+          "playerId": "p6",
+          "points": [
+            {
+              "x": 44,
+              "y": 120
+            },
+            {
+              "x": 64,
+              "y": 70
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "punt-return-purple-d",
+      "name": "Punt Return — Purple D",
+      "order": 3,
+      "lineOfScrimmage": 126,
+      "lineLabel": "LINE OF SCRIMMAGE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 40,
+          "y": 126
+        },
+        {
+          "id": "p1",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 380,
+          "y": 126
+        },
+        {
+          "id": "p2",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 150,
+          "y": 126
+        },
+        {
+          "id": "p3",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 180,
+          "y": 126
+        },
+        {
+          "id": "p4",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 210,
+          "y": 126
+        },
+        {
+          "id": "p5",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 240,
+          "y": 126
+        },
+        {
+          "id": "p6",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 270,
+          "y": 126
+        },
+        {
+          "id": "p7",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 178,
+          "y": 92
+        },
+        {
+          "id": "p8",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 210,
+          "y": 92
+        },
+        {
+          "id": "p9",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 242,
+          "y": 92
+        },
+        {
+          "id": "p10",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 210,
+          "y": 30
+        },
+        {
+          "id": "p11",
+          "team": "us",
+          "label": "LJ",
+          "player": "Severts",
+          "x": 48,
+          "y": 150
+        },
+        {
+          "id": "p12",
+          "team": "us",
+          "label": "L2",
+          "player": "Dalley",
+          "x": 150,
+          "y": 150
+        },
+        {
+          "id": "p13",
+          "team": "us",
+          "label": "L1",
+          "player": "Ruelas",
+          "x": 190,
+          "y": 150
+        },
+        {
+          "id": "p14",
+          "team": "us",
+          "label": "R1",
+          "player": "Steinke",
+          "x": 232,
+          "y": 150
+        },
+        {
+          "id": "p15",
+          "team": "us",
+          "label": "R2",
+          "player": "Black",
+          "x": 272,
+          "y": 150
+        },
+        {
+          "id": "p16",
+          "team": "us",
+          "label": "RJ",
+          "player": "Wentzel",
+          "x": 372,
+          "y": 150
+        },
+        {
+          "id": "p17",
+          "team": "us",
+          "label": "LM",
+          "player": "Archuletta",
+          "x": 168,
+          "y": 212
+        },
+        {
+          "id": "p18",
+          "team": "us",
+          "label": "RM",
+          "player": "Debenham",
+          "x": 252,
+          "y": 212
+        },
+        {
+          "id": "p19",
+          "team": "us",
+          "label": "LB",
+          "player": "Scott",
+          "x": 142,
+          "y": 290
+        },
+        {
+          "id": "p20",
+          "team": "us",
+          "label": "RB",
+          "player": "Bagley",
+          "x": 278,
+          "y": 290
+        },
+        {
+          "id": "p21",
+          "team": "us",
+          "label": "PR",
+          "player": "Pace",
+          "x": 210,
+          "y": 412
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "p11",
+          "points": [
+            {
+              "x": 44,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p12",
+          "points": [
+            {
+              "x": 158,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p13",
+          "points": [
+            {
+              "x": 196,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p14",
+          "points": [
+            {
+              "x": 236,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p15",
+          "points": [
+            {
+              "x": 266,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p16",
+          "points": [
+            {
+              "x": 376,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p17",
+          "points": [
+            {
+              "x": 164,
+              "y": 276
+            },
+            {
+              "x": 186,
+              "y": 304
+            }
+          ]
+        },
+        {
+          "playerId": "p18",
+          "points": [
+            {
+              "x": 256,
+              "y": 276
+            },
+            {
+              "x": 234,
+              "y": 304
+            }
+          ]
+        },
+        {
+          "playerId": "p19",
+          "points": [
+            {
+              "x": 160,
+              "y": 346
+            },
+            {
+              "x": 188,
+              "y": 370
+            }
+          ]
+        },
+        {
+          "playerId": "p20",
+          "points": [
+            {
+              "x": 262,
+              "y": 346
+            },
+            {
+              "x": 234,
+              "y": 370
+            }
+          ]
+        },
+        {
+          "playerId": "p21",
+          "points": [
+            {
+              "x": 210,
+              "y": 306
+            },
+            {
+              "x": 210,
+              "y": 186
+            },
+            {
+              "x": 210,
+              "y": 86
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "punt-return-white-d",
+      "name": "Punt Return — White D",
+      "order": 4,
+      "lineOfScrimmage": 126,
+      "lineLabel": "LINE OF SCRIMMAGE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 40,
+          "y": 126
+        },
+        {
+          "id": "p1",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 380,
+          "y": 126
+        },
+        {
+          "id": "p2",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 150,
+          "y": 126
+        },
+        {
+          "id": "p3",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 180,
+          "y": 126
+        },
+        {
+          "id": "p4",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 210,
+          "y": 126
+        },
+        {
+          "id": "p5",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 240,
+          "y": 126
+        },
+        {
+          "id": "p6",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 270,
+          "y": 126
+        },
+        {
+          "id": "p7",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 178,
+          "y": 92
+        },
+        {
+          "id": "p8",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 210,
+          "y": 92
+        },
+        {
+          "id": "p9",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 242,
+          "y": 92
+        },
+        {
+          "id": "p10",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 210,
+          "y": 30
+        },
+        {
+          "id": "p11",
+          "team": "us",
+          "label": "LJ",
+          "player": "Prasad",
+          "x": 48,
+          "y": 150
+        },
+        {
+          "id": "p12",
+          "team": "us",
+          "label": "L2",
+          "player": "Paulich",
+          "x": 150,
+          "y": 150
+        },
+        {
+          "id": "p13",
+          "team": "us",
+          "label": "L1",
+          "player": "Bullock",
+          "x": 190,
+          "y": 150
+        },
+        {
+          "id": "p14",
+          "team": "us",
+          "label": "R1",
+          "player": "Mitchell",
+          "x": 232,
+          "y": 150
+        },
+        {
+          "id": "p15",
+          "team": "us",
+          "label": "R2",
+          "player": "Rowley",
+          "x": 272,
+          "y": 150
+        },
+        {
+          "id": "p16",
+          "team": "us",
+          "label": "RJ",
+          "player": "Mineer",
+          "x": 372,
+          "y": 150
+        },
+        {
+          "id": "p17",
+          "team": "us",
+          "label": "LM",
+          "player": "Martinez",
+          "x": 168,
+          "y": 212
+        },
+        {
+          "id": "p18",
+          "team": "us",
+          "label": "RM",
+          "player": "Bearnson",
+          "x": 252,
+          "y": 212
+        },
+        {
+          "id": "p19",
+          "team": "us",
+          "label": "LB",
+          "player": "Grover",
+          "x": 142,
+          "y": 290
+        },
+        {
+          "id": "p20",
+          "team": "us",
+          "label": "RB",
+          "player": "Bagley",
+          "x": 278,
+          "y": 290
+        },
+        {
+          "id": "p21",
+          "team": "us",
+          "label": "PR",
+          "player": "Reary",
+          "x": 210,
+          "y": 412
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "p11",
+          "points": [
+            {
+              "x": 44,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p12",
+          "points": [
+            {
+              "x": 158,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p13",
+          "points": [
+            {
+              "x": 196,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p14",
+          "points": [
+            {
+              "x": 236,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p15",
+          "points": [
+            {
+              "x": 266,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p16",
+          "points": [
+            {
+              "x": 376,
+              "y": 128
+            }
+          ]
+        },
+        {
+          "playerId": "p17",
+          "points": [
+            {
+              "x": 164,
+              "y": 276
+            },
+            {
+              "x": 186,
+              "y": 304
+            }
+          ]
+        },
+        {
+          "playerId": "p18",
+          "points": [
+            {
+              "x": 256,
+              "y": 276
+            },
+            {
+              "x": 234,
+              "y": 304
+            }
+          ]
+        },
+        {
+          "playerId": "p19",
+          "points": [
+            {
+              "x": 160,
+              "y": 346
+            },
+            {
+              "x": 188,
+              "y": 370
+            }
+          ]
+        },
+        {
+          "playerId": "p20",
+          "points": [
+            {
+              "x": 262,
+              "y": 346
+            },
+            {
+              "x": 234,
+              "y": 370
+            }
+          ]
+        },
+        {
+          "playerId": "p21",
+          "points": [
+            {
+              "x": 210,
+              "y": 306
+            },
+            {
+              "x": 210,
+              "y": 186
+            },
+            {
+              "x": 210,
+              "y": 86
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "kickoff-check-me",
+      "name": "Kickoff — Spread",
+      "order": 5,
+      "lineOfScrimmage": 330,
+      "lineLabel": "FREE KICK LINE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "us",
+          "label": "R5",
+          "player": "Prasad",
+          "x": 386,
+          "y": 362
+        },
+        {
+          "id": "p1",
+          "team": "us",
+          "label": "R4",
+          "player": "Bagley",
+          "x": 348,
+          "y": 362
+        },
+        {
+          "id": "p2",
+          "team": "us",
+          "label": "R3",
+          "player": "Bearnson",
+          "x": 310,
+          "y": 362
+        },
+        {
+          "id": "p3",
+          "team": "us",
+          "label": "RG",
+          "player": "Grover",
+          "x": 272,
+          "y": 362
+        },
+        {
+          "id": "p4",
+          "team": "us",
+          "label": "R1",
+          "player": "Black",
+          "x": 234,
+          "y": 362
+        },
+        {
+          "id": "p5",
+          "team": "us",
+          "label": "L1",
+          "player": "Archuletta",
+          "x": 186,
+          "y": 362
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "LG",
+          "player": "Pace",
+          "x": 148,
+          "y": 362
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "L3",
+          "player": "Paulich",
+          "x": 110,
+          "y": 362
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "L4",
+          "player": "Scott",
+          "x": 72,
+          "y": 362
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "L5",
+          "player": "Severts",
+          "x": 34,
+          "y": 362
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "K",
+          "player": "Debenham",
+          "x": 210,
+          "y": 410
+        }
+      ],
+      "routes": []
+    },
+    {
+      "slug": "cluster-kickoff-huddle-to-twins",
+      "name": "Kickoff — Cluster Speed",
+      "order": 6,
+      "lineOfScrimmage": 340,
+      "lineLabel": "FREE KICK LINE — INSIDE THE NUMBERS",
+      "players": [
+        {
+          "id": "p0",
+          "team": "us",
+          "label": "H5",
+          "player": "Pace",
+          "x": 244,
+          "y": 356
+        },
+        {
+          "id": "p1",
+          "team": "us",
+          "label": "H4",
+          "player": "Bagley",
+          "x": 220,
+          "y": 352
+        },
+        {
+          "id": "p2",
+          "team": "us",
+          "label": "H3",
+          "player": "Black",
+          "x": 196,
+          "y": 356
+        },
+        {
+          "id": "p3",
+          "team": "us",
+          "label": "H2",
+          "player": "Scott",
+          "x": 172,
+          "y": 360
+        },
+        {
+          "id": "p4",
+          "team": "us",
+          "label": "H1",
+          "player": "Severts",
+          "x": 238,
+          "y": 380
+        },
+        {
+          "id": "p5",
+          "team": "us",
+          "label": "H6",
+          "player": "Dalley",
+          "x": 214,
+          "y": 376
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "H7",
+          "player": "Bearnson",
+          "x": 190,
+          "y": 380
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "H8",
+          "player": "Wentzel",
+          "x": 166,
+          "y": 384
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "H9",
+          "player": "Archuletta",
+          "x": 226,
+          "y": 402
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "H10",
+          "player": "Mineer",
+          "x": 200,
+          "y": 402
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "K",
+          "player": "Debenham",
+          "x": 210,
+          "y": 444
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "p0",
+          "points": [
+            {
+              "x": 300,
+              "y": 350
+            },
+            {
+              "x": 346,
+              "y": 346
+            }
+          ]
+        },
+        {
+          "playerId": "p3",
+          "points": [
+            {
+              "x": 120,
+              "y": 354
+            },
+            {
+              "x": 74,
+              "y": 346
+            }
+          ]
+        },
+        {
+          "playerId": "p4",
+          "points": [
+            {
+              "x": 294,
+              "y": 370
+            },
+            {
+              "x": 324,
+              "y": 348
+            }
+          ]
+        },
+        {
+          "playerId": "p7",
+          "points": [
+            {
+              "x": 126,
+              "y": 374
+            },
+            {
+              "x": 96,
+              "y": 348
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cluster-ko-10-play",
+      "name": "Kickoff — Cluster 10-Play",
+      "order": 7,
+      "lineOfScrimmage": 340,
+      "lineLabel": "FREE KICK LINE — INSIDE THE NUMBERS",
+      "players": [
+        {
+          "id": "p0",
+          "team": "us",
+          "label": "H5",
+          "player": "Prasad",
+          "x": 244,
+          "y": 356
+        },
+        {
+          "id": "p1",
+          "team": "us",
+          "label": "H4",
+          "player": "Steinke",
+          "x": 220,
+          "y": 352
+        },
+        {
+          "id": "p2",
+          "team": "us",
+          "label": "H3",
+          "player": "Mitchell",
+          "x": 196,
+          "y": 356
+        },
+        {
+          "id": "p3",
+          "team": "us",
+          "label": "H2",
+          "player": "Grover",
+          "x": 172,
+          "y": 360
+        },
+        {
+          "id": "p4",
+          "team": "us",
+          "label": "H1",
+          "player": "Reary",
+          "x": 238,
+          "y": 380
+        },
+        {
+          "id": "p5",
+          "team": "us",
+          "label": "H6",
+          "player": "Rowley",
+          "x": 214,
+          "y": 376
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "H7",
+          "player": "Ruelas",
+          "x": 190,
+          "y": 380
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "H8",
+          "player": "Paulich",
+          "x": 166,
+          "y": 384
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "H9",
+          "player": "Martinez",
+          "x": 226,
+          "y": 402
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "H10",
+          "player": "Bullock",
+          "x": 200,
+          "y": 402
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "K",
+          "player": "Debenham",
+          "x": 210,
+          "y": 444
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "p0",
+          "points": [
+            {
+              "x": 300,
+              "y": 350
+            },
+            {
+              "x": 346,
+              "y": 346
+            }
+          ]
+        },
+        {
+          "playerId": "p3",
+          "points": [
+            {
+              "x": 120,
+              "y": 354
+            },
+            {
+              "x": 74,
+              "y": 346
+            }
+          ]
+        },
+        {
+          "playerId": "p4",
+          "points": [
+            {
+              "x": 294,
+              "y": 370
+            },
+            {
+              "x": 324,
+              "y": 348
+            }
+          ]
+        },
+        {
+          "playerId": "p7",
+          "points": [
+            {
+              "x": 126,
+              "y": 374
+            },
+            {
+              "x": 96,
+              "y": 348
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "onside-kick-kangaroo-right",
+      "name": "Kickoff — Onside",
+      "order": 8,
+      "lineOfScrimmage": 340,
+      "lineLabel": "FREE KICK LINE — THE 40",
+      "players": [
+        {
+          "id": "p0",
+          "team": "us",
+          "label": "R",
+          "player": null,
+          "x": 362,
+          "y": 356
+        },
+        {
+          "id": "p1",
+          "team": "us",
+          "label": "R",
+          "player": null,
+          "x": 320,
+          "y": 356
+        },
+        {
+          "id": "p2",
+          "team": "us",
+          "label": "R",
+          "player": null,
+          "x": 278,
+          "y": 356
+        },
+        {
+          "id": "p3",
+          "team": "us",
+          "label": "R",
+          "player": null,
+          "x": 236,
+          "y": 356
+        },
+        {
+          "id": "p4",
+          "team": "us",
+          "label": "K",
+          "player": null,
+          "x": 214,
+          "y": 380
+        },
+        {
+          "id": "p5",
+          "team": "us",
+          "label": "L1",
+          "player": null,
+          "x": 188,
+          "y": 356
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "L2",
+          "player": null,
+          "x": 158,
+          "y": 356
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "L3",
+          "player": null,
+          "x": 128,
+          "y": 356
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "L4",
+          "player": null,
+          "x": 98,
+          "y": 356
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "L5",
+          "player": null,
+          "x": 68,
+          "y": 356
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "L6",
+          "player": null,
+          "x": 38,
+          "y": 356
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "p5",
+          "points": [
+            {
+              "x": 128,
+              "y": 286
+            },
+            {
+              "x": 102,
+              "y": 262
+            }
+          ]
+        },
+        {
+          "playerId": "p6",
+          "points": [
+            {
+              "x": 100,
+              "y": 278
+            },
+            {
+              "x": 80,
+              "y": 258
+            }
+          ]
+        },
+        {
+          "playerId": "p7",
+          "points": [
+            {
+              "x": 76,
+              "y": 286
+            },
+            {
+              "x": 58,
+              "y": 264
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "kick-return-5-2-2-2",
+      "name": "Kick Return — 5-2-2-2",
+      "order": 9,
+      "lineOfScrimmage": 60,
+      "lineLabel": "THEIR FREE KICK LINE",
+      "players": [
+        {
+          "id": "p0",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 380,
+          "y": 38
+        },
+        {
+          "id": "p1",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 310,
+          "y": 38
+        },
+        {
+          "id": "p2",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 240,
+          "y": 38
+        },
+        {
+          "id": "p3",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 170,
+          "y": 38
+        },
+        {
+          "id": "p4",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 100,
+          "y": 38
+        },
+        {
+          "id": "p5",
+          "team": "them",
+          "label": null,
+          "player": null,
+          "x": 30,
+          "y": 38
+        },
+        {
+          "id": "p6",
+          "team": "us",
+          "label": "H5",
+          "player": "Severts",
+          "x": 374,
+          "y": 126
+        },
+        {
+          "id": "p7",
+          "team": "us",
+          "label": "H4",
+          "player": "Prasad",
+          "x": 292,
+          "y": 126
+        },
+        {
+          "id": "p8",
+          "team": "us",
+          "label": "H3",
+          "player": "Bearnson",
+          "x": 210,
+          "y": 126
+        },
+        {
+          "id": "p9",
+          "team": "us",
+          "label": "H2",
+          "player": "Steinke",
+          "x": 128,
+          "y": 126
+        },
+        {
+          "id": "p10",
+          "team": "us",
+          "label": "H1",
+          "player": "Bagley",
+          "x": 46,
+          "y": 126
+        },
+        {
+          "id": "p11",
+          "team": "us",
+          "label": "RM",
+          "player": "Debenham",
+          "x": 280,
+          "y": 200
+        },
+        {
+          "id": "p12",
+          "team": "us",
+          "label": "LM",
+          "player": "Paulich",
+          "x": 140,
+          "y": 200
+        },
+        {
+          "id": "p13",
+          "team": "us",
+          "label": "RB",
+          "player": "Archuletta",
+          "x": 255,
+          "y": 272
+        },
+        {
+          "id": "p14",
+          "team": "us",
+          "label": "LB",
+          "player": "Black",
+          "x": 165,
+          "y": 272
+        },
+        {
+          "id": "p15",
+          "team": "us",
+          "label": "RR",
+          "player": "Scott",
+          "x": 245,
+          "y": 356
+        },
+        {
+          "id": "p16",
+          "team": "us",
+          "label": "LR",
+          "player": "Pace",
+          "x": 175,
+          "y": 356
+        }
+      ],
+      "routes": []
+    }
+  ]
+}
