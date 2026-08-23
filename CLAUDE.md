@@ -242,6 +242,19 @@ because they belong to another play and are edited there; and they are drawn und
 eleven so our circles are never covered. Older saves may still carry `team:'x'` players from
 when they were seeded — those are left alone and simply ignored.
 
+**Where they collide.** `meetsOf(p)` (`meets(p)` on the boys' page) walks each matched
+pair down their own two routes on one clock and takes the first step where they are within
+touching distance; a pair that never quite touches counts at its closest approach, provided
+that is close enough to be a collision rather than two men passing on opposite sides of the
+field. In the animation both men **stop there** for the rest of the run — that is the block,
+or the tackle. The spot is ringed from the first frame, dashed until they reach it and
+filled once they do, so a boy sees where his collision is supposed to happen before it
+does. The coach's diagram draws the same rings whenever Them is on.
+Nothing about this is stored either: it is recomputed from the two plays every draw, so
+dragging a man moves his collision under his finger, and editing the play he faces moves it
+too. The one cache is on the boys' page, keyed by slug and look and dropped whenever a save
+arrives from the coach's app — a stale cache there would answer with the old geometry.
+
 **Matchups.** Because the other team is a real play, every opposing man has a label, a lane
 and a written job. `matchups(p)` pairs each of our eleven with the nearest of theirs,
 best-pair-first so two of ours cannot claim the same man while a third goes unmatched.

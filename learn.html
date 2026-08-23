@@ -167,7 +167,14 @@ function look(p){
    a punt faces a punt return — reflected across the line and flipped left to right,
    because their left is our right. Derived, never stored. */
 function mid(list,key){return list.reduce(function(a,q){return a+q[key];},0)/(list.length||1);}
+var themCache=null, themKey='';
 function themOf(p){
+  var key=(p&&p.slug)+'|'+lookIx;
+  if(themKey===key&&themCache)return themCache;
+  themKey=key; themCache=buildThem(p);
+  return themCache;
+}
+function buildThem(p){
   var src=BY_SLUG[p.mirrorOf||''];
   var ho=ours(p), so=src?src.players.filter(function(q){return q.team==='us';}):[];
   if(!src||!ho.length||!so.length)return {men:[],routes:[],name:''};
@@ -200,8 +207,45 @@ function matchups(p){
   var ua={},ub={};
   pairs.forEach(function(pr){
     if(ua[pr.a.id]||ub[pr.bi])return;
-    ua[pr.a.id]=1; ub[pr.bi]=1; out[pr.a.id]=th.men[pr.bi];
+    ua[pr.a.id]=1; ub[pr.bi]=1;
+    out[pr.a.id]=th.men[pr.bi]; out[pr.a.id].bi=pr.bi;
   });
+  return out;
+}
+
+/* Where each pair actually meets. Two men who are matched up run their own routes
+   until they come together; that spot is the block, or the tackle, and it is the
+   thing the boys need to see. Walk both paths on the same clock, take the first
+   step where they are within touching distance, and if they never quite touch,
+   take their closest approach — provided it is close enough to be a collision and
+   not two men passing on opposite sides of the field. Once a pair has met, both
+   stop there for the rest of the run. */
+var MEET_TOUCH=22, MEET_NEAR=44;
+var meetCache=null, meetKey='';
+function meets(p){
+  var key=(p&&p.slug)+'|'+lookIx;
+  if(meetKey===key&&meetCache)return meetCache;
+  meetKey=key;
+  var out={us:{},them:{},list:[]};
+  var th=themOf(p), mu=matchups(p);
+  ours(p).forEach(function(q){
+    var m=mu[q.id]; if(!m||!th.men.length)return;
+    var a=pathOf(p,q), b=m.path;
+    if(a.total<=0&&b.length<2)return;      // nobody is moving; there is no collision
+    var hit=null, near=null;
+    for(var i=0;i<=120;i++){
+      var t=i/120, pa=atT(a,t), pb=segAt(b,t);
+      var d=Math.hypot(pa.x-pb.x,pa.y-pb.y);
+      if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
+      if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}
+    }
+    var c=hit||((near&&near.d<=MEET_NEAR)?near:null);
+    if(!c)return;
+    c.mine=q; c.his=m;
+    c.x=(c.a.x+c.b.x)/2; c.y=(c.a.y+c.b.y)/2;
+    out.us[q.id]=c; out.them[m.bi]=c; out.list.push(c);
+  });
+  meetCache=out;
   return out;
 }
 function segAt(path,t){
@@ -399,15 +443,27 @@ function drawField(opts){
   /* Their eleven, drawn under ours and moving with them, so a boy can see the
      man he has to beat doing what that man is coached to do. */
   if(opts.them&&showThem){
-    var TH=themOf(p), tt=(opts.t===undefined?0:opts.t);
-    TH.men.forEach(function(m){
+    var TH=themOf(p), tt=(opts.t===undefined?0:opts.t), MT=meets(p);
+    /* Where the pairs are going to meet, marked from the first frame so a boy can
+       see where his block or his tackle is supposed to happen before it does. It
+       fills in once they get there. */
+    MT.list.forEach(function(c){
+      var here=tt>=c.t;
+      svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:here?11:9,fill:here?'rgba(229,138,107,.22)':'none',
+        stroke:'#E58A6B','stroke-opacity':here?.95:.4,'stroke-width':here?2:1.2,
+        'stroke-dasharray':here?'':'3 3'}));
+      if(here)svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:2.6,fill:'#E58A6B'}));
+    });
+    TH.men.forEach(function(m,bi){
       if(m.path.length>1){
         var d='M'+m.path[0].x+','+m.path[0].y;
         m.path.forEach(function(t,i){ if(i)d+=' L'+t.x+','+t.y; });
         svg.appendChild(E('path',{d:d,fill:'none',stroke:'#EDEBE0','stroke-opacity':.16,
           'stroke-width':1.5,'stroke-linecap':'round','stroke-dasharray':'5 4'}));
       }
-      var at=segAt(m.path,tt), on=opts.beat&&opts.beat===m;
+      var mc=MT.them[bi];
+      var at=(mc&&tt>=mc.t)?mc.b:segAt(m.path,tt);
+      var on=opts.beat&&opts.beat===m;
       [[-7,-7,7,7],[-7,7,7,-7]].forEach(function(dd){
         svg.appendChild(E('line',{x1:at.x+dd[0],y1:at.y+dd[1],x2:at.x+dd[2],y2:at.y+dd[3],
           stroke:on?'#E58A6B':'#EDEBE0','stroke-opacity':on?1:.4,
@@ -500,6 +556,7 @@ function paintSrc(){
 }
 function indexData(d){
   DATA=d; BY_SLUG={}; ROSTER={};
+  themKey=''; themCache=null; meetKey=''; meetCache=null;
   (d.roster||[]).forEach(function(r){ROSTER[r.last]=r;});
   (d.plays||[]).forEach(function(q){BY_SLUG[q.slug]=q;});
   var sel=document.getElementById('playSel');
@@ -588,9 +645,12 @@ function buildPaths(){
   paths=ours(play).map(function(q){return {q:q,path:pathOf(play,q)};});
 }
 function frameAt(t){
+  var MT=showThem?meets(play):{us:{}};
   drawField({routes:true,names:true,aim:true,them:true,t:t,view:watchView,
     people:paths.map(function(e){
-      var pt=atT(e.path,t);
+      // a man who has met his man stops there — that is the block, or the tackle
+      var c=MT.us[e.q.id];
+      var pt=(c&&t>=c.t)?c.a:atT(e.path,t);
       return {q:e.q,x:pt.x,y:pt.y};
     })});
 }

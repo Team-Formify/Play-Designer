@@ -623,7 +623,11 @@ function themOf(p){
     // no counterpart: the drafted opponents that live on the play itself
     var men=p.players.filter(function(q){return q.team==='x';});
     var ids={}; men.forEach(function(q){ids[q.id]=1;});
-    return {men:men.map(function(q){return{x:q.x,y:q.y,q:q};}),
+    return {men:men.map(function(q){
+              var r=look(p).routes.filter(function(x){return x.playerId===q.id;})[0];
+              return{x:q.x,y:q.y,q:q,
+                     path:[{x:q.x,y:q.y}].concat(r?r.points:[])};
+            }),
             routes:look(p).routes.filter(function(r){return ids[r.playerId];})
               .map(function(r){var o=men.filter(function(q){return q.id===r.playerId;})[0];
                 return{from:{x:o.x,y:o.y},points:r.points};}),
@@ -635,12 +639,16 @@ function themOf(p){
   var room=(hSgn<0?(p.los-18):(VB.h-18-p.los));
   var k=Math.min(1,Math.max(0.2,room/depth));
   function M(x,y){ return {x:VB.w-x, y:p.los+hSgn*((y-src.los)*sSgn)*k}; }
-  var byId={}; so.forEach(function(q){byId[q.id]=q;});
-  var men=so.map(function(q){var m=M(q.x,q.y); m.q=q; return m;});
+  var rt={};
+  look(src).routes.forEach(function(r){rt[r.playerId]=r;});
   var routes=[];
-  look(src).routes.forEach(function(r){
-    var o=byId[r.playerId]; if(!o||!r.points||!r.points.length)return;
-    routes.push({from:M(o.x,o.y),points:r.points.map(function(t){return M(t.x,t.y);})});
+  var men=so.map(function(q){
+    var m=M(q.x,q.y); m.q=q;
+    var r=rt[q.id];
+    m.path=[{x:m.x,y:m.y}].concat(
+      (r&&r.points)?r.points.map(function(t){return M(t.x,t.y);}):[]);
+    if(m.path.length>1)routes.push({from:m.path[0],points:m.path.slice(1)});
+    return m;
   });
   return {men:men,routes:routes,derived:true,name:src.name};
 }
@@ -666,9 +674,55 @@ function matchups(p){
     if(usedA[pr.a.id]||usedB[pr.bi])return;
     usedA[pr.a.id]=1; usedB[pr.bi]=1;
     var m=th.men[pr.bi];
-    out[pr.a.id]={x:m.x,y:m.y,label:(m.q&&m.q.label)||'',
+    out[pr.a.id]={x:m.x,y:m.y,path:m.path||[{x:m.x,y:m.y}],
+                  label:(m.q&&m.q.label)||'',
                   role:(m.q&&(m.q.role||''))||'',job:(m.q&&(m.q.job||''))||'',
                   unit:th.name||''};
+  });
+  return out;
+}
+
+/* Where each matched pair actually comes together — the block, or the tackle.
+   Both men are walked down their own routes on one clock; the first step where
+   they are within touching distance is the collision, and if they never quite
+   touch, their closest approach counts provided it is close enough to be a
+   collision and not two men passing on opposite sides of the field.
+   Worked out from the two plays every time it is drawn, never stored, so dragging
+   a man or redrawing a lane moves the contact point with him as he moves. */
+var MEET_TOUCH=22, MEET_NEAR=44;
+function walk(pts,t){
+  var segs=[],total=0,i;
+  for(i=1;i<pts.length;i++){var L=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);segs.push(L);total+=L;}
+  if(total<=0)return pts[0];
+  var want=total*t,run=0;
+  for(i=0;i<segs.length;i++){
+    if(run+segs[i]>=want){var f=segs[i]?(want-run)/segs[i]:0;
+      return {x:pts[i].x+(pts[i+1].x-pts[i].x)*f,y:pts[i].y+(pts[i+1].y-pts[i].y)*f};}
+    run+=segs[i];
+  }
+  return pts[pts.length-1];
+}
+function meetsOf(p){
+  var th=themOf(p), mu=matchups(p), out=[];
+  if(!th.men.length)return out;
+  var byRoute={};
+  look(p).routes.forEach(function(r){byRoute[r.playerId]=r;});
+  p.players.filter(function(q){return q.team==='o';}).forEach(function(q){
+    var m=mu[q.id]; if(!m)return;
+    var r=byRoute[q.id];
+    var a=[{x:q.x,y:q.y}].concat(r?r.points:[]);
+    var b=m.path||[{x:m.x,y:m.y}];
+    if(a.length<2&&b.length<2)return;
+    var hit=null,near=null;
+    for(var i=0;i<=120;i++){
+      var t=i/120, pa=walk(a,t), pb=walk(b,t);
+      var d=Math.hypot(pa.x-pb.x,pa.y-pb.y);
+      if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
+      if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}
+    }
+    var c=hit||((near&&near.d<=MEET_NEAR)?near:null);
+    if(!c)return;
+    out.push({x:(c.a.x+c.b.x)/2,y:(c.a.y+c.b.y)/2,id:q.id,label:q.label||'',vs:m.label||''});
   });
   return out;
 }
@@ -1135,6 +1189,14 @@ function drawField(){
           stroke:on&&!printing?C.hot:C.chalk,'stroke-opacity':on?1:C.themOp,
           'stroke-width':on?3:2.2,'stroke-linecap':'round'}));
       });
+    });
+    // where each pair is going to come together
+    meetsOf(p).forEach(function(c){
+      var on=(c.id===selId);
+      svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:on?11:9,
+        fill:on?'rgba(229,138,107,.2)':'none',
+        stroke:printing?C.chalk:C.hot,'stroke-opacity':on?.95:.5,
+        'stroke-width':on?2:1.2,'stroke-dasharray':on?'':'3 3'}));
     });
     // tapping one of ours draws the line to the man he has to beat
     if(sel){
