@@ -1853,158 +1853,477 @@
           "y": 180
         }
       ],
-      "routes": [
+      "howItWorks": "Ten across, level with the kicker, so the whole unit times its run-up together and crosses the free kick line at full speed at the same moment. Every man has a lane and stays in it — coverage breaks down when someone runs around a block instead of through his lane. The kicker is the safety and stays behind the ball the whole way.",
+      "looks": [
         {
-          "playerId": "p10",
-          "points": [
+          "id": "deep",
+          "name": "Deep",
+          "how": "The kick we want: high, to the corner, landing inside their 10. Everybody sprints his lane and keeps his shoulders square. Nobody passes the BALL men.",
+          "aim": {
+            "x": 330,
+            "y": 268,
+            "from": "K",
+            "label": "KICK HERE — DEEP CORNER, INSIDE THE 10"
+          },
+          "routes": [
             {
-              "x": 210,
-              "y": 352
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 352
+                },
+                {
+                  "x": 210,
+                  "y": 293
+                }
+              ]
             },
             {
-              "x": 210,
-              "y": 293
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 376,
+                  "y": 280
+                },
+                {
+                  "x": 365,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 341,
+                  "y": 280
+                },
+                {
+                  "x": 331,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 305,
+                  "y": 280
+                },
+                {
+                  "x": 298,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 269,
+                  "y": 280
+                },
+                {
+                  "x": 265,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 233,
+                  "y": 280
+                },
+                {
+                  "x": 231,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 187,
+                  "y": 280
+                },
+                {
+                  "x": 189,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 151,
+                  "y": 280
+                },
+                {
+                  "x": 155,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 115,
+                  "y": 280
+                },
+                {
+                  "x": 122,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 79,
+                  "y": 280
+                },
+                {
+                  "x": 89,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 44,
+                  "y": 280
+                },
+                {
+                  "x": 55,
+                  "y": 150
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p0",
-          "points": [
+          "id": "pooch",
+          "name": "Pooch",
+          "how": "High and short, about 25 yards, dropped in front of their deep men so one of their blockers has to catch it. Less field to cover: the whole line squeezes toward the ball and the outside men tighten instead of running past it.",
+          "aim": {
+            "x": 300,
+            "y": 300,
+            "from": "K",
+            "label": "POOCH — HIGH AND SHORT, IN FRONT OF THEIR DEEP MEN"
+          },
+          "routes": [
             {
-              "x": 376,
-              "y": 280
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 355
+                },
+                {
+                  "x": 230,
+                  "y": 300
+                }
+              ]
             },
             {
-              "x": 365,
-              "y": 150
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 376,
+                  "y": 355
+                },
+                {
+                  "x": 351,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 341,
+                  "y": 355
+                },
+                {
+                  "x": 324,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 305,
+                  "y": 355
+                },
+                {
+                  "x": 298,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 269,
+                  "y": 355
+                },
+                {
+                  "x": 273,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 233,
+                  "y": 355
+                },
+                {
+                  "x": 246,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 187,
+                  "y": 355
+                },
+                {
+                  "x": 213,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 151,
+                  "y": 355
+                },
+                {
+                  "x": 187,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 115,
+                  "y": 355
+                },
+                {
+                  "x": 161,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 79,
+                  "y": 355
+                },
+                {
+                  "x": 135,
+                  "y": 300
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 44,
+                  "y": 355
+                },
+                {
+                  "x": 109,
+                  "y": 300
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p1",
-          "points": [
+          "id": "squib",
+          "name": "Squib",
+          "how": "Low and hard along the ground so their front line has to field it, not their returner. It is a live ball: the middle five attack it, the outside men hold their lanes in case it is picked up and brought back.",
+          "aim": {
+            "x": 250,
+            "y": 308,
+            "from": "K",
+            "label": "SQUIB — LOW AND HARD, ON THE GROUND BY THEIR 35"
+          },
+          "routes": [
             {
-              "x": 341,
-              "y": 280
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 359
+                },
+                {
+                  "x": 224,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 331,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p2",
-          "points": [
-            {
-              "x": 305,
-              "y": 280
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 376,
+                  "y": 359
+                },
+                {
+                  "x": 324,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 298,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p3",
-          "points": [
-            {
-              "x": 269,
-              "y": 280
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 341,
+                  "y": 359
+                },
+                {
+                  "x": 302,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 265,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p4",
-          "points": [
-            {
-              "x": 233,
-              "y": 280
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 305,
+                  "y": 359
+                },
+                {
+                  "x": 281,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 231,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p5",
-          "points": [
-            {
-              "x": 187,
-              "y": 280
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 269,
+                  "y": 359
+                },
+                {
+                  "x": 260,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 189,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p6",
-          "points": [
-            {
-              "x": 151,
-              "y": 280
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 233,
+                  "y": 359
+                },
+                {
+                  "x": 238,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 155,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p7",
-          "points": [
-            {
-              "x": 115,
-              "y": 280
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 187,
+                  "y": 359
+                },
+                {
+                  "x": 211,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 122,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p8",
-          "points": [
-            {
-              "x": 79,
-              "y": 280
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 151,
+                  "y": 359
+                },
+                {
+                  "x": 189,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 89,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p9",
-          "points": [
-            {
-              "x": 44,
-              "y": 280
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 115,
+                  "y": 359
+                },
+                {
+                  "x": 168,
+                  "y": 308
+                }
+              ]
             },
             {
-              "x": 55,
-              "y": 150
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 79,
+                  "y": 359
+                },
+                {
+                  "x": 147,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 44,
+                  "y": 359
+                },
+                {
+                  "x": 125,
+                  "y": 308
+                }
+              ]
             }
           ]
         }
-      ],
-      "howItWorks": "Ten across, level with the kicker, so the whole unit times its run-up together and crosses the free kick line at full speed at the same moment. Every man has a lane and stays in it — coverage breaks down when someone runs around a block instead of through his lane. The kicker is the safety and stays behind the ball the whole way.",
-      "aim": {
-        "x": 330,
-        "y": 268,
-        "from": "K",
-        "label": "KICK HERE — DEEP CORNER, INSIDE THE 10"
-      }
+      ]
     },
     {
       "slug": "cluster-kickoff-huddle-to-twins",
@@ -2234,158 +2553,477 @@
           "y": 184
         }
       ],
-      "routes": [
+      "howItWorks": "The ten huddle inside the numbers instead of spreading out. They hold until the kicker starts his approach, then break to their lanes. It makes the return team guess, and it forces them to compress in case of an onside, which takes blockers away from the return. Fast kids on this one — they have further to travel to the outside lanes.",
+      "looks": [
         {
-          "playerId": "p0",
-          "points": [
+          "id": "deep",
+          "name": "Deep",
+          "how": "The pairs break for the sidelines as the kicker starts his approach, and the kick goes deep to a corner away from their best returner. The huddle makes them stay home in case it is onside, so the field is wider than it looks.",
+          "aim": {
+            "x": 330,
+            "y": 280,
+            "from": "K",
+            "label": "KICK HERE — DEEP CORNER, AWAY FROM THEIR BEST RETURNER"
+          },
+          "routes": [
             {
-              "x": 300,
-              "y": 350
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 350
+                },
+                {
+                  "x": 346,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 346,
-              "y": 346
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 120,
+                  "y": 354
+                },
+                {
+                  "x": 74,
+                  "y": 346
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 294,
+                  "y": 370
+                },
+                {
+                  "x": 324,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 126,
+                  "y": 374
+                },
+                {
+                  "x": 96,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 219,
+                  "y": 251
+                },
+                {
+                  "x": 219,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 197,
+                  "y": 253
+                },
+                {
+                  "x": 198,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 214,
+                  "y": 263
+                },
+                {
+                  "x": 214,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 191,
+                  "y": 265
+                },
+                {
+                  "x": 192,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 276
+                },
+                {
+                  "x": 224,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 276
+                },
+                {
+                  "x": 201,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 297
+                },
+                {
+                  "x": 210,
+                  "y": 150
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p3",
-          "points": [
+          "id": "pooch",
+          "name": "Pooch",
+          "how": "Same break, shorter kick. The pairs still get to the sidelines but stop their sprint at the ball instead of running past it, and the middle lanes come up hard under the catch.",
+          "aim": {
+            "x": 300,
+            "y": 308,
+            "from": "K",
+            "label": "POOCH — HIGH AND SHORT, IN FRONT OF THEIR DEEP MEN"
+          },
+          "routes": [
             {
-              "x": 120,
-              "y": 354
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 350
+                },
+                {
+                  "x": 346,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 74,
-              "y": 346
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 120,
+                  "y": 354
+                },
+                {
+                  "x": 74,
+                  "y": 346
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 294,
+                  "y": 370
+                },
+                {
+                  "x": 324,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 126,
+                  "y": 374
+                },
+                {
+                  "x": 96,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 330
+                },
+                {
+                  "x": 237,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 203,
+                  "y": 332
+                },
+                {
+                  "x": 220,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 214,
+                  "y": 342
+                },
+                {
+                  "x": 233,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 191,
+                  "y": 344
+                },
+                {
+                  "x": 216,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 355
+                },
+                {
+                  "x": 241,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 355
+                },
+                {
+                  "x": 223,
+                  "y": 308
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 376
+                },
+                {
+                  "x": 230,
+                  "y": 308
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p4",
-          "points": [
+          "id": "squib",
+          "name": "Squib",
+          "how": "The one to call if they have a returner we cannot tackle. It goes on the ground at their front line while our pairs are already moving, so we are on top of it before they have it clean.",
+          "aim": {
+            "x": 250,
+            "y": 314,
+            "from": "K",
+            "label": "SQUIB — LOW AND HARD, ON THE GROUND BY THEIR 35"
+          },
+          "routes": [
             {
-              "x": 294,
-              "y": 370
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 350
+                },
+                {
+                  "x": 346,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 324,
-              "y": 348
-            }
-          ]
-        },
-        {
-          "playerId": "p7",
-          "points": [
-            {
-              "x": 126,
-              "y": 374
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 120,
+                  "y": 354
+                },
+                {
+                  "x": 74,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 96,
-              "y": 348
-            }
-          ]
-        },
-        {
-          "playerId": "p1",
-          "points": [
-            {
-              "x": 219,
-              "y": 251
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 294,
+                  "y": 370
+                },
+                {
+                  "x": 324,
+                  "y": 348
+                }
+              ]
             },
             {
-              "x": 219,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p2",
-          "points": [
-            {
-              "x": 197,
-              "y": 253
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 126,
+                  "y": 374
+                },
+                {
+                  "x": 96,
+                  "y": 348
+                }
+              ]
             },
             {
-              "x": 198,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p5",
-          "points": [
-            {
-              "x": 214,
-              "y": 263
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 223,
+                  "y": 332
+                },
+                {
+                  "x": 230,
+                  "y": 312
+                }
+              ]
             },
             {
-              "x": 214,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p6",
-          "points": [
-            {
-              "x": 191,
-              "y": 265
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 335
+                },
+                {
+                  "x": 217,
+                  "y": 314
+                }
+              ]
             },
             {
-              "x": 192,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p8",
-          "points": [
-            {
-              "x": 225,
-              "y": 276
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 214,
+                  "y": 345
+                },
+                {
+                  "x": 227,
+                  "y": 314
+                }
+              ]
             },
             {
-              "x": 224,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p9",
-          "points": [
-            {
-              "x": 201,
-              "y": 276
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 191,
+                  "y": 347
+                },
+                {
+                  "x": 213,
+                  "y": 314
+                }
+              ]
             },
             {
-              "x": 201,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p10",
-          "points": [
-            {
-              "x": 210,
-              "y": 297
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 358
+                },
+                {
+                  "x": 233,
+                  "y": 314
+                }
+              ]
             },
             {
-              "x": 210,
-              "y": 150
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 358
+                },
+                {
+                  "x": 219,
+                  "y": 314
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 379
+                },
+                {
+                  "x": 224,
+                  "y": 314
+                }
+              ]
             }
           ]
         }
-      ],
-      "howItWorks": "The ten huddle inside the numbers instead of spreading out. They hold until the kicker starts his approach, then break to their lanes. It makes the return team guess, and it forces them to compress in case of an onside, which takes blockers away from the return. Fast kids on this one — they have further to travel to the outside lanes.",
-      "aim": {
-        "x": 330,
-        "y": 280,
-        "from": "K",
-        "label": "KICK HERE — DEEP CORNER, AWAY FROM THEIR BEST RETURNER"
-      }
+      ]
     },
     {
       "slug": "cluster-ko-10-play",
@@ -2615,158 +3253,477 @@
           "y": 184
         }
       ],
-      "routes": [
+      "howItWorks": "Same huddle and same break as Cluster Speed, run with the boys who need snaps. The X-men stay interior, which is where the league requires them and also the shortest run. The huddle does the work here — it buys the coverage a half second because the return team cannot see who is going where until the kicker moves.",
+      "looks": [
         {
-          "playerId": "p0",
-          "points": [
+          "id": "deep",
+          "name": "Deep",
+          "how": "Deep and down the middle, because the middle is the easiest place for a young unit to fit. Everybody has a lane and nobody has to make a decision on the run.",
+          "aim": {
+            "x": 210,
+            "y": 278,
+            "from": "K",
+            "label": "KICK HERE — DEEP AND DOWN THE MIDDLE"
+          },
+          "routes": [
             {
-              "x": 300,
-              "y": 350
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 350
+                },
+                {
+                  "x": 346,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 346,
-              "y": 346
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 120,
+                  "y": 354
+                },
+                {
+                  "x": 74,
+                  "y": 346
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 294,
+                  "y": 370
+                },
+                {
+                  "x": 324,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 126,
+                  "y": 374
+                },
+                {
+                  "x": 96,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 219,
+                  "y": 251
+                },
+                {
+                  "x": 219,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 197,
+                  "y": 253
+                },
+                {
+                  "x": 198,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 214,
+                  "y": 263
+                },
+                {
+                  "x": 214,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 191,
+                  "y": 265
+                },
+                {
+                  "x": 192,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 276
+                },
+                {
+                  "x": 224,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 276
+                },
+                {
+                  "x": 201,
+                  "y": 150
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 297
+                },
+                {
+                  "x": 210,
+                  "y": 150
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p3",
-          "points": [
+          "id": "pooch",
+          "name": "Pooch",
+          "how": "High and short so it lands on one of their blockers instead of their returner. Short field, so nobody outruns the ball — get to it and get square.",
+          "aim": {
+            "x": 250,
+            "y": 306,
+            "from": "K",
+            "label": "POOCH — HIGH AND SHORT, IN FRONT OF THEIR DEEP MEN"
+          },
+          "routes": [
             {
-              "x": 120,
-              "y": 354
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 350
+                },
+                {
+                  "x": 346,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 74,
-              "y": 346
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 120,
+                  "y": 354
+                },
+                {
+                  "x": 74,
+                  "y": 346
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 294,
+                  "y": 370
+                },
+                {
+                  "x": 324,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 126,
+                  "y": 374
+                },
+                {
+                  "x": 96,
+                  "y": 348
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 221,
+                  "y": 329
+                },
+                {
+                  "x": 226,
+                  "y": 306
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 200,
+                  "y": 331
+                },
+                {
+                  "x": 209,
+                  "y": 306
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 214,
+                  "y": 341
+                },
+                {
+                  "x": 222,
+                  "y": 306
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 191,
+                  "y": 343
+                },
+                {
+                  "x": 205,
+                  "y": 306
+                }
+              ]
+            },
+            {
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 354
+                },
+                {
+                  "x": 230,
+                  "y": 306
+                }
+              ]
+            },
+            {
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 354
+                },
+                {
+                  "x": 212,
+                  "y": 306
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 375
+                },
+                {
+                  "x": 219,
+                  "y": 306
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p4",
-          "points": [
+          "id": "squib",
+          "name": "Squib",
+          "how": "On the ground at their front line. It is a live ball and it is the play most likely to give this group a takeaway, so everybody runs to the football.",
+          "aim": {
+            "x": 210,
+            "y": 312,
+            "from": "K",
+            "label": "SQUIB — LOW AND HARD, ON THE GROUND BY THEIR 35"
+          },
+          "routes": [
             {
-              "x": 294,
-              "y": 370
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 350
+                },
+                {
+                  "x": 346,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 324,
-              "y": 348
-            }
-          ]
-        },
-        {
-          "playerId": "p7",
-          "points": [
-            {
-              "x": 126,
-              "y": 374
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 120,
+                  "y": 354
+                },
+                {
+                  "x": 74,
+                  "y": 346
+                }
+              ]
             },
             {
-              "x": 96,
-              "y": 348
-            }
-          ]
-        },
-        {
-          "playerId": "p1",
-          "points": [
-            {
-              "x": 219,
-              "y": 251
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 294,
+                  "y": 370
+                },
+                {
+                  "x": 324,
+                  "y": 348
+                }
+              ]
             },
             {
-              "x": 219,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p2",
-          "points": [
-            {
-              "x": 197,
-              "y": 253
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 126,
+                  "y": 374
+                },
+                {
+                  "x": 96,
+                  "y": 348
+                }
+              ]
             },
             {
-              "x": 198,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p5",
-          "points": [
-            {
-              "x": 214,
-              "y": 263
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 218,
+                  "y": 332
+                },
+                {
+                  "x": 216,
+                  "y": 312
+                }
+              ]
             },
             {
-              "x": 214,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p6",
-          "points": [
-            {
-              "x": 191,
-              "y": 265
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 198,
+                  "y": 334
+                },
+                {
+                  "x": 202,
+                  "y": 312
+                }
+              ]
             },
             {
-              "x": 192,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p8",
-          "points": [
-            {
-              "x": 225,
-              "y": 276
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 214,
+                  "y": 344
+                },
+                {
+                  "x": 213,
+                  "y": 312
+                }
+              ]
             },
             {
-              "x": 224,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p9",
-          "points": [
-            {
-              "x": 201,
-              "y": 276
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 191,
+                  "y": 346
+                },
+                {
+                  "x": 198,
+                  "y": 312
+                }
+              ]
             },
             {
-              "x": 201,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p10",
-          "points": [
-            {
-              "x": 210,
-              "y": 297
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 225,
+                  "y": 357
+                },
+                {
+                  "x": 219,
+                  "y": 312
+                }
+              ]
             },
             {
-              "x": 210,
-              "y": 150
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 201,
+                  "y": 357
+                },
+                {
+                  "x": 204,
+                  "y": 312
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 210,
+                  "y": 378
+                },
+                {
+                  "x": 210,
+                  "y": 312
+                }
+              ]
             }
           ]
         }
-      ],
-      "howItWorks": "Same huddle and same break as Cluster Speed, run with the boys who need snaps. The X-men stay interior, which is where the league requires them and also the shortest run. The huddle does the work here — it buys the coverage a half second because the return team cannot see who is going where until the kicker moves.",
-      "aim": {
-        "x": 210,
-        "y": 278,
-        "from": "K",
-        "label": "KICK HERE — DEEP AND DOWN THE MIDDLE"
-      }
+      ]
     },
     {
       "slug": "onside-kick-kangaroo-right",
