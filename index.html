@@ -156,6 +156,12 @@
     <button class="mode lbl" data-l="off" aria-pressed="false">Hide</button>
   </div>
 
+  <div class="row" role="group" aria-label="Field view">
+    <span class="labhint">Field:</span>
+    <button class="mode lbl" data-v="fit" aria-pressed="true">Fit to play</button>
+    <button class="mode lbl" data-v="full" aria-pressed="false">Whole field</button>
+  </div>
+
   <div class="sec">
     <h2>Load a starting formation</h2>
     <div class="chips" id="presets"></div>
@@ -268,6 +274,76 @@ function fullName(last){
          (pos.length?'  \u2014 '+pos.join(' | '):'');
 }
 var VB={w:420,h:500};
+/* The visible window onto the field. The whole 420x500 box is mostly empty grass
+   for any given unit — a kickoff uses about a quarter of it — so by default we
+   crop to the play and everything on screen roughly doubles in size. */
+var VIEW={x:0,y:0,w:420,h:500};
+var fitMode='fit';
+
+function computeView(p,lay){
+  var full={x:0,y:0,w:VB.w,h:VB.h};
+  if(fitMode==='full'||!p||!p.players.length)return full;
+  var xs=[],ys=[];
+  p.players.forEach(function(q){xs.push(q.x);ys.push(q.y);});
+  (p.routes||[]).forEach(function(r){(r.points||[]).forEach(function(t){xs.push(t.x);ys.push(t.y);});});
+  ys.push(p.los);                       // the line is always worth showing
+  // Second pass: once names are placed, make sure the window contains them too.
+  if(lay)Object.keys(lay).forEach(function(k){
+    var r=lay[k].rect;
+    xs.push(r.x,r.x+r.w); ys.push(r.y,r.y+r.h);
+  });
+  var x0=Math.min.apply(null,xs)-18, x1=Math.max.apply(null,xs)+18;
+  var y0=Math.min.apply(null,ys)-22, y1=Math.max.apply(null,ys)+24;
+  var w=x1-x0, h=y1-y0, c;
+  if(w<240){c=(x0+x1)/2; x0=c-120; w=240;}
+  if(h<200){c=(y0+y1)/2; y0=c-100; h=200;}
+  // keep it phone-shaped: never taller than 1.35:1, never wider than 2.2:1
+  if(h/w>1.35){c=x0+w/2; w=h/1.35; x0=c-w/2;}
+  if(w/h>2.2){c=y0+h/2; h=w/2.2; y0=c-h/2;}
+  if(w<=VB.w){ x0=Math.max(0,Math.min(x0,VB.w-w)); } else { x0=(VB.w-w)/2; }
+  if(h<=VB.h){ y0=Math.max(0,Math.min(y0,VB.h-h)); } else { y0=(VB.h-h)/2; }
+  return{x:x0,y:y0,w:w,h:h};
+}
+
+function rectsOverlap(a,b){
+  return !(a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y);
+}
+/* Place every name so it clears the player circles and the names already placed.
+   The old version only staggered alternate men in a row, which is why BLACK and
+   BEARNSON ended up underneath the wings on the punt sheets. */
+function placeLabels(p){
+  var FS=9.5, LH=12;
+  var obstacles=p.players.map(function(q){return{x:q.x-13,y:q.y-13,w:26,h:26};});
+  var CAND=[[0,16],[0,28],[0,40],[34,16],[-34,16],[34,28],[-34,28],[0,52],
+            [0,-30],[0,-42],[48,-6],[-48,-6]];
+  var out={};
+  p.players.filter(function(q){return q.name&&q.team==='o';})
+    .slice().sort(function(a,b){return a.y-b.y||a.x-b.x;})
+    .forEach(function(q){
+      var d=info(q.name);
+      var full=d.l.toUpperCase()+(d.n?' '+d.n:''), short=d.l.toUpperCase();
+      var texts = lblMode==='num' ? [d.n||short.slice(0,4)]
+                : lblMode==='full'? [full]
+                : [full,short,(d.n||short.slice(0,3))];
+      var best=null;
+      for(var ti=0;ti<texts.length;ti++){
+        if(best&&best.score<=0.5)break;                 // already clean, keep the longer name
+        var t=texts[ti], w=t.length*FS*0.58+5;
+        for(var ci=0;ci<CAND.length;ci++){
+          var dx=CAND[ci][0], dy=CAND[ci][1];
+          var rect={x:q.x+dx-w/2,y:q.y+dy,w:w,h:LH}, sc=0;
+          for(var oi=0;oi<obstacles.length;oi++) if(rectsOverlap(rect,obstacles[oi])) sc+=10;
+          sc+=ci*0.5+ti*2.5;                            // prefer the default spot and the full name
+          if(rect.x<VIEW.x+2)sc+=6;
+          if(rect.x+rect.w>VIEW.x+VIEW.w-2)sc+=6;
+          if(!best||sc<best.score)best={score:sc,text:t,dx:dx,dy:dy,w:w,rect:rect};
+        }
+      }
+      out[q.id]=best;
+      obstacles.push(best.rect);
+    });
+  return out;
+}
 
 /* ---------- presets ---------- */
 function P(x,y,l,t,n){return{id:'p'+(Math.random()*1e9|0),x:x,y:y,label:l||'',name:n||'',team:t||'o',fromPreset:n?1:0};}
@@ -442,7 +518,11 @@ var svg=document.getElementById('field');
 function drawField(){
   var p=cur(); if(!p)return;
   svg.innerHTML='';
-  svg.appendChild(E('rect',{width:VB.w,height:VB.h,fill:'#1D3A31'}));
+  VIEW=computeView(p,null);
+  var lay=placeLabels(p);
+  VIEW=computeView(p,lay);
+  svg.setAttribute('viewBox',VIEW.x+' '+VIEW.y+' '+VIEW.w+' '+VIEW.h);
+  svg.appendChild(E('rect',{x:VIEW.x,y:VIEW.y,width:VIEW.w,height:VIEW.h,fill:'#1D3A31'}));
 
   var g=E('g',{});
   for(var y=10;y<=VB.h-6;y+=28){
@@ -457,9 +537,26 @@ function drawField(){
   g.appendChild(E('line',{x1:406,x2:406,y1:0,y2:VB.h,stroke:'#EDEBE0','stroke-opacity':.3,'stroke-width':2}));
   svg.appendChild(g);
 
-  svg.appendChild(E('line',{x1:0,x2:VB.w,y1:p.los,y2:p.los,stroke:'#E3B547','stroke-width':1.8,'stroke-dasharray':'6 4'}));
-  var lt=E('text',{x:6,y:p.los-6,fill:'#E3B547','font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'letter-spacing':1});
-  lt.textContent=p.losLabel; svg.appendChild(lt);
+  svg.appendChild(E('line',{x1:VIEW.x,x2:VIEW.x+VIEW.w,y1:p.los,y2:p.los,
+    stroke:'#E3B547','stroke-width':1.8,'stroke-dasharray':'6 4'}));
+  if(p.losLabel){
+    // Cropping brings the sideline in close, so this used to land on top of the
+    // outside man. Take the first offset that clears every circle.
+    var lw=p.losLabel.length*5.6+6, lx=VIEW.x+6, ly=-6;
+    var offs=[-6,-25,20,36];
+    for(var oi=0;oi<offs.length;oi++){
+      var rr={x:lx-3,y:p.los+offs[oi]-8,w:lw,h:11};
+      var clash=p.players.some(function(q){
+        return rectsOverlap(rr,{x:q.x-15,y:q.y-15,w:30,h:30});
+      });
+      if(!clash){ly=offs[oi];break;}
+    }
+    svg.appendChild(E('rect',{x:lx-3,y:p.los+ly-8,width:lw,height:11,rx:2,
+      fill:'#13251F','fill-opacity':.72}));
+    var lt=E('text',{x:lx,y:p.los+ly,fill:'#E3B547',
+      'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'letter-spacing':1});
+    lt.textContent=p.losLabel; svg.appendChild(lt);
+  }
 
   // routes
   p.routes.forEach(function(r){
@@ -479,49 +576,6 @@ function drawField(){
     });
   });
 
-  // work out label placement so crowded rows stay readable
-  var mine=p.players.filter(function(q){return q.team==='o';});
-  var bands=[],cb=null;
-  mine.slice().sort(function(a,b){return a.y-b.y||a.x-b.x;}).forEach(function(q){
-    if(!cb||Math.abs(q.y-cb.y)>26){cb={y:q.y,items:[]};bands.push(cb);}
-    cb.items.push(q);
-  });
-  var lay={};
-  bands.forEach(function(b){
-    b.items.sort(function(a,c){return a.x-c.x;});
-    var gaps=[];
-    b.items.forEach(function(q,i){
-      var gl=i>0?q.x-b.items[i-1].x:999, gr=i<b.items.length-1?b.items[i+1].x-q.x:999;
-      gaps.push(Math.min(gl,gr));
-    });
-    var tight=Math.min.apply(null,gaps)<62;
-    b.items.forEach(function(q,i){
-      // when we stagger, a label only competes with the player two spots away
-      var room=gaps[i];
-      if(tight){
-        var gl2=i>1?q.x-b.items[i-2].x:999;
-        var gr2=i<b.items.length-2?b.items[i+2].x-q.x:999;
-        room=Math.min(gl2,gr2);
-      }
-      lay[q.id]={dy:(tight&&i%2===1)?12:0,room:room};
-    });
-  });
-
-  function labelFor(pl){
-    var d=info(pl.name), L=lblMode;
-    if(L==='num')return d.n||d.l.slice(0,4).toUpperCase();
-    var full=d.l.toUpperCase()+(d.n?' '+d.n:'');
-    if(L==='full')return full;
-    var room=(lay[pl.id]&&lay[pl.id].room)||999;
-    if(room>=999)return full;
-    var chars=Math.max(3,Math.floor((room-6)/5.0));
-    if(full.length<=chars)return full;
-    var short=d.l.toUpperCase();
-    if(short.length<=chars)return short;
-    if(d.n&&(''+d.n).length<=chars)return d.n;
-    return short.slice(0,chars);
-  }
-
   // players
   p.players.forEach(function(pl){
     var grp=E('g',{'data-id':pl.id,style:'cursor:pointer'});
@@ -540,19 +594,19 @@ function drawField(){
         t.textContent=pl.label; grp.appendChild(t);
       }
     }
-    if(pl.name&&lblMode!=='off'&&pl.team==='o'){
+    if(pl.name&&lblMode!=='off'&&pl.team==='o'&&lay[pl.id]){
       var d=info(pl.name);
-      var dy=(lay[pl.id]?lay[pl.id].dy:0);
-      var txt=labelFor(pl);
-      var fs=9.5, wpx=txt.length*fs*0.58;
-      grp.appendChild(E('rect',{x:pl.x-wpx/2-2.5,y:pl.y+16+dy,width:wpx+5,height:12,rx:2,
+      var L=lay[pl.id], lx=pl.x+L.dx, ly=pl.y+L.dy;
+      grp.appendChild(E('rect',{x:lx-L.w/2,y:ly,width:L.w,height:12,rx:2,
         fill:'#13251F','fill-opacity':.82}));
-      var n=E('text',{x:pl.x,y:pl.y+25+dy,'text-anchor':'middle',fill:'#EDEBE0',
-        'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':fs,'letter-spacing':.2});
-      n.textContent=txt; grp.appendChild(n);
-      if(dy>0){
-        grp.appendChild(E('line',{x1:pl.x,y1:pl.y+12,x2:pl.x,y2:pl.y+16+dy,
-          stroke:'#EDEBE0','stroke-opacity':.3}));
+      var n=E('text',{x:lx,y:ly+9,'text-anchor':'middle',fill:'#EDEBE0',
+        'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':9.5,'letter-spacing':.2});
+      n.textContent=L.text; grp.appendChild(n);
+      // leader line whenever the name had to move off its default spot
+      if(Math.abs(L.dx)>4||L.dy<0||L.dy>20){
+        var ty=L.dy<0?ly+12:ly;
+        grp.appendChild(E('line',{x1:pl.x,y1:pl.y+(L.dy<0?-12:12),x2:lx,y2:ty,
+          stroke:'#EDEBE0','stroke-opacity':.42}));
       }
       if(d.x){
         var xb=E('text',{x:pl.x+15,y:pl.y-9,'text-anchor':'middle',fill:'#E58A6B',
@@ -664,10 +718,11 @@ function paintLineup(){
 /* ---------- coords ---------- */
 function pt(evt){
   var r=svg.getBoundingClientRect();
-  return{x:(evt.clientX-r.left)/r.width*VB.w,y:(evt.clientY-r.top)/r.height*VB.h};
+  return{x:VIEW.x+(evt.clientX-r.left)/r.width*VIEW.w,
+         y:VIEW.y+(evt.clientY-r.top)/r.height*VIEW.h};
 }
 function hit(c){
-  var p=cur(),best=null,bd=26;
+  var p=cur(),best=null,bd=Math.max(13,26*VIEW.w/VB.w);
   p.players.forEach(function(pl){
     var d=Math.hypot(pl.x-c.x,pl.y-c.y);
     if(d<bd){bd=d;best=pl;}
@@ -875,11 +930,18 @@ document.getElementById('fillNames').onclick=function(){
   alert((n?('Filled '+n+' spot'+(n>1?'s':'')+'. '):'Nothing was blank. ')+
         (blanks?(blanks+' still empty \u2014 the sheet ran out of names.'):'All '+dst.length+' spots are named.'));
 };
-document.querySelectorAll('.mode.lbl').forEach(function(b){
+document.querySelectorAll('.mode.lbl[data-l]').forEach(function(b){
   b.onclick=function(){
     lblMode=b.dataset.l;
-    document.querySelectorAll('.mode.lbl').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.l===lblMode);});
+    document.querySelectorAll('.mode.lbl[data-l]').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.l===lblMode);});
     drawField();
+  };
+});
+document.querySelectorAll('.mode.lbl[data-v]').forEach(function(b){
+  b.onclick=function(){
+    fitMode=b.dataset.v;
+    document.querySelectorAll('.mode.lbl[data-v]').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.v===fitMode);});
+    save(); drawField();
   };
 });
 document.getElementById('doDownload').onclick=downloadBackup;
@@ -1020,7 +1082,7 @@ document.getElementById('playSel').onchange=function(e){
 var saveTimer=null, saveSeq=0, savedSeq=0, storageBlocked=false;
 
 function stateJSON(){
-  return JSON.stringify({plays:plays,curId:curId,team:TEAM,flipAll:flipAll,build:BUILD});
+  return JSON.stringify({plays:plays,curId:curId,team:TEAM,flipAll:flipAll,fitMode:fitMode,build:BUILD});
 }
 function paintDot(){
   var dot=document.getElementById('saveDot'); if(!dot)return;
@@ -1200,6 +1262,7 @@ function downloadBackup(){
           plays=d.plays; curId=d.curId&&d.plays[d.curId]?d.curId:Object.keys(d.plays)[0];
           if(d.team&&d.team.length){TEAM=d.team;ROSTER=TEAM.map(function(q){return q.l;});}
           if(d.flipAll)flipAll=true;
+          if(d.fitMode==='full'||d.fitMode==='fit')fitMode=d.fitMode;
           savedBuild=d.build||0;
           loaded=true;
         }
@@ -1302,6 +1365,7 @@ function downloadBackup(){
   }
   document.getElementById('playName').value=cur().name;
   document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
+  document.querySelectorAll('.mode.lbl[data-v]').forEach(function(o){o.setAttribute('aria-pressed',o.dataset.v===fitMode);});
   document.getElementById('hint').textContent=HINTS.move;
   (function(){
     function blocked(){
