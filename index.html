@@ -12,26 +12,28 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Play Designer — Lehi 8th Special Teams</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     color-scheme:dark;
     --page:#13251F; --board:#1D3A31; --deep:#0D1B16;
     --chalk:#EDEBE0; --soft:#9AA69C; --gold:#E3B547; --warm:#E58A6B;
-    --body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    /* No webfonts on purpose. This gets used on a sideline with no signal, so
+       every face below ships with the OS and nothing blocks on the network. */
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+    --display:'Haettenschweiler','Arial Narrow',Impact,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:var(--page);color:var(--chalk);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
   .wrap{max-width:760px;margin:0 auto;padding:0 12px 40px}
 
   header{background:var(--board);padding:14px 12px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  header h1{font-family:'Anton',Impact,sans-serif;text-transform:uppercase;font-size:20px;margin:0;letter-spacing:.02em;flex:1;min-width:150px}
+  header h1{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:20px;margin:0;letter-spacing:.04em;flex:1;min-width:150px}
   header h1 span{color:var(--gold)}
   select,.btn{font-family:var(--body);font-size:13px;background:var(--deep);color:var(--chalk);border:1px solid rgba(237,235,224,.25);border-radius:4px;padding:7px 10px;cursor:pointer}
   select{max-width:150px}
+  #bakSel{max-width:none;flex:1;min-width:0}
+  #bakSel:disabled,.btn:disabled{opacity:.45}
   .btn:active{background:var(--gold);color:var(--deep)}
   .btn.gold{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:600}
 
@@ -198,13 +200,20 @@
 
   <div class="sec">
     <h2>Back up your work</h2>
-    <div class="panel"><p>When I send an updated version it starts fresh. Export before you switch, then paste
-    the text back in and everything returns exactly as you left it.</p></div>
+    <div class="panel"><p>Your plays live in this browser on this device only. Download a copy now and then &mdash;
+    that file is the one thing that survives a cleared browser, a wiped phone, or a new one.</p></div>
     <div class="row">
-      <button class="btn gold" id="doExport">Export my plays</button>
+      <button class="btn gold" id="doDownload">Download backup file</button>
+      <button class="btn" id="doExport">Copy as text</button>
       <button class="btn" id="doImport">Import</button>
     </div>
-    <textarea id="ioBox" placeholder="Tap Export, then copy this text somewhere safe. To restore, paste it here and tap Import."></textarea>
+    <textarea id="ioBox" placeholder="Tap Copy as text, then paste it somewhere safe. To restore, paste it back here and tap Import."></textarea>
+
+    <label class="f">Automatic backups on this device</label>
+    <div class="row">
+      <select id="bakSel" aria-label="Choose a backup"></select>
+      <button class="btn" id="doRestore">Restore</button>
+    </div>
   </div>
 
   <div class="sec">
@@ -498,8 +507,15 @@ var STORE={
   },
   set:function(k,v){
     if(window.storage&&window.storage.set)return window.storage.set(k,v);
-    try{localStorage.setItem(k,v);}catch(e){}
+    // This catch used to swallow the error and resolve anyway, so a quota error
+    // or a private-mode block still painted the badge green. Reject instead.
+    try{localStorage.setItem(k,v);}catch(e){return Promise.reject(e);}
     return Promise.resolve({key:k,value:v});
+  },
+  del:function(k){
+    if(window.storage&&window.storage.del)return window.storage.del(k);
+    try{localStorage.removeItem(k);}catch(e){}
+    return Promise.resolve();
   }
 };
 var BUILD=9;
@@ -549,7 +565,7 @@ function drawField(){
   svg.appendChild(g);
 
   svg.appendChild(E('line',{x1:0,x2:VB.w,y1:p.los,y2:p.los,stroke:'#E3B547','stroke-width':1.8,'stroke-dasharray':'6 4'}));
-  var lt=E('text',{x:6,y:p.los-6,fill:'#E3B547','font-family':'IBM Plex Mono, monospace','font-size':8.5,'letter-spacing':1});
+  var lt=E('text',{x:6,y:p.los-6,fill:'#E3B547','font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'letter-spacing':1});
   lt.textContent=p.losLabel; svg.appendChild(lt);
 
   // routes
@@ -627,7 +643,7 @@ function drawField(){
         stroke:isSel||isRt?'#E58A6B':'#E3B547','stroke-width':isSel||isRt?2.6:2}));
       if(pl.label){
         var t=E('text',{x:pl.x,y:pl.y+3.4,'text-anchor':'middle',fill:'#E3B547',
-          'font-family':'IBM Plex Mono, monospace','font-size':9});
+          'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':9});
         t.textContent=pl.label; grp.appendChild(t);
       }
     }
@@ -639,7 +655,7 @@ function drawField(){
       grp.appendChild(E('rect',{x:pl.x-wpx/2-2.5,y:pl.y+16+dy,width:wpx+5,height:12,rx:2,
         fill:'#13251F','fill-opacity':.82}));
       var n=E('text',{x:pl.x,y:pl.y+25+dy,'text-anchor':'middle',fill:'#EDEBE0',
-        'font-family':'IBM Plex Mono, monospace','font-size':fs,'letter-spacing':.2});
+        'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':fs,'letter-spacing':.2});
       n.textContent=txt; grp.appendChild(n);
       if(dy>0){
         grp.appendChild(E('line',{x1:pl.x,y1:pl.y+12,x2:pl.x,y2:pl.y+16+dy,
@@ -647,7 +663,7 @@ function drawField(){
       }
       if(d.x){
         var xb=E('text',{x:pl.x+15,y:pl.y-9,'text-anchor':'middle',fill:'#E58A6B',
-          'font-family':'IBM Plex Mono, monospace','font-size':8.5,'font-weight':'bold'});
+          'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'font-weight':'bold'});
         xb.textContent='X'; grp.appendChild(xb);
       }
     }
@@ -991,6 +1007,10 @@ document.querySelectorAll('.mode.lbl').forEach(function(b){
     drawField();
   };
 });
+document.getElementById('doDownload').onclick=downloadBackup;
+document.getElementById('doRestore').onclick=function(){
+  restoreBackup(document.getElementById('bakSel').value);
+};
 document.getElementById('doExport').onclick=function(){
   var box=document.getElementById('ioBox');
   box.value=JSON.stringify({v:1,build:BUILD,plays:plays,team:TEAM,flipAll:flipAll});
@@ -1114,28 +1134,185 @@ document.getElementById('playSel').onchange=function(e){
   save();draw();
 };
 
-/* ---------- storage ---------- */
-var saveTimer=null;
+/* ---------- storage ----------
+   CLAUDE.md rule 5: the badge must never read SAVED while an edit is still only
+   in memory. The old version debounced 300ms and went orange only on a thrown
+   error, so a tab closed mid-debounce showed a green SAVED for a write that
+   never happened. Now an edit bumps saveSeq and paints orange immediately, and
+   only a completed write moves savedSeq up to meet it. */
+var saveTimer=null, saveSeq=0, savedSeq=0, storageBlocked=false;
+
+function stateJSON(){
+  return JSON.stringify({plays:plays,curId:curId,team:TEAM,flipAll:flipAll,build:BUILD});
+}
+function paintDot(){
+  var dot=document.getElementById('saveDot'); if(!dot)return;
+  if(!storageBlocked&&savedSeq===saveSeq){dot.textContent='saved';dot.className='ok';}
+  else{dot.textContent='NOT SAVED';dot.className='bad';}
+}
+function writeNow(){
+  clearTimeout(saveTimer); saveTimer=null;
+  if(savedSeq===saveSeq)return Promise.resolve();
+  var seq=saveSeq, body;
+  try{body=stateJSON();}
+  catch(e){storageBlocked=true;paintDot();return Promise.resolve();}
+  return STORE.set('pd-state',body).then(function(){
+    if(seq>savedSeq)savedSeq=seq;
+    storageBlocked=false; paintDot();
+    noteBackup(body);
+  }).catch(function(){
+    storageBlocked=true; paintDot();
+  });
+}
 function save(){
+  saveSeq++;
+  paintDot();                          // orange the instant the edit exists
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(function(){
-    var dot=document.getElementById('saveDot');
-    try{
-      STORE.set('pd-state',JSON.stringify({plays:plays,curId:curId,team:TEAM,flipAll:flipAll,build:BUILD}))
-        .then(function(){ if(dot){dot.textContent='saved';dot.className='ok';} })
-        .catch(function(){ if(dot){dot.textContent='NOT SAVED';dot.className='bad';} });
-    }catch(e){ if(dot){dot.textContent='NOT SAVED';dot.className='bad';} }
-  },300);
+  saveTimer=setTimeout(writeNow,300);
+}
+/* A backgrounded tab may never get another frame. Flush whatever is pending
+   right now — the localStorage write is synchronous, so it lands even here. */
+function flushSave(){ if(saveSeq!==savedSeq)writeNow(); }
+window.addEventListener('pagehide',flushSave);
+window.addEventListener('beforeunload',flushSave);
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden')flushSave();
+});
+
+/* ---------- rolling backups ----------
+   Everything lives in one key on one origin. Clearing site data, or iOS evicting
+   storage for a home-screen app it has not seen in a week, takes the whole
+   playbook with it and there is no undo. These keep a short local history so a
+   bad update or a mis-tap is recoverable, and the download button produces the
+   one copy that survives this browser entirely.
+   Backups are best effort: a failure here must never block or fail a real save. */
+var BAK_MAX=12, BAK_PRE_MAX=4, BAK_MIN_GAP=30*60*1000;
+var bakIndex=[], lastBakAt=0;
+
+function bakLoadIndex(){
+  return STORE.get('pd-bak-index').then(function(r){
+    try{bakIndex=r&&r.value?JSON.parse(r.value):[];}catch(e){bakIndex=[];}
+    if(!Array.isArray(bakIndex))bakIndex=[];
+    // Carry the gap across sessions, or every app open would burn a slot.
+    if(bakIndex.length)lastBakAt=bakIndex[bakIndex.length-1].ts||0;
+    return bakIndex;
+  }).catch(function(){bakIndex=[];});
+}
+function bakSaveIndex(){
+  return STORE.set('pd-bak-index',JSON.stringify(bakIndex)).catch(function(){});
+}
+function bakCount(body){
+  try{return Object.keys(JSON.parse(body).plays||{}).length;}catch(e){return 0;}
+}
+/* Drop the oldest 'auto' first — a 'pre-update' snapshot is the one worth having. */
+function bakPrune(){
+  var drop=[],i,j;
+  var pre=bakIndex.filter(function(b){return b.label==='pre-update';});
+  while(pre.length>BAK_PRE_MAX){
+    var old=pre.shift();
+    drop.push(bakIndex.splice(bakIndex.indexOf(old),1)[0]);
+  }
+  while(bakIndex.length>BAK_MAX){
+    i=0;
+    for(j=0;j<bakIndex.length;j++){if(bakIndex[j].label!=='pre-update'){i=j;break;}}
+    drop.push(bakIndex.splice(i,1)[0]);
+  }
+  return drop;
+}
+function bakWrite(body,label){
+  var ts=Date.now(), key='pd-bak-'+ts;
+  return STORE.set(key,body).then(function(){
+    bakIndex.push({key:key,ts:ts,n:bakCount(body),label:label||'auto'});
+    lastBakAt=ts;
+    var drop=bakPrune();
+    return Promise.all(drop.map(function(b){return STORE.del(b.key);}))
+      .then(bakSaveIndex).then(paintBackups);
+  }).catch(function(){
+    // Most likely out of quota. Give a slot back so the next real save has room.
+    var drop=bakIndex.shift();
+    if(drop)return STORE.del(drop.key).then(bakSaveIndex).then(paintBackups).catch(function(){});
+  });
+}
+function noteBackup(body){
+  if(Date.now()-lastBakAt<BAK_MIN_GAP)return;
+  bakWrite(body,'auto');
+}
+
+function bakStamp(ts){
+  var d=new Date(ts);
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+
+         d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+}
+function paintBackups(){
+  var sel=document.getElementById('bakSel'), btn=document.getElementById('doRestore');
+  if(!sel||!btn)return;
+  sel.innerHTML='';
+  if(!bakIndex.length){
+    var o=document.createElement('option');
+    o.value=''; o.textContent='No backups yet';
+    sel.appendChild(o); sel.disabled=true; btn.disabled=true; return;
+  }
+  sel.disabled=false; btn.disabled=false;
+  bakIndex.slice().reverse().forEach(function(b){
+    var op=document.createElement('option');
+    op.value=b.key;
+    op.textContent=bakStamp(b.ts)+'  \u00b7  '+b.n+' play'+(b.n===1?'':'s')+
+      (b.label==='pre-update'?'  \u00b7  before update':
+       b.label==='pre-restore'?'  \u00b7  before restore':'');
+    sel.appendChild(op);
+  });
+}
+function restoreBackup(key){
+  if(!key)return;
+  STORE.get(key).then(function(r){
+    var d;
+    try{d=JSON.parse(r&&r.value);}catch(e){}
+    if(!d||!d.plays||!Object.keys(d.plays).length){
+      alert('That backup could not be read. Nothing was changed.');return;
+    }
+    var n=Object.keys(d.plays).length;
+    if(!confirm('Restore '+n+' play'+(n===1?'':'s')+' from this backup?\n\n'+
+                'What you have right now gets backed up first, so this is reversible.'))return;
+    // Rule 1: nothing goes away without a way back to it.
+    bakWrite(stateJSON(),'pre-restore').then(function(){
+      plays=d.plays;
+      if(d.team&&d.team.length){TEAM=d.team;ROSTER=TEAM.map(function(q){return q.l;});}
+      flipAll=!!d.flipAll;
+      curId=(d.curId&&plays[d.curId])?d.curId:Object.keys(plays)[0];
+      selId=null; routing=null;
+      document.getElementById('playName').value=cur().name;
+      document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
+      save(); paintPlays(); draw();
+      alert('Restored.');
+    });
+  });
+}
+function downloadBackup(){
+  var body=stateJSON(), d=new Date();
+  function pad(x){return (x<10?'0':'')+x;}
+  var name='lehi-special-teams-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';
+  var box=document.getElementById('ioBox');
+  if(box)box.value=body;   // some in-app browsers no-op the download without throwing
+  try{
+    var url=URL.createObjectURL(new Blob([body],{type:'application/json'}));
+    var a=document.createElement('a');
+    a.href=url; a.download=name; a.style.display='none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+  }catch(e){
+    alert('This browser would not hand over a file. The full text is in the box below \u2014 copy it somewhere safe.');
+  }
 }
 
 (async function(){
-  var loaded=false, savedBuild=0;
+  var loaded=false, savedBuild=0, rawLoaded=null;
   try{
     {
       var r=await STORE.get('pd-state');
       if(r&&r.value){
         var d=JSON.parse(r.value);
         if(d.plays&&Object.keys(d.plays).length){
+          rawLoaded=r.value;
           plays=d.plays; curId=d.curId&&d.plays[d.curId]?d.curId:Object.keys(d.plays)[0];
           if(d.team&&d.team.length){TEAM=d.team;ROSTER=TEAM.map(function(q){return q.l;});}
           if(d.flipAll)flipAll=true;
@@ -1145,6 +1322,17 @@ function save(){
       }
     }
   }catch(e){}
+
+  await bakLoadIndex();
+  /* Snapshot exactly what was on disk before migration touches a thing. This is
+     the copy that matters when a new build misreads old data — the failure mode
+     this project keeps hitting. Only on a build change, so opening the app
+     twenty times in a day does not churn the whole history away. */
+  if(rawLoaded&&(savedBuild!==BUILD||!bakIndex.length)){
+    await bakWrite(rawLoaded,savedBuild!==BUILD?'pre-update':'auto');
+  }
+  paintBackups();
+
   // migrate old saves: add any core play that is missing, drop retired ones that were never used
   if(loaded){
     var CORE=[['Punt \u2014 Base','STD Punt'],
@@ -1254,17 +1442,16 @@ function save(){
   document.getElementById('flipAll').textContent=flipAll?'Flip ALL back':'Flip ALL plays';
   document.getElementById('hint').textContent=HINTS.move;
   (function(){
-    var dot=document.getElementById('saveDot');
+    function blocked(){
+      storageBlocked=true; paintDot();
+      alert('This browser is not letting the page save. Your changes will be lost on reload \u2014 use Download backup file to keep your work.');
+    }
     STORE.set('pd-probe','1').then(function(){
       return STORE.get('pd-probe');
     }).then(function(r){
-      if(r&&r.value==='1'){dot.textContent='saved';dot.className='ok';}
-      else{dot.textContent='NOT SAVED';dot.className='bad';
-        alert('This browser is not letting the page save. Your changes will be lost on reload. Use Export my plays to keep your work.');}
-    }).catch(function(){
-      dot.textContent='NOT SAVED';dot.className='bad';
-      alert('This browser is not letting the page save. Use Export my plays to keep your work.');
-    });
+      if(r&&r.value==='1'){storageBlocked=false;paintDot();}
+      else blocked();
+    }).catch(blocked);
   })();
   paintPlays(); draw(); save();
 })();

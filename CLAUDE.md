@@ -24,7 +24,9 @@ it was broken once and cost him hours of re-entry. Treat them as hard constraint
    the last one. There is a `STORE` shim that falls back to `localStorage`. Keep it.
 5. **Show save state.** There is a badge next to the play dropdown that reads SAVED (green)
    or NOT SAVED (orange). Never remove it. Silent save failure is what caused most of the
-   pain here.
+   pain here. The badge tracks the *pending edit*, not the last successful write: `save()`
+   bumps `saveSeq` and paints orange immediately, and only a completed write moves
+   `savedSeq` up to meet it. Never make it green on anything but a resolved write.
 6. **Migrations rename, they never rewrite.** If a data shape changes, migrate forward
    additively.
 
@@ -119,11 +121,23 @@ Single file. Vanilla JS, SVG, no dependencies, no build.
 index.html
 ├─ TEAM[]        roster
 ├─ PRESETS{}     play factories, each returns {players, los, losLabel, routes}
-├─ STORE         storage shim (window.storage → localStorage)
+├─ STORE         storage shim (window.storage → localStorage), rejects on failure
+├─ save()        debounced write + honest badge; flushes on pagehide/visibilitychange
+├─ backups       rolling local snapshots + download/restore
 ├─ drawField()   renders the SVG
 ├─ paintLineup() editable position/name list under the field
 └─ migration     runs on load: rename, seed-if-empty, never delete
 ```
+
+**No webfonts.** Everything is a system font stack. This gets used on a sideline with no
+signal, so nothing may block on the network. Do not add a `<link>` to a font CDN.
+
+**Backups.** `pd-bak-<ts>` keys with a `pd-bak-index` manifest. Up to 12, at most one per
+30 minutes, plus a `pre-update` snapshot of the raw saved state taken *before* migration
+runs whenever `BUILD` changes — that is the copy that matters when a new build misreads
+old data. Pruning drops the oldest `auto` first so `pre-update` snapshots survive, and
+restoring snapshots the current state as `pre-restore` first so it is reversible. Backups
+are best effort and must never block or fail a real save.
 
 **Coordinate system:** viewBox 420 × 500. Sidelines at x=14 and x=406, so 392px = 53.3
 yards wide. Vertical scale varies per play and is not to scale — distances are labeled.
@@ -146,6 +160,7 @@ helper for printed cards.
 
 **Then, roughly in value order:**
 
+- ~~Honest save badge~~ and ~~rolling backups + download~~ and ~~drop the webfonts~~ — done.
 - Print stylesheet needs a real pass. Printing a play should give a clean one-page sheet:
   diagram on top, lineup table below, black on white.
 - A game-day mode: big text, one play at a time, swipe between units, no editing chrome.
@@ -159,6 +174,19 @@ helper for printed cards.
 property is why it works on a phone on a practice field.
 
 ---
+
+## Known warts
+
+- **Renaming a core play re-seeds a duplicate.** The migration's CORE loop matches on
+  `plays[k].name`, so renaming "Punt — Base" makes it look missing and a fresh copy is
+  added on next load. This contradicts rule 3 (match on slug, never name). Pre-existing,
+  verified against the original build; fix it as part of the data/code split.
+- **`PRESETS` slugs do not match `special-teams-plays.json` slugs.** Saved plays carry the
+  old preset key (`'STD Punt'`); the JSON uses `std-punt`. The refactor needs an explicit
+  old-key → new-slug alias map applied additively, or every existing play stops resolving.
+- **ids are `Math.random()*1e9|0`** in `P()` and `blank()`. Collisions are unlikely, not
+  impossible, and a collision silently merges two players. `crypto.randomUUID()` is
+  available everywhere this runs.
 
 ## Open questions for the coach
 
