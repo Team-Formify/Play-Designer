@@ -180,8 +180,9 @@ yards wide. Vertical scale varies per play and is not to scale — distances are
 Nothing matches on display name any more.
 
 **Label convention:** `L`/`R` prefix for side. Punt: LG/RG gunners, LT/RT tackles,
-LGD/RGD guards, S snapper, LW/RW wings, PP protector, P punter. Kickoff: L5→R5 outward
-from K. Kick return: H1–H5 hands team, LM/RM and LB/RB blockers, LR/RR deep. Punt return:
+LGD/RGD guards, S snapper, LW/RW wings, PP protector, P punter. Kickoff: L1→L5 and
+R1→R5 numbering outward from K; the 2 spots used to read LG/RG, and "gunner" is a role
+now, not a label. Onside: L1→L6 kick side, R1→R4 away side. Kick return: H1–H5 hands team, LM/RM and LB/RB blockers, LR/RR deep. Punt return:
 LJ/RJ jammers, LH/MH/RH hold-up, LM/RM second level, LW/MW/RW wall, PR returner.
 The mirroring the coach's sheets needed is baked into the stored coordinates, so
 nothing flips a play at load time. `swapSideLabel()` is the shared L/R label swapper
@@ -235,12 +236,15 @@ doing its job, not a bug.
 
 ## Open questions for the coach
 
-- **Kickoff lane numbering disagrees with his own sheet.** His handwritten kickoff sheet
-  reads L1 at the outside through L5 inside, then SAFETY, then R5 to R1. The app labels
-  the same row L5 L4 L3 LG L1 / R1 RG R3 R4 R5 — reversed, with the gunner spots taking
-  the 2 positions. The lanes seeded into the data (BALL CONTAIN FORCE ALLEY BALL |
-  SAFETY | BALL ALLEY FORCE CONTAIN BALL) are mapped by **where the man stands**, not by
-  his number, so they match the sheet on the field. Which numbering he wants is his call.
+- ~~Kickoff lane numbering~~ — settled. Numbering runs **outward from the kicker**
+  (L1/R1 beside him, L5/R5 widest), which is the commoner convention and was already the
+  app's direction; the real inconsistency was LG/RG sitting in a numbered row, and those
+  are L2/R2 now. His handwritten sheet numbers the same row the other way (L1 widest).
+  The lanes (BALL CONTAIN FORCE ALLEY BALL | SAFETY | BALL ALLEY FORCE CONTAIN BALL) are
+  mapped by **where the man stands**, not by his number, so they land on the same eleven
+  bodies either way. Flipping the numbering is a one-line data edit if he prefers his.
+- **Onside personnel is a draft.** Assigned so the three men under the kick are the
+  surest hands and all four ten-play boys get a snap. His call to change.
 - The written jobs are drafts. Punt-return wall/hold-up spots and both cluster kickoffs
   were left blank rather than guessed at.
 
