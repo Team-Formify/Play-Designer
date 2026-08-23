@@ -239,33 +239,19 @@
   </div>
 </div>
 
+<!-- Fallback copy of special-teams-plays.json, used when fetch cannot reach the
+     real file (downloaded local copy, artifact viewer). The .json file is the
+     source of truth; regenerate this with `node scripts/sync-play-data.js`. -->
+<script type="application/json" id="play-data">{"schema":1,"generated":"2026-08-21","field":{"width":420,"height":500,"sidelineLeft":14,"sidelineRight":406,"yardsWide":53.3},"roster":[{"last":"Archuletta","first":"Cree","number":"14","xman":false,"offense":"QB / LG / X","defense":"MIKE"},{"last":"Bagley","first":"Ledger","number":"27","xman":false,"offense":"Z","defense":"LCB / SS"},{"last":"Bearnson","first":"Ryker","number":"49","xman":false,"offense":"RG / QB / Z / F / Y","defense":"SS"},{"last":"Black","first":"Brave","number":"12","xman":false,"offense":"F / Y","defense":"RDE / FS"},{"last":"Bullock","first":"Tistyn","number":null,"xman":true,"offense":"RG","defense":"LDT"},{"last":"Dalley","first":"Caleb","number":"17","xman":false,"offense":"H / Y / F / RT","defense":"LDE"},{"last":"Debenham","first":"Dolan","number":"16","xman":false,"offense":"C / RT","defense":"SAM"},{"last":"Grover","first":"Ja'corey","number":"55","xman":false,"offense":"H","defense":"LCB / RCB"},{"last":"Martinez","first":"Daxton","number":"22","xman":false,"offense":"C / LT","defense":"LDT / RDT"},{"last":"Mineer","first":"Mason","number":"47","xman":false,"offense":"X","defense":"RCB"},{"last":"Mitchell","first":"Cole","number":"48","xman":true,"offense":"LG","defense":"RDT"},{"last":"Pace","first":"Kyler","number":"10","xman":false,"offense":"Y / H","defense":"FS"},{"last":"Paulich","first":"Andrew","number":"35","xman":false,"offense":"LT","defense":"RDE / LDT / MIKE"},{"last":"Prasad","first":"Joseph","number":"67","xman":false,"offense":"Z","defense":"LCB"},{"last":"Reary","first":"Cache","number":"9","xman":false,"offense":"QB","defense":"FS"},{"last":"Rowley","first":"Mason","number":"73","xman":false,"offense":"C","defense":"RDT"},{"last":"Ruelas","first":"Jehudiel","number":"74","xman":true,"offense":"RG","defense":"LDT"},{"last":"Scott","first":"Rowan","number":"99","xman":false,"offense":"Z","defense":"RCB / WILL"},{"last":"Severts","first":"Cooper","number":"34","xman":false,"offense":"Z","defense":"WILL / FS"},{"last":"Steinke","first":"Zander","number":"33","xman":false,"offense":"—","defense":"LDE / RDT / MIKE / SAM"},{"last":"Wentzel","first":"Carter","number":"7","xman":false,"offense":"X","defense":"RCB"}],"plays":[{"slug":"std-punt","name":"Punt — Base","order":1,"lineOfScrimmage":190,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"us","label":"S","player":"Paulich","x":210,"y":190},{"id":"p1","team":"us","label":"RGD","player":"Prasad","x":248,"y":190},{"id":"p2","team":"us","label":"LGD","player":"Steinke","x":172,"y":190},{"id":"p3","team":"us","label":"RT","player":"Bearnson","x":286,"y":190},{"id":"p4","team":"us","label":"LT","player":"Black","x":134,"y":190},{"id":"p5","team":"us","label":"RG","player":"Grover","x":376,"y":190},{"id":"p6","team":"us","label":"LG","player":"Pace","x":44,"y":190},{"id":"p7","team":"us","label":"RW","player":"Dalley","x":280,"y":230},{"id":"p8","team":"us","label":"LW","player":"Scott","x":140,"y":230},{"id":"p9","team":"us","label":"PP","player":"Archuletta","x":192,"y":264},{"id":"p10","team":"us","label":"P","player":"Debenham","x":210,"y":340}],"routes":[]},{"slug":"villanova-fake-from-std-punt","name":"Punt — Villanova Fake","order":2,"lineOfScrimmage":190,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"us","label":"S","player":"Paulich","x":210,"y":190},{"id":"p1","team":"us","label":"RGD","player":"Prasad","x":248,"y":190},{"id":"p2","team":"us","label":"LGD","player":"Steinke","x":172,"y":190},{"id":"p3","team":"us","label":"RT","player":"Bearnson","x":286,"y":190},{"id":"p4","team":"us","label":"LT","player":"Black","x":134,"y":190},{"id":"p5","team":"us","label":"RG","player":"Grover","x":376,"y":190},{"id":"p6","team":"us","label":"LG","player":"Pace","x":44,"y":190},{"id":"p7","team":"us","label":"RW","player":"Dalley","x":280,"y":230},{"id":"p8","team":"us","label":"LW","player":"Scott","x":140,"y":230},{"id":"p9","team":"us","label":"PP","player":"Archuletta","x":192,"y":264},{"id":"p10","team":"us","label":"P","player":"Debenham","x":210,"y":340}],"routes":[{"playerId":"p9","points":[{"x":224,"y":272},{"x":270,"y":258},{"x":316,"y":208},{"x":324,"y":120},{"x":320,"y":40}]},{"playerId":"p10","points":[{"x":206,"y":306},{"x":188,"y":290}]},{"playerId":"p8","points":[{"x":172,"y":268},{"x":90,"y":276},{"x":38,"y":224},{"x":34,"y":150}]},{"playerId":"p7","points":[{"x":298,"y":206},{"x":312,"y":168}]},{"playerId":"p3","points":[{"x":300,"y":176},{"x":316,"y":148}]},{"playerId":"p5","points":[{"x":376,"y":120},{"x":358,"y":70}]},{"playerId":"p6","points":[{"x":44,"y":120},{"x":64,"y":70}]}]},{"slug":"punt-return-purple-d","name":"Punt Return — Purple D","order":3,"lineOfScrimmage":126,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":40,"y":126},{"id":"p1","team":"them","label":null,"player":null,"x":380,"y":126},{"id":"p2","team":"them","label":null,"player":null,"x":150,"y":126},{"id":"p3","team":"them","label":null,"player":null,"x":180,"y":126},{"id":"p4","team":"them","label":null,"player":null,"x":210,"y":126},{"id":"p5","team":"them","label":null,"player":null,"x":240,"y":126},{"id":"p6","team":"them","label":null,"player":null,"x":270,"y":126},{"id":"p7","team":"them","label":null,"player":null,"x":178,"y":92},{"id":"p8","team":"them","label":null,"player":null,"x":210,"y":92},{"id":"p9","team":"them","label":null,"player":null,"x":242,"y":92},{"id":"p10","team":"them","label":null,"player":null,"x":210,"y":30},{"id":"p11","team":"us","label":"LJ","player":"Severts","x":48,"y":150},{"id":"p12","team":"us","label":"L2","player":"Dalley","x":150,"y":150},{"id":"p13","team":"us","label":"L1","player":"Ruelas","x":190,"y":150},{"id":"p14","team":"us","label":"R1","player":"Steinke","x":232,"y":150},{"id":"p15","team":"us","label":"R2","player":"Black","x":272,"y":150},{"id":"p16","team":"us","label":"RJ","player":"Wentzel","x":372,"y":150},{"id":"p17","team":"us","label":"LM","player":"Archuletta","x":168,"y":212},{"id":"p18","team":"us","label":"RM","player":"Debenham","x":252,"y":212},{"id":"p19","team":"us","label":"LB","player":"Scott","x":142,"y":290},{"id":"p20","team":"us","label":"RB","player":"Bagley","x":278,"y":290},{"id":"p21","team":"us","label":"PR","player":"Pace","x":210,"y":412}],"routes":[{"playerId":"p11","points":[{"x":44,"y":128}]},{"playerId":"p12","points":[{"x":158,"y":128}]},{"playerId":"p13","points":[{"x":196,"y":128}]},{"playerId":"p14","points":[{"x":236,"y":128}]},{"playerId":"p15","points":[{"x":266,"y":128}]},{"playerId":"p16","points":[{"x":376,"y":128}]},{"playerId":"p17","points":[{"x":164,"y":276},{"x":186,"y":304}]},{"playerId":"p18","points":[{"x":256,"y":276},{"x":234,"y":304}]},{"playerId":"p19","points":[{"x":160,"y":346},{"x":188,"y":370}]},{"playerId":"p20","points":[{"x":262,"y":346},{"x":234,"y":370}]},{"playerId":"p21","points":[{"x":210,"y":306},{"x":210,"y":186},{"x":210,"y":86}]}]},{"slug":"punt-return-white-d","name":"Punt Return — White D","order":4,"lineOfScrimmage":126,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":40,"y":126},{"id":"p1","team":"them","label":null,"player":null,"x":380,"y":126},{"id":"p2","team":"them","label":null,"player":null,"x":150,"y":126},{"id":"p3","team":"them","label":null,"player":null,"x":180,"y":126},{"id":"p4","team":"them","label":null,"player":null,"x":210,"y":126},{"id":"p5","team":"them","label":null,"player":null,"x":240,"y":126},{"id":"p6","team":"them","label":null,"player":null,"x":270,"y":126},{"id":"p7","team":"them","label":null,"player":null,"x":178,"y":92},{"id":"p8","team":"them","label":null,"player":null,"x":210,"y":92},{"id":"p9","team":"them","label":null,"player":null,"x":242,"y":92},{"id":"p10","team":"them","label":null,"player":null,"x":210,"y":30},{"id":"p11","team":"us","label":"LJ","player":"Prasad","x":48,"y":150},{"id":"p12","team":"us","label":"L2","player":"Paulich","x":150,"y":150},{"id":"p13","team":"us","label":"L1","player":"Bullock","x":190,"y":150},{"id":"p14","team":"us","label":"R1","player":"Mitchell","x":232,"y":150},{"id":"p15","team":"us","label":"R2","player":"Rowley","x":272,"y":150},{"id":"p16","team":"us","label":"RJ","player":"Mineer","x":372,"y":150},{"id":"p17","team":"us","label":"LM","player":"Martinez","x":168,"y":212},{"id":"p18","team":"us","label":"RM","player":"Bearnson","x":252,"y":212},{"id":"p19","team":"us","label":"LB","player":"Grover","x":142,"y":290},{"id":"p20","team":"us","label":"RB","player":"Bagley","x":278,"y":290},{"id":"p21","team":"us","label":"PR","player":"Reary","x":210,"y":412}],"routes":[{"playerId":"p11","points":[{"x":44,"y":128}]},{"playerId":"p12","points":[{"x":158,"y":128}]},{"playerId":"p13","points":[{"x":196,"y":128}]},{"playerId":"p14","points":[{"x":236,"y":128}]},{"playerId":"p15","points":[{"x":266,"y":128}]},{"playerId":"p16","points":[{"x":376,"y":128}]},{"playerId":"p17","points":[{"x":164,"y":276},{"x":186,"y":304}]},{"playerId":"p18","points":[{"x":256,"y":276},{"x":234,"y":304}]},{"playerId":"p19","points":[{"x":160,"y":346},{"x":188,"y":370}]},{"playerId":"p20","points":[{"x":262,"y":346},{"x":234,"y":370}]},{"playerId":"p21","points":[{"x":210,"y":306},{"x":210,"y":186},{"x":210,"y":86}]}]},{"slug":"kickoff-check-me","name":"Kickoff — Spread","order":5,"lineOfScrimmage":330,"lineLabel":"FREE KICK LINE","players":[{"id":"p0","team":"us","label":"R5","player":"Prasad","x":386,"y":362},{"id":"p1","team":"us","label":"R4","player":"Bagley","x":348,"y":362},{"id":"p2","team":"us","label":"R3","player":"Bearnson","x":310,"y":362},{"id":"p3","team":"us","label":"RG","player":"Grover","x":272,"y":362},{"id":"p4","team":"us","label":"R1","player":"Black","x":234,"y":362},{"id":"p5","team":"us","label":"L1","player":"Archuletta","x":186,"y":362},{"id":"p6","team":"us","label":"LG","player":"Pace","x":148,"y":362},{"id":"p7","team":"us","label":"L3","player":"Paulich","x":110,"y":362},{"id":"p8","team":"us","label":"L4","player":"Scott","x":72,"y":362},{"id":"p9","team":"us","label":"L5","player":"Severts","x":34,"y":362},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":410}],"routes":[]},{"slug":"cluster-kickoff-huddle-to-twins","name":"Kickoff — Cluster Speed","order":6,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — INSIDE THE NUMBERS","players":[{"id":"p0","team":"us","label":"H5","player":"Pace","x":244,"y":356},{"id":"p1","team":"us","label":"H4","player":"Bagley","x":220,"y":352},{"id":"p2","team":"us","label":"H3","player":"Black","x":196,"y":356},{"id":"p3","team":"us","label":"H2","player":"Scott","x":172,"y":360},{"id":"p4","team":"us","label":"H1","player":"Severts","x":238,"y":380},{"id":"p5","team":"us","label":"H6","player":"Dalley","x":214,"y":376},{"id":"p6","team":"us","label":"H7","player":"Bearnson","x":190,"y":380},{"id":"p7","team":"us","label":"H8","player":"Wentzel","x":166,"y":384},{"id":"p8","team":"us","label":"H9","player":"Archuletta","x":226,"y":402},{"id":"p9","team":"us","label":"H10","player":"Mineer","x":200,"y":402},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":444}],"routes":[{"playerId":"p0","points":[{"x":300,"y":350},{"x":346,"y":346}]},{"playerId":"p3","points":[{"x":120,"y":354},{"x":74,"y":346}]},{"playerId":"p4","points":[{"x":294,"y":370},{"x":324,"y":348}]},{"playerId":"p7","points":[{"x":126,"y":374},{"x":96,"y":348}]}]},{"slug":"cluster-ko-10-play","name":"Kickoff — Cluster 10-Play","order":7,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — INSIDE THE NUMBERS","players":[{"id":"p0","team":"us","label":"H5","player":"Prasad","x":244,"y":356},{"id":"p1","team":"us","label":"H4","player":"Steinke","x":220,"y":352},{"id":"p2","team":"us","label":"H3","player":"Mitchell","x":196,"y":356},{"id":"p3","team":"us","label":"H2","player":"Grover","x":172,"y":360},{"id":"p4","team":"us","label":"H1","player":"Reary","x":238,"y":380},{"id":"p5","team":"us","label":"H6","player":"Rowley","x":214,"y":376},{"id":"p6","team":"us","label":"H7","player":"Ruelas","x":190,"y":380},{"id":"p7","team":"us","label":"H8","player":"Paulich","x":166,"y":384},{"id":"p8","team":"us","label":"H9","player":"Martinez","x":226,"y":402},{"id":"p9","team":"us","label":"H10","player":"Bullock","x":200,"y":402},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":444}],"routes":[{"playerId":"p0","points":[{"x":300,"y":350},{"x":346,"y":346}]},{"playerId":"p3","points":[{"x":120,"y":354},{"x":74,"y":346}]},{"playerId":"p4","points":[{"x":294,"y":370},{"x":324,"y":348}]},{"playerId":"p7","points":[{"x":126,"y":374},{"x":96,"y":348}]}]},{"slug":"onside-kick-kangaroo-right","name":"Kickoff — Onside","order":8,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — THE 40","players":[{"id":"p0","team":"us","label":"R","player":null,"x":362,"y":356},{"id":"p1","team":"us","label":"R","player":null,"x":320,"y":356},{"id":"p2","team":"us","label":"R","player":null,"x":278,"y":356},{"id":"p3","team":"us","label":"R","player":null,"x":236,"y":356},{"id":"p4","team":"us","label":"K","player":null,"x":214,"y":380},{"id":"p5","team":"us","label":"L1","player":null,"x":188,"y":356},{"id":"p6","team":"us","label":"L2","player":null,"x":158,"y":356},{"id":"p7","team":"us","label":"L3","player":null,"x":128,"y":356},{"id":"p8","team":"us","label":"L4","player":null,"x":98,"y":356},{"id":"p9","team":"us","label":"L5","player":null,"x":68,"y":356},{"id":"p10","team":"us","label":"L6","player":null,"x":38,"y":356}],"routes":[{"playerId":"p5","points":[{"x":128,"y":286},{"x":102,"y":262}]},{"playerId":"p6","points":[{"x":100,"y":278},{"x":80,"y":258}]},{"playerId":"p7","points":[{"x":76,"y":286},{"x":58,"y":264}]}]},{"slug":"kick-return-5-2-2-2","name":"Kick Return — 5-2-2-2","order":9,"lineOfScrimmage":60,"lineLabel":"THEIR FREE KICK LINE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":380,"y":38},{"id":"p1","team":"them","label":null,"player":null,"x":310,"y":38},{"id":"p2","team":"them","label":null,"player":null,"x":240,"y":38},{"id":"p3","team":"them","label":null,"player":null,"x":170,"y":38},{"id":"p4","team":"them","label":null,"player":null,"x":100,"y":38},{"id":"p5","team":"them","label":null,"player":null,"x":30,"y":38},{"id":"p6","team":"us","label":"H5","player":"Severts","x":374,"y":126},{"id":"p7","team":"us","label":"H4","player":"Prasad","x":292,"y":126},{"id":"p8","team":"us","label":"H3","player":"Bearnson","x":210,"y":126},{"id":"p9","team":"us","label":"H2","player":"Steinke","x":128,"y":126},{"id":"p10","team":"us","label":"H1","player":"Bagley","x":46,"y":126},{"id":"p11","team":"us","label":"RM","player":"Debenham","x":280,"y":200},{"id":"p12","team":"us","label":"LM","player":"Paulich","x":140,"y":200},{"id":"p13","team":"us","label":"RB","player":"Archuletta","x":255,"y":272},{"id":"p14","team":"us","label":"LB","player":"Black","x":165,"y":272},{"id":"p15","team":"us","label":"RR","player":"Scott","x":245,"y":356},{"id":"p16","team":"us","label":"LR","player":"Pace","x":175,"y":356}],"routes":[]}]}</script>
+
 <script>
 var NS='http://www.w3.org/2000/svg';
 function E(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
 
-var TEAM=[
- {l:'Archuletta',f:'Cree',n:'14',o:'QB / LG / X',d:'MIKE'},
- {l:'Bagley',f:'Ledger',n:'27',o:'Z',d:'LCB / SS'},
- {l:'Bearnson',f:'Ryker',n:'49',o:'RG / QB / Z / F / Y',d:'SS'},
- {l:'Black',f:'Brave',n:'12',o:'F / Y',d:'RDE / FS'},
- {l:'Bullock',f:'Tistyn',n:'',x:1,o:'RG',d:'LDT'},
- {l:'Dalley',f:'Caleb',n:'17',o:'H / Y / F / RT',d:'LDE'},
- {l:'Debenham',f:'Dolan',n:'16',o:'C / RT',d:'SAM'},
- {l:'Grover',f:"Ja'corey",n:'55',o:'H',d:'LCB / RCB'},
- {l:'Martinez',f:'Daxton',n:'22',o:'C / LT',d:'LDT / RDT'},
- {l:'Mineer',f:'Mason',n:'47',o:'X',d:'RCB'},
- {l:'Mitchell',f:'Cole',n:'48',x:1,o:'LG',d:'RDT'},
- {l:'Pace',f:'Kyler',n:'10',o:'Y / H',d:'FS'},
- {l:'Paulich',f:'Andrew',n:'35',o:'LT',d:'RDE / LDT / MIKE'},
- {l:'Prasad',f:'Joseph',n:'67',o:'Z',d:'LCB'},
- {l:'Reary',f:'Cache',n:'9',o:'QB',d:'FS'},
- {l:'Rowley',f:'Mason',n:'73',o:'C',d:'RDT'},
- {l:'Ruelas',f:'Jehudiel',n:'74',x:1,o:'RG',d:'LDT'},
- {l:'Scott',f:'Rowan',n:'99',o:'Z',d:'RCB / WILL'},
- {l:'Severts',f:'Cooper',n:'34',o:'Z',d:'WILL / FS'},
- {l:'Steinke',f:'Zander',n:'33',o:'\u2014',d:'LDE / RDT / MIKE / SAM'},
- {l:'Wentzel',f:'Carter',n:'7',o:'X',d:'RCB'}
-];
+/* The roster and the plays both come from special-teams-plays.json now. TEAM is
+   filled by seedRoster() once the data lands, and is still overridden by whatever
+   the user has saved — his edits always win. */
+var TEAM=[];
 var ROSTER=TEAM.map(function(p){return p.l;});
 function info(last){
   for(var i=0;i<TEAM.length;i++) if(TEAM[i].l===last) return TEAM[i];
@@ -287,215 +273,130 @@ var VB={w:420,h:500};
 function P(x,y,l,t,n){return{id:'p'+(Math.random()*1e9|0),x:x,y:y,label:l||'',name:n||'',team:t||'o',fromPreset:n?1:0};}
 function ln(y,xs,labels){return xs.map(function(x,i){return P(x,y,labels?labels[i]:'');});}
 
-function mir(o){
-  function swapSide(l){
-    if(!l)return l;
-    var m={'H1':'H5','H2':'H4','H3':'H3','H4':'H2','H5':'H1'};
-    if(m[l])return m[l];
-    if(l.charAt(0)==='L')return 'R'+l.slice(1);
-    if(l.charAt(0)==='R')return 'L'+l.slice(1);
-    return l;
-  }
-  o.players.forEach(function(q){ q.x=420-q.x; q.label=swapSide(q.label); });
-  if(o.routes)o.routes.forEach(function(r){
-    if(r.pts)r.pts.forEach(function(pt){ pt[0]=420-pt[0]; });
-  });
-  return o;
+/* Shared by the mirror button and anything else that flips a play left-to-right.
+   CLAUDE.md: reuse this, do not hand-roll it. */
+function swapSideLabel(l){
+  if(!l)return l;
+  var m={'H1':'H5','H2':'H4','H3':'H3','H4':'H2','H5':'H1'};
+  if(m[l])return m[l];
+  if(l.charAt(0)==='L')return 'R'+l.slice(1);
+  if(l.charAt(0)==='R')return 'L'+l.slice(1);
+  return l;
 }
 
-var PRESETS={
-  'STD Punt':function(){
-    var a=[],los=190,sp=38;
-    a.push(P(210,los,'S','o','Paulich'));
-    a.push(P(210-sp,los,'LGD','o','Prasad'));
-    a.push(P(210+sp,los,'RGD','o','Steinke'));
-    a.push(P(210-2*sp,los,'LT','o','Bearnson'));
-    a.push(P(210+2*sp,los,'RT','o','Black'));
-    a.push(P(44,los,'LG','o','Grover'));
-    a.push(P(376,los,'RG','o','Pace'));
-    a.push(P(140,los+40,'LW','o','Dalley'));
-    a.push(P(280,los+40,'RW','o','Scott'));
-    a.push(P(228,los+74,'PP','o','Archuletta'));
-    a.push(P(210,los+150,'P','o','Debenham'));
-    return mir({players:a,los:los,losLabel:'LINE OF SCRIMMAGE'});
-  },
-  'Villanova Fake (from STD Punt)':function(){
-    var a=[],los=190,sp=38;
-    a.push(P(210,los,'S','o','Paulich'));
-    a.push(P(210-sp,los,'LGD','o','Prasad'));
-    a.push(P(210+sp,los,'RGD','o','Steinke'));
-    a.push(P(210-2*sp,los,'LT','o','Bearnson'));
-    a.push(P(210+2*sp,los,'RT','o','Black'));
-    a.push(P(44,los,'LG','o','Grover'));
-    a.push(P(376,los,'RG','o','Pace'));
-    a.push(P(140,los+40,'LW','o','Dalley'));
-    a.push(P(280,los+40,'RW','o','Scott'));
-    a.push(P(228,los+74,'PP','o','Archuletta'));
-    a.push(P(210,los+150,'P','o','Debenham'));
-    return mir({players:a,los:los,losLabel:'LINE OF SCRIMMAGE',routes:[
-      // protector takes the snap, sells the toss back, then breaks left
-      {who:'Archuletta',pts:[[196,272],[150,258],[104,208],[96,120],[100,40]]},
-      // punter sells the fake handoff to the crossing wing
-      {who:'Debenham',pts:[[214,306],[232,290]]},
-      // wing runs the decoy sweep to the right
-      {who:'Scott',pts:[[248,268],[330,276],[382,224],[386,150]]},
-      // left side blocks the actual runner's lane
-      {who:'Dalley',pts:[[122,206],[108,168]]},
-      {who:'Bearnson',pts:[[120,176],[104,148]]},
-      // gunners release normally so it still looks like a punt
-      {who:'Grover',pts:[[44,120],[62,70]]},
-      {who:'Pace',pts:[[376,120],[356,70]]}
-    ]});
-  },
-  'Onside Kick \u2014 Kangaroo Right':function(){
-    var a=[],los=340;
-    // 4 left of the kicker, 6 right \u2014 at least four each side is required
-    [58,100,142,184].forEach(function(x){a.push(P(x,los+16,'L'));});
-    a.push(P(206,los+40,'K'));
-    [232,262,292,322,352,382].forEach(function(x,i){a.push(P(x,los+16,'R'+(i+1)));});
-    var rt=[];
-    // ball is driven into the ground and bounces to the right of the kicker
-    a.forEach(function(q){
-      if(q.label==='R1')rt.push({who:q.name,id:q.id,pts:[[292,286],[318,262]]});
-      if(q.label==='R2')rt.push({who:q.name,id:q.id,pts:[[320,278],[340,258]]});
-      if(q.label==='R3')rt.push({who:q.name,id:q.id,pts:[[344,286],[362,264]]});
-    });
-    return mir({players:a,los:los,losLabel:'FREE KICK LINE \u2014 THE 40',routes:rt});
-  },
-  'Punt Return \u2014 Purple D':function(){
-    var a=[],los=126;
-    // their punt team \u2014 shield look
-    a.push(P(40,los,'','x')); a.push(P(380,los,'','x'));
-    [150,180,210,240,270].forEach(function(x){a.push(P(x,los,'','x'));});
-    [178,210,242].forEach(function(x){a.push(P(x,los-34,'','x'));});
-    a.push(P(210,los-96,'','x'));
-    // six across: two jammers on their gunners, four inside
-    a.push(P(48,los+24,'LJ','o','Severts'));
-    var dl=['Dalley','Ruelas','Steinke','Black'];
-    ['L2','L1','R1','R2'].forEach(function(l,i){
-      a.push(P([150,190,232,272][i],los+24,l,'o',dl[i]));
-    });
-    a.push(P(372,los+24,'RJ','o','Wentzel'));
-    // second level \u2014 linebackers
-    a.push(P(168,los+86,'LM','o','Archuletta')); a.push(P(252,los+86,'RM','o','Debenham'));
-    // third level
-    a.push(P(142,los+164,'LB','o','Scott')); a.push(P(278,los+164,'RB','o','Bagley'));
-    // free safety returns it
-    a.push(P(210,los+286,'PR','o','Pace'));
-    var rt=[];
-    a.forEach(function(q){
-      if(q.label==='LJ')rt.push({id:q.id,pts:[[44,los+2]]});
-      if(q.label==='RJ')rt.push({id:q.id,pts:[[376,los+2]]});
-      if(q.label==='L2')rt.push({id:q.id,pts:[[158,los+2]]});
-      if(q.label==='L1')rt.push({id:q.id,pts:[[196,los+2]]});
-      if(q.label==='R1')rt.push({id:q.id,pts:[[236,los+2]]});
-      if(q.label==='R2')rt.push({id:q.id,pts:[[266,los+2]]});
-      if(q.label==='LM')rt.push({id:q.id,pts:[[164,los+150],[186,los+178]]});
-      if(q.label==='RM')rt.push({id:q.id,pts:[[256,los+150],[234,los+178]]});
-      if(q.label==='LB')rt.push({id:q.id,pts:[[160,los+220],[188,los+244]]});
-      if(q.label==='RB')rt.push({id:q.id,pts:[[262,los+220],[234,los+244]]});
-      if(q.label==='PR')rt.push({id:q.id,pts:[[210,los+180],[210,los+60],[210,los-40]]});
-    });
-    return {players:a,los:los,losLabel:'LINE OF SCRIMMAGE',routes:rt};
-  },
-  'Cluster Kickoff (huddle to twins)':function(){
-    var a=[],los=340;
-    // everyone starts inside the numbers \u2014 required at the ready whistle
-    var hud=[[176,los+16],[200,los+12],[224,los+16],[248,los+20],
-             [182,los+40],[206,los+36],[230,los+40],[254,los+44],
-             [194,los+62],[220,los+62]];
-    // speed unit \u2014 fastest four are H1/H5 (break left) and H4/H8 (break right)
-    var cn=['Pace','Bagley','Black','Scott','Severts',
-            'Dalley','Bearnson','Wentzel','Archuletta','Mineer'];
-    hud.forEach(function(c,i){a.push(P(c[0],c[1],'H'+(i+1),'o',cn[i]));});
-    a.push(P(210,los+104,'K','o','Debenham'));
-    var rt=[];
-    a.forEach(function(q){
-      // twins pair breaks left
-      if(q.label==='H1')rt.push({id:q.id,pts:[[120,los+10],[74,los+6]]});
-      if(q.label==='H5')rt.push({id:q.id,pts:[[126,los+30],[96,los+8]]});
-      // twins pair breaks right
-      if(q.label==='H4')rt.push({id:q.id,pts:[[300,los+14],[346,los+6]]});
-      if(q.label==='H8')rt.push({id:q.id,pts:[[294,los+34],[324,los+8]]});
-    });
-    return mir({players:a,los:los,losLabel:'FREE KICK LINE \u2014 INSIDE THE NUMBERS',routes:rt});
-  },
-  'Punt Return \u2014 White D':function(){
-    var a=[],los=126;
-    a.push(P(40,los,'','x')); a.push(P(380,los,'','x'));
-    [150,180,210,240,270].forEach(function(x){a.push(P(x,los,'','x'));});
-    [178,210,242].forEach(function(x){a.push(P(x,los-34,'','x'));});
-    a.push(P(210,los-96,'','x'));
-    // second-team defense
-    a.push(P(48,los+24,'LJ','o','Prasad'));
-    var dl=['Paulich','Bullock','Mitchell','Rowley'];
-    ['L2','L1','R1','R2'].forEach(function(l,i){
-      a.push(P([150,190,232,272][i],los+24,l,'o',dl[i]));
-    });
-    a.push(P(372,los+24,'RJ','o','Mineer'));
-    a.push(P(168,los+86,'LM','o','Martinez')); a.push(P(252,los+86,'RM','o','Bearnson'));
-    a.push(P(142,los+164,'LB','o','Grover')); a.push(P(278,los+164,'RB','o','Bagley'));
-    a.push(P(210,los+286,'PR','o','Reary'));
-    var rt=[];
-    a.forEach(function(q){
-      if(q.label==='LJ')rt.push({id:q.id,pts:[[44,los+2]]});
-      if(q.label==='RJ')rt.push({id:q.id,pts:[[376,los+2]]});
-      if(q.label==='L2')rt.push({id:q.id,pts:[[158,los+2]]});
-      if(q.label==='L1')rt.push({id:q.id,pts:[[196,los+2]]});
-      if(q.label==='R1')rt.push({id:q.id,pts:[[236,los+2]]});
-      if(q.label==='R2')rt.push({id:q.id,pts:[[266,los+2]]});
-      if(q.label==='LM')rt.push({id:q.id,pts:[[164,los+150],[186,los+178]]});
-      if(q.label==='RM')rt.push({id:q.id,pts:[[256,los+150],[234,los+178]]});
-      if(q.label==='LB')rt.push({id:q.id,pts:[[160,los+220],[188,los+244]]});
-      if(q.label==='RB')rt.push({id:q.id,pts:[[262,los+220],[234,los+244]]});
-      if(q.label==='PR')rt.push({id:q.id,pts:[[210,los+180],[210,los+60],[210,los-40]]});
-    });
-    return {players:a,los:los,losLabel:'LINE OF SCRIMMAGE',routes:rt};
-  },
-  'Cluster KO \u2014 10 Play':function(){
-    var a=[],los=340;
-    var hud=[[176,los+16],[200,los+12],[224,los+16],[248,los+20],
-             [182,los+40],[206,los+36],[230,los+40],[254,los+44],
-             [194,los+62],[220,los+62]];
-    // the boys who need snaps \u2014 X-men stay interior, never on the twins
-    var cn=['Prasad','Steinke','Mitchell','Grover','Reary',
-            'Rowley','Ruelas','Paulich','Martinez','Bullock'];
-    hud.forEach(function(c,i){a.push(P(c[0],c[1],'H'+(i+1),'o',cn[i]));});
-    a.push(P(210,los+104,'K','o','Debenham'));
-    var rt=[];
-    a.forEach(function(q){
-      if(q.label==='H1')rt.push({id:q.id,pts:[[120,los+10],[74,los+6]]});
-      if(q.label==='H5')rt.push({id:q.id,pts:[[126,los+30],[96,los+8]]});
-      if(q.label==='H4')rt.push({id:q.id,pts:[[300,los+14],[346,los+6]]});
-      if(q.label==='H8')rt.push({id:q.id,pts:[[294,los+34],[324,los+8]]});
-    });
-    return mir({players:a,los:los,losLabel:'FREE KICK LINE \u2014 INSIDE THE NUMBERS',routes:rt});
-  },
-  'Kickoff (check me)':function(){
-    var a=[],los=330;
-    var nm=['Prasad','Bagley','Bearnson','Grover','Black','Archuletta','Pace','Paulich','Scott','Severts'];
-    var xs=[34,72,110,148,186,234,272,310,348,386];
-    var lb=['L5','L4','L3','LG','L1','R1','RG','R3','R4','R5'];
-    nm.forEach(function(n,i){ a.push(P(xs[i],los+32,lb[i],'o',n)); });
-    a.push(P(210,los+80,'K','o','Debenham'));
-    return mir({players:a,los:los,losLabel:'FREE KICK LINE'});
-  },
-  'Kick Return 5-2-2-2':function(){
-    var a=[],los=60;
-    [40,110,180,250,320,390].forEach(function(x){a.push(P(x,los-22,'','x'));});
-    var f=['Severts','Prasad','Bearnson','Steinke','Bagley'];
-    var fl=['H1','H2','H3','H4','H5'];
-    [46,128,210,292,374].forEach(function(x,i){a.push(P(x,los+66,fl[i],'o',f[i]));});
-    a.push(P(140,los+140,'LM','o','Debenham'));
-    a.push(P(280,los+140,'RM','o','Paulich'));
-    a.push(P(165,los+212,'LB','o','Archuletta'));
-    a.push(P(255,los+212,'RB','o','Black'));
-    a.push(P(175,los+296,'LR','o','Scott'));
-    a.push(P(245,los+296,'RR','o','Pace'));
-    return mir({players:a,los:los,losLabel:'THEIR FREE KICK LINE'});
-  },
-  'Blank field':function(){return{players:[],los:250,losLabel:'LINE OF SCRIMMAGE'};}
+/* ---------- play data ----------
+   Plays are data now, not code. The canonical copy is special-teams-plays.json;
+   editing that file and pushing changes the app with no code edit. The
+   <script type="application/json" id="play-data"> block at the bottom of the
+   page is a byte-identical fallback for the two contexts where fetch cannot
+   reach a sibling file: a downloaded local copy, and the artifact viewer.
+   Regenerate that block with `node scripts/sync-play-data.js` after editing the
+   JSON — never by hand. The mirroring the coach's sheets needed is already baked
+   into the stored coordinates, so nothing flips them at load time any more. */
+var PLAYDATA={plays:[],roster:[]}, BY_SLUG={};
+
+function indexPlayData(d){
+  if(!d||!Array.isArray(d.plays)||!d.plays.length)return false;
+  PLAYDATA=d; BY_SLUG={};
+  d.plays.forEach(function(q){ if(q&&q.slug)BY_SLUG[q.slug]=q; });
+  return Object.keys(BY_SLUG).length>0;
+}
+function loadPlayData(){
+  function embedded(){
+    var el=document.getElementById('play-data');
+    try{return JSON.parse(el.textContent);}catch(e){return null;}
+  }
+  return fetch('special-teams-plays.json',{cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){ if(!indexPlayData(d))throw 0; })
+    .catch(function(){ return indexPlayData(embedded()); });
+}
+function seedRoster(){
+  // Only ever fills an empty roster. A saved roster is the user's and is left alone.
+  if(TEAM.length||!PLAYDATA.roster||!PLAYDATA.roster.length)return;
+  TEAM=PLAYDATA.roster.map(function(r){
+    return {l:r.last,f:r.first||'',n:r.number||'',x:r.xman?1:0,o:r.offense||'',d:r.defense||''};
+  });
+  ROSTER=TEAM.map(function(q){return q.l;});
+}
+
+/* Slugs are the key (CLAUDE.md rule 3). Saves made before the split carry the old
+   PRESETS key as their slug, so map those forward. Additive: nothing is rewritten
+   that does not resolve. */
+var SLUG_ALIAS={
+  'STD Punt':'std-punt',
+  'Villanova Fake (from STD Punt)':'villanova-fake-from-std-punt',
+  'Punt Return \u2014 Purple D':'punt-return-purple-d',
+  'Punt Return \u2014 White D':'punt-return-white-d',
+  'Kickoff (check me)':'kickoff-check-me',
+  'Cluster Kickoff (huddle to twins)':'cluster-kickoff-huddle-to-twins',
+  'Cluster KO \u2014 10 Play':'cluster-ko-10-play',
+  'Onside Kick \u2014 Kangaroo Right':'onside-kick-kangaroo-right',
+  'Kick Return 5-2-2-2':'kick-return-5-2-2-2',
+  'Blank field':'blank'
 };
+/* Last resort only, for saves old enough to predate slugs entirely. Never used
+   when a play already resolves by slug. */
+var NAME_SLUG={
+  'STD Punt':'std-punt','Punt \u2014 Base':'std-punt',
+  'Villanova Fake':'villanova-fake-from-std-punt','Punt \u2014 Villanova Fake':'villanova-fake-from-std-punt',
+  'Kickoff':'kickoff-check-me','Kickoff \u2014 Spread':'kickoff-check-me',
+  'Cluster Kickoff':'cluster-kickoff-huddle-to-twins','Kickoff \u2014 Cluster Speed':'cluster-kickoff-huddle-to-twins',
+  'Cluster KO \u2014 10 Play':'cluster-ko-10-play','Kickoff \u2014 Cluster 10-Play':'cluster-ko-10-play',
+  'Onside Kick':'onside-kick-kangaroo-right','Kickoff \u2014 Onside':'onside-kick-kangaroo-right',
+  'Kick Return 5-2-2-2':'kick-return-5-2-2-2','Kick Return \u2014 5-2-2-2':'kick-return-5-2-2-2',
+  'Punt Return 6-2-2-1':'punt-return-purple-d','Punt Return \u2014 Purple D':'punt-return-purple-d',
+  'Punt Return \u2014 White D':'punt-return-white-d'
+};
+function canonSlug(s){ return (s&&SLUG_ALIAS[s])||s||''; }
+function slugFor(pl){
+  if(!pl)return null;
+  var s=canonSlug(pl.slug);
+  if(s&&BY_SLUG[s])return s;
+  if(s==='blank'||s==='custom')return s;
+  return NAME_SLUG[pl.name]||null;
+}
+
+/* Collision-free ids. The old Math.random()*1e9|0 could in principle repeat,
+   and a repeat silently merges two players. */
+function uid(prefix){
+  try{ return prefix+crypto.randomUUID().replace(/-/g,'').slice(0,12); }
+  catch(e){ return prefix+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); }
+}
+function P(x,y,l,t,n){return{id:uid('p'),x:x,y:y,label:l||'',name:n||'',team:t||'o',fromPreset:n?1:0};}
+
+/* Pure: a slug in, a fresh play out. Same input always gives the same shape, with
+   new ids every call so two copies of one formation never share a player id. */
+function buildPlay(slug,name){
+  slug=canonSlug(slug)||'blank';
+  var src=BY_SLUG[slug], players=[], routes=[], idmap={};
+  if(src){
+    src.players.forEach(function(q){
+      var nid=uid('p');
+      idmap[q.id]=nid;
+      players.push({id:nid,x:q.x,y:q.y,label:q.label||'',name:q.player||'',
+                    team:q.team==='them'?'x':'o',fromPreset:q.player?1:0});
+    });
+    (src.routes||[]).forEach(function(r){
+      var owner=idmap[r.playerId];
+      if(!owner)return;
+      routes.push({playerId:owner,points:(r.points||[]).map(function(pt){return{x:pt.x,y:pt.y};})});
+    });
+  }
+  return {id:uid('pl'),
+    name:name||(src?src.name:'Untitled play'),
+    slug:slug,
+    players:players,routes:routes,
+    los:src?src.lineOfScrimmage:250,
+    losLabel:src?src.lineLabel:'LINE OF SCRIMMAGE',
+    flipped:false};
+}
+/* Every core play, in the order the coach reads them. Order comes from the data. */
+function coreSlugs(){
+  return PLAYDATA.plays.slice()
+    .sort(function(a,b){return (a.order||99)-(b.order||99);})
+    .map(function(q){return q.slug;});
+}
 
 /* ---------- state ---------- */
 var plays={}, curId=null, mode='move', selId=null, chipName=null, routing=null, lastAdd=0;
@@ -518,26 +419,18 @@ var STORE={
     return Promise.resolve();
   }
 };
-var BUILD=9;
-var ORDER=['Punt \u2014 Base','Punt \u2014 Villanova Fake','Punt Return \u2014 Purple D','Punt Return \u2014 White D','Kickoff \u2014 Spread','Kickoff \u2014 Cluster Speed','Kickoff \u2014 Cluster 10-Play','Kickoff \u2014 Onside','Kick Return \u2014 5-2-2-2'];
-function rank(nm){var i=ORDER.indexOf(nm);return i<0?99:i;}
+var BUILD=10;
+/* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
+   a play no longer moves it, and custom plays fall to the end. */
+function rank(pl){
+  var s=slugFor(pl), d=s&&BY_SLUG[s];
+  return (d&&d.order)||99;
+}
 var lblMode='auto';
 var flipAll=false;
 
-function blank(name,preset,slug){
-  var base=PRESETS[preset||'Blank field']();
-  var rts=[];
-  if(base.routes){
-    base.routes.forEach(function(r){
-      var owner=base.players.filter(function(q){
-        return r.id?(q.id===r.id):(r.who&&q.name===r.who);
-      })[0];
-      if(owner)rts.push({playerId:owner.id,points:r.pts.map(function(pt){return{x:pt[0],y:pt[1]};})});
-    });
-  }
-  var p={id:'pl'+(Math.random()*1e9|0),name:name||'Untitled play',
-    slug:slug||preset||'custom',
-    players:base.players,routes:rts,los:base.los,losLabel:base.losLabel,flipped:false};
+function blank(name,slug){
+  var p=buildPlay(slug||'blank',name);
   if(flipAll)flipPlay(p);
   return p;
 }
@@ -911,15 +804,7 @@ function flipPlay(p){
 document.getElementById('flip').onclick=function(){ flipPlay(cur()); save();draw(); };
 document.getElementById('mirror').onclick=function(){
   var p=cur();
-  function swapSide(l){
-    if(!l)return l;
-    var m={'H1':'H5','H2':'H4','H3':'H3','H4':'H2','H5':'H1'};
-    if(m[l])return m[l];
-    if(l.charAt(0)==='L')return 'R'+l.slice(1);
-    if(l.charAt(0)==='R')return 'L'+l.slice(1);
-    return l;
-  }
-  p.players.forEach(function(pl){ pl.x=VB.w-pl.x; pl.label=swapSide(pl.label); });
+  p.players.forEach(function(pl){ pl.x=VB.w-pl.x; pl.label=swapSideLabel(pl.label); });
   p.routes.forEach(function(r){ r.points.forEach(function(pt){ pt.x=VB.w-pt.x; }); });
   save();draw();
 };
@@ -932,32 +817,22 @@ document.getElementById('flipAll').onclick=function(){
 document.getElementById('print').onclick=function(){window.print();};
 document.getElementById('fillNames').onclick=function(){
   var p=cur();
-  var map={'STD Punt':'STD Punt','Punt \u2014 Base':'STD Punt',
-    'Punt \u2014 Villanova Fake':'Villanova Fake (from STD Punt)',
-    'Kickoff \u2014 Spread':'Kickoff (check me)',
-    'Kickoff \u2014 Cluster Speed':'Cluster Kickoff (huddle to twins)',
-    'Kickoff \u2014 Cluster 10-Play':'Cluster KO \u2014 10 Play',
-    'Kickoff \u2014 Onside':'Onside Kick \u2014 Kangaroo Right',
-    'Kick Return \u2014 5-2-2-2':'Kick Return 5-2-2-2','Punt Return 6-2-2-1':'Punt Return \u2014 Purple D',
-    'Punt Return \u2014 Purple D':'Punt Return \u2014 Purple D',
-    'Punt Return \u2014 White D':'Punt Return \u2014 White D',
-    'Kickoff':'Kickoff (check me)','Cluster Kickoff':'Cluster Kickoff (huddle to twins)',
-    'Cluster KO \u2014 10 Play':'Cluster KO \u2014 10 Play',
-    'Kick Return 5-2-2-2':'Kick Return 5-2-2-2','Villanova Fake':'Villanova Fake (from STD Punt)'};
-  var key=map[p.name];
+  // Slug first, always. The old version matched on display name, so renaming a
+  // play quietly broke Fill names.
+  var key=slugFor(p);
 
-  if(!key){
-    var opts=Object.keys(PRESETS).filter(function(k){
-      return PRESETS[k]().players.some(function(q){return q.team==='o'&&q.name;});
+  if(!key||!BY_SLUG[key]){
+    var opts=coreSlugs().filter(function(sl){
+      return BY_SLUG[sl].players.some(function(q){return q.team==='us'&&q.player;});
     });
     var msg='Which team sheet should fill "'+p.name+'"?\n\n';
-    opts.forEach(function(k,i){msg+=(i+1)+'. '+k+'\n';});
+    opts.forEach(function(sl,i){msg+=(i+1)+'. '+BY_SLUG[sl].name+'\n';});
     var pick=prompt(msg+'\nType a number:');
     if(!pick)return;
     key=opts[parseInt(pick,10)-1];
     if(!key){alert('That was not one of the numbers.');return;}
   }
-  if(!PRESETS[key]){alert('No sheet found.');return;}
+  if(!BY_SLUG[key]){alert('No sheet found.');return;}
 
   function ordered(list){
     var mine=list.filter(function(q){return q.team==='o';});
@@ -974,7 +849,7 @@ document.getElementById('fillNames').onclick=function(){
     return out;
   }
 
-  var base=PRESETS[key]();
+  var base=buildPlay(key);
   var src=ordered(base.players), dst=ordered(p.players);
   var taken={}; dst.forEach(function(q){ if(q.name)taken[q.name]=1; });
   var n=0;
@@ -1036,19 +911,14 @@ document.getElementById('doImport').onclick=function(){
   }catch(e){ alert('That did not read as a saved playbook \u2014 make sure the whole text was pasted.'); }
 };
 document.getElementById('addMissing').onclick=function(){
-  var have={}; Object.keys(plays).forEach(function(k){have[plays[k].name]=1;});
+  var have={}; Object.keys(plays).forEach(function(k){
+    var s2=slugFor(plays[k]); if(s2)have[s2]=1;
+  });
   var added=0;
-  [['Punt \u2014 Base','STD Punt'],
-   ['Punt Return \u2014 Purple D','Punt Return \u2014 Purple D'],
-   ['Punt Return \u2014 White D','Punt Return \u2014 White D'],
-   ['Kickoff \u2014 Spread','Kickoff (check me)'],
-   ['Kickoff \u2014 Cluster Speed','Cluster Kickoff (huddle to twins)'],
-   ['Kickoff \u2014 Cluster 10-Play','Cluster KO \u2014 10 Play'],
-   ['Kick Return \u2014 5-2-2-2','Kick Return 5-2-2-2'],
-   ['Kickoff \u2014 Onside','Onside Kick \u2014 Kangaroo Right'],
-   ['Punt \u2014 Villanova Fake','Villanova Fake (from STD Punt)']].forEach(function(x){
-    if(have[x[0]])return;
-    var q=blank(x[0],x[1],x[1]); plays[q.id]=q; added++;
+  coreSlugs().forEach(function(slug){
+    if(have[slug])return;
+    have[slug]=1;
+    var q=blank(BY_SLUG[slug].name,slug); plays[q.id]=q; added++;
   });
   save();paintPlays();draw();
   alert(added?('Added '+added+'. Nothing else was touched.'):'You already have all of them.');
@@ -1074,7 +944,7 @@ document.getElementById('resetAll').onclick=function(){
 };
 
 document.getElementById('newPlay').onclick=function(){
-  var p=blank('New play','Blank field'); plays[p.id]=p; curId=p.id; selId=null; routing=null;
+  var p=blank('New play','blank'); plays[p.id]=p; curId=p.id; selId=null; routing=null;
   save();paintPlays();draw();
   document.getElementById('playName').value=p.name;
 };
@@ -1106,22 +976,29 @@ document.getElementById('addName').onclick=function(){
 };
 
 var pbox=document.getElementById('presets');
-Object.keys(PRESETS).forEach(function(k){
-  var b=document.createElement('button');
-  b.className='chip'; b.textContent=k;
-  b.onclick=function(){
-    if(!confirm('Replace the players on "'+cur().name+'" with the '+k+' formation?'))return;
-    var base=PRESETS[k]();
-    var p=cur(); p.players=base.players; p.routes=[]; p.los=base.los; p.losLabel=base.losLabel;
-    selId=null;routing=null; save();draw();
-  };
-  pbox.appendChild(b);
-});
+function paintPresets(){
+  pbox.innerHTML='';
+  coreSlugs().concat(['blank']).forEach(function(slug){
+    var d=BY_SLUG[slug], title=d?d.name:'Blank field';
+    var b=document.createElement('button');
+    b.className='chip'; b.textContent=title;
+    b.onclick=function(){
+      if(!confirm('Replace the players on "'+cur().name+'" with the '+title+' formation?'))return;
+      var base=buildPlay(slug,title), p=cur();
+      // The formation is replaced; the play keeps its own name, and now its slug
+      // follows the formation so every later lookup resolves.
+      p.players=base.players; p.routes=[]; p.los=base.los; p.losLabel=base.losLabel;
+      p.slug=slug;
+      selId=null;routing=null; save();draw();
+    };
+    pbox.appendChild(b);
+  });
+}
 
 function paintPlays(){
   var s=document.getElementById('playSel'); s.innerHTML='';
   Object.keys(plays).sort(function(a,b){
-    var d=rank(plays[a].name)-rank(plays[b].name);
+    var d=rank(plays[a])-rank(plays[b]);
     return d||plays[a].name.localeCompare(plays[b].name);
   }).forEach(function(k){
     var o=document.createElement('option'); o.value=k; o.textContent=plays[k].name;
@@ -1305,6 +1182,13 @@ function downloadBackup(){
 }
 
 (async function(){
+  // Nothing below can resolve a slug until the data is indexed. This is first.
+  await loadPlayData();
+  if(!Object.keys(BY_SLUG).length){
+    alert('The play data would not load. Nothing has been changed or lost \u2014 '+
+          'reload the page, and use Download backup file if it keeps happening.');
+  }
+
   var loaded=false, savedBuild=0, rawLoaded=null;
   try{
     {
@@ -1323,6 +1207,7 @@ function downloadBackup(){
     }
   }catch(e){}
 
+  seedRoster();   // no-op if the save already restored his roster
   await bakLoadIndex();
   /* Snapshot exactly what was on disk before migration touches a thing. This is
      the copy that matters when a new build misreads old data — the failure mode
@@ -1335,34 +1220,16 @@ function downloadBackup(){
 
   // migrate old saves: add any core play that is missing, drop retired ones that were never used
   if(loaded){
-    var CORE=[['Punt \u2014 Base','STD Punt'],
-     ['Punt Return \u2014 Purple D','Punt Return \u2014 Purple D'],
-     ['Punt Return \u2014 White D','Punt Return \u2014 White D'],
-     ['Kickoff \u2014 Spread','Kickoff (check me)'],
-     ['Kickoff \u2014 Cluster Speed','Cluster Kickoff (huddle to twins)'],
-     ['Kickoff \u2014 Cluster 10-Play','Cluster KO \u2014 10 Play'],
-     ['Kick Return \u2014 5-2-2-2','Kick Return 5-2-2-2'],
-     ['Kickoff \u2014 Onside','Onside Kick \u2014 Kangaroo Right'],
-     ['Punt \u2014 Villanova Fake','Villanova Fake (from STD Punt)']];
+    /* Stamp every play with a canonical slug before anything else looks at it.
+       Saves from before the split carry the old PRESETS key; saves from before
+       slugs existed carry nothing and are recovered from their name once, here.
+       Additive — a play that resolves to nothing keeps whatever it had. */
+    Object.keys(plays).forEach(function(k){
+      var pl=plays[k], s2=slugFor(pl);
+      if(s2&&pl.slug!==s2)pl.slug=s2;
+    });
+
     // fill only EMPTY spots from the team sheet — never overwrites anything
-    function sheetFor(nm){
-      var m={'STD Punt':'STD Punt','Punt \u2014 Base':'STD Punt',
-        'Punt \u2014 Villanova Fake':'Villanova Fake (from STD Punt)',
-        'Kickoff \u2014 Spread':'Kickoff (check me)',
-        'Kickoff \u2014 Cluster Speed':'Cluster Kickoff (huddle to twins)',
-        'Kickoff \u2014 Cluster 10-Play':'Cluster KO \u2014 10 Play',
-        'Kickoff \u2014 Onside':'Onside Kick \u2014 Kangaroo Right',
-        'Kick Return \u2014 5-2-2-2':'Kick Return 5-2-2-2',
-        'Punt Return 6-2-2-1':'Punt Return \u2014 Purple D',
-        'Punt Return \u2014 Purple D':'Punt Return \u2014 Purple D',
-        'Punt Return \u2014 White D':'Punt Return \u2014 White D',
-        'Kickoff':'Kickoff (check me)',
-        'Cluster Kickoff':'Cluster Kickoff (huddle to twins)',
-        'Cluster KO \u2014 10 Play':'Cluster KO \u2014 10 Play',
-        'Kick Return 5-2-2-2':'Kick Return 5-2-2-2',
-        'Villanova Fake':'Villanova Fake (from STD Punt)'};
-      return m[nm];
-    }
     function ord(list){
       var mine=list.filter(function(q){return q.team==='o';});
       var bands=[],cb=null;
@@ -1377,13 +1244,12 @@ function downloadBackup(){
     }
     Object.keys(plays).forEach(function(k){
       var pl=plays[k];
-      var key=(pl.slug&&PRESETS[pl.slug])?pl.slug:sheetFor(pl.name);
-      if(!key||!PRESETS[key])return;
-      if(!pl.slug)pl.slug=key;
+      var key=slugFor(pl);
+      if(!key||!BY_SLUG[key])return;
       // hands off unless the play has no names at all
       var anyName=(pl.players||[]).some(function(q){return q.team==='o'&&q.name;});
       if(anyName)return;
-      var src=ord(PRESETS[key]().players), dst=ord(pl.players);
+      var src=ord(buildPlay(key).players), dst=ord(pl.players);
       var taken={}; dst.forEach(function(q){ if(q.name)taken[q.name]=1; });
       var byLabel={};
       src.forEach(function(q){ if(q.name&&q.label)byLabel[q.label]=q.name; });
@@ -1414,27 +1280,23 @@ function downloadBackup(){
              'Kick Return 5-2-2-2':'Kick Return \u2014 5-2-2-2'};
       if(R[plays[k].name])plays[k].name=R[plays[k].name];
     });
-    var have={}; Object.keys(plays).forEach(function(k){have[plays[k].name]=1;});
-    CORE.forEach(function(x){
-      if(have[x[0]])return;
-      have[x[0]]=1;
-      var q=blank(x[0],x[1],x[1]); plays[q.id]=q;
+    /* Seed only what is genuinely absent, matched on slug. Matching on display
+       name was the bug that made renaming a play spawn a duplicate copy of it. */
+    var have={}; Object.keys(plays).forEach(function(k){
+      var s2=slugFor(plays[k]); if(s2)have[s2]=1;
+    });
+    coreSlugs().forEach(function(slug){
+      if(have[slug])return;
+      have[slug]=1;
+      var q=blank(BY_SLUG[slug].name,slug); plays[q.id]=q;
     });
 
     if(!plays[curId])curId=Object.keys(plays)[0];
   }
 
   if(!loaded){
-    [['Punt \u2014 Base','STD Punt'],
-     ['Punt Return \u2014 Purple D','Punt Return \u2014 Purple D'],
-     ['Punt Return \u2014 White D','Punt Return \u2014 White D'],
-     ['Kickoff \u2014 Spread','Kickoff (check me)'],
-     ['Kickoff \u2014 Cluster Speed','Cluster Kickoff (huddle to twins)'],
-     ['Kickoff \u2014 Cluster 10-Play','Cluster KO \u2014 10 Play'],
-     ['Kick Return \u2014 5-2-2-2','Kick Return 5-2-2-2'],
-     ['Kickoff \u2014 Onside','Onside Kick \u2014 Kangaroo Right'],
-     ['Punt \u2014 Villanova Fake','Villanova Fake (from STD Punt)']].forEach(function(x){
-      var p=blank(x[0],x[1],x[1]); plays[p.id]=p;
+    coreSlugs().forEach(function(slug){
+      var q=blank(BY_SLUG[slug].name,slug); plays[q.id]=q;
     });
     curId=Object.keys(plays)[0];
   }
@@ -1453,7 +1315,7 @@ function downloadBackup(){
       else blocked();
     }).catch(blocked);
   })();
-  paintPlays(); draw(); save();
+  paintPresets(); paintPlays(); draw(); save();
 })();
 </script>
 </body>
