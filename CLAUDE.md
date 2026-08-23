@@ -139,10 +139,22 @@ index.html
 ├─ STORE         storage shim (window.storage → localStorage), rejects on failure
 ├─ save()        debounced write + honest badge; flushes on pagehide/visibilitychange
 ├─ backups       rolling local snapshots + download/restore
-├─ drawField()   renders the SVG
+├─ computeView() crops the viewBox to the play; placeLabels() keeps names clear
+├─ drawField()   renders the SVG; pal() swaps to black-on-white for printing
+├─ toSourceJSON()writes the playbook back out as special-teams-plays.json
+├─ game day      read-only, one unit, swipe/arrows to move between them
 ├─ paintLineup() editable position/name list under the field
 └─ migration     runs on load: rename, seed-if-empty, never delete
 ```
+
+**Printing.** `beforeprint` (plus a `matchMedia('print')` listener) sets `printing`,
+redraws through `PAL_PRINT`, and `paintPrintSheet()` builds a plain table so the
+interactive `<select>` lineup never reaches paper. `@page` is letter portrait, the
+diagram is pinned to 96mm, and every play fits one sheet — re-check that with the PDF
+page count if you change either.
+
+**Game day.** `body.gd` hides all editing chrome. The field is read-only: `pointerdown`
+returns early, so a swipe changes unit and nothing can be dragged by accident.
 
 **No webfonts.** Everything is a system font stack. This gets used on a sideline with no
 signal, so nothing may block on the network. Do not add a `<link>` to a font CDN.
@@ -181,10 +193,8 @@ repo as a standalone renderer for printed cards and is not yet wired into the ap
 **Then, roughly in value order:**
 
 - ~~Honest save badge~~, ~~rolling backups + download~~, ~~drop the webfonts~~,
-  ~~split data from code~~ — done.
-- Print stylesheet needs a real pass. Printing a play should give a clean one-page sheet:
-  diagram on top, lineup table below, black on white.
-- A game-day mode: big text, one play at a time, swipe between units, no editing chrome.
+  ~~split data from code~~, ~~fit the view to the play~~, ~~collision-placed labels~~,
+  ~~export back out as source~~, ~~print stylesheet~~, ~~game-day mode~~ — done.
 - Minimum-play tracker — tally snaps per player across units. The 10-play rule is the
   thing the head coach actually worries about.
 - Per-player coaching notes attached to a spot, so the printed sheet carries assignments.

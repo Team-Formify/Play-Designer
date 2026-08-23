@@ -96,6 +96,42 @@
       color:#666;margin:3mm 0 0}
   }
   #printTitle,#printSheet{display:none}
+
+  /* ---- game day: one unit, big, nothing to tap by accident ---- */
+  #gdBar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;
+    background:var(--board);padding:10px 10px;border-bottom:1px solid rgba(237,235,224,.16)}
+  #gdName{flex:1;min-width:0;text-align:center;font-family:var(--display);font-weight:800;
+    text-transform:uppercase;letter-spacing:.02em;font-size:19px;line-height:1.08;
+    overflow-wrap:anywhere}
+  .gdNav{flex:0 0 46px;height:46px;font-size:30px;line-height:1;background:var(--deep);
+    color:var(--chalk);border:1px solid rgba(237,235,224,.25);border-radius:6px;cursor:pointer;
+    -webkit-tap-highlight-color:transparent}
+  .gdNav:active{background:var(--gold);color:var(--deep)}
+  .gdQuit{flex:0 0 auto;background:transparent;color:var(--soft);border:1px solid rgba(237,235,224,.25);
+    border-radius:6px;padding:9px 9px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;cursor:pointer}
+  #gdHint{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--soft);text-align:center;margin:8px 0 0}
+  #gdList{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin-top:12px}
+  .gdRow{display:flex;align-items:baseline;gap:9px;padding:7px 0;
+    border-bottom:1px solid rgba(237,235,224,.12)}
+  .gdRow .p{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--gold);
+    flex:0 0 42px}
+  .gdRow .n{flex:1;min-width:0;font-size:17px;font-weight:500;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  .gdRow .n.none{color:var(--warm);font-style:italic;font-size:15px}
+  .gdRow .xm{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--warm)}
+  @media (max-width:520px){
+    #gdList{grid-template-columns:1fr}
+    #gdName{font-size:16px}
+    .gdNav{flex:0 0 40px;height:42px;font-size:26px}
+    .gdRow .n{font-size:18px}
+  }
+  body.gd header,body.gd .bar,body.gd .row,body.gd .sec,body.gd .hint{display:none!important}
+  body.gd .wrap{padding:0 10px 30px}
+  body.gd .fieldbox{border-radius:0;touch-action:pan-y}
+  body.gd svg#field{touch-action:pan-y}
+  @media print{#gdBar,#gdList,#gdHint{display:none!important}}
   #saveDot{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--soft);padding:4px 8px;border-radius:10px;border:1px solid rgba(237,235,224,.2);white-space:nowrap}
   #saveDot.ok{color:#8FD19E;border-color:rgba(143,209,158,.45)}
@@ -129,8 +165,16 @@
   <select id="playSel" aria-label="Choose play"></select>
   <span id="saveDot" title="save status">saved</span>
   <button class="btn" id="newPlay">+ New</button>
+  <button class="btn gold" id="gdOn">Game day</button>
   <a class="btn" id="schedLink" target="_blank" rel="noopener noreferrer" hidden>Schedule &#8599;</a>
 </header>
+
+<div id="gdBar" hidden>
+  <button class="gdNav" id="gdPrev" aria-label="Previous unit">&#8249;</button>
+  <div id="gdName" aria-live="polite"></div>
+  <button class="gdNav" id="gdNext" aria-label="Next unit">&#8250;</button>
+  <button class="gdQuit" id="gdOff">Done</button>
+</div>
 
 <div class="wrap">
   <div id="printTitle"></div>
@@ -193,6 +237,9 @@
       <button class="btn" id="addName">Add</button>
     </div>
   </div>
+
+  <div id="gdList" hidden></div>
+  <p id="gdHint" hidden>Swipe the field to change units</p>
 
   <div id="printSheet" aria-hidden="true">
     <table id="psTable"><tbody></tbody></table>
@@ -684,7 +731,7 @@ function updateCount(){
   cn.className='count'+(ours===11?'':' bad');
 }
 
-function draw(){ drawField(); paintRoster(); paintSel(); paintLineup(); }
+function draw(){ drawField(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays(); }
 
 function paintLineup(){
   var p=cur(), box=document.getElementById('lineup');
@@ -769,6 +816,62 @@ function paintLineup(){
   }
 }
 
+/* ---------- game day ----------
+   One unit at a time, big enough to read at arm's length, with every editing
+   control out of the way so nothing moves by accident on a sideline. */
+var gameday=false, gdSwipe=null;
+
+function gdOrder(){
+  return Object.keys(plays).sort(function(a,b){
+    return (rank(plays[a])-rank(plays[b]))||plays[a].name.localeCompare(plays[b].name);
+  });
+}
+function gdStep(d){
+  var ord=gdOrder(), i=ord.indexOf(curId);
+  if(i<0)i=0;
+  curId=ord[(i+d+ord.length)%ord.length];
+  selId=null; routing=null;
+  save(); draw();
+}
+function paintGameDay(){
+  if(!gameday)return;
+  var p=cur(); if(!p)return;
+  document.getElementById('gdName').textContent=p.name;
+  var box=document.getElementById('gdList'); box.innerHTML='';
+  var ours=p.players.filter(function(q){return q.team==='o';})
+    .sort(function(a,b){return a.y-b.y||a.x-b.x;});
+  ours.forEach(function(q){
+    var d=info(q.name), row=document.createElement('div'); row.className='gdRow';
+    var a=document.createElement('span'); a.className='p'; a.textContent=q.label||'\u2014';
+    var b=document.createElement('span');
+    b.className='n'+(q.name?'':' none');
+    b.textContent=q.name?(d.l+(d.n?' '+d.n:'')):'open';
+    row.appendChild(a); row.appendChild(b);
+    if(d.x){var c=document.createElement('span');c.className='xm';c.textContent='X';row.appendChild(c);}
+    box.appendChild(row);
+  });
+}
+function setGameDay(on){
+  gameday=!!on;
+  document.body.classList.toggle('gd',gameday);
+  ['gdBar','gdList','gdHint'].forEach(function(id){
+    document.getElementById(id).hidden=!gameday;
+  });
+  selId=null; routing=null;
+  if(gameday)window.scrollTo(0,0);
+  draw();
+}
+document.getElementById('gdOn').onclick=function(){setGameDay(true);};
+document.getElementById('gdOff').onclick=function(){setGameDay(false);};
+document.getElementById('gdPrev').onclick=function(){gdStep(-1);};
+document.getElementById('gdNext').onclick=function(){gdStep(1);};
+document.addEventListener('keydown',function(e){
+  if(!gameday)return;
+  if(e.key==='ArrowLeft')gdStep(-1);
+  else if(e.key==='ArrowRight')gdStep(1);
+  else if(e.key==='Escape')setGameDay(false);
+});
+
 /* The printed lineup is its own plain table. The on-screen one is built from
    <select> and <input>, which print as form controls and differ per browser. */
 function paintPrintSheet(p){
@@ -839,6 +942,8 @@ function hit(c){
 /* ---------- interaction ---------- */
 var drag=null;
 svg.addEventListener('pointerdown',function(e){
+  // Game day is read-only: track the swipe, never move a player.
+  if(gameday){ gdSwipe={x:e.clientX,y:e.clientY}; return; }
   e.preventDefault();
   var c=pt(e),h=hit(c),p=cur();
 
@@ -883,8 +988,19 @@ svg.addEventListener('pointermove',function(e){
   });
   draw();
 });
-svg.addEventListener('pointerup',function(){ if(drag){drag=null;cur().userEdited=1;save();} });
-svg.addEventListener('pointercancel',function(){ drag=null; });
+svg.addEventListener('pointerup',function(e){
+  if(gameday){
+    if(gdSwipe){
+      var dx=e.clientX-gdSwipe.x, dy=e.clientY-gdSwipe.y;
+      // horizontal and deliberate, or it was a scroll
+      if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.4)gdStep(dx<0?1:-1);
+      gdSwipe=null;
+    }
+    return;
+  }
+  if(drag){drag=null;cur().userEdited=1;save();}
+});
+svg.addEventListener('pointercancel',function(){ drag=null; gdSwipe=null; });
 
 /* ---------- roster ---------- */
 function paintRoster(){
