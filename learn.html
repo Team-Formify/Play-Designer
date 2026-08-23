@@ -412,7 +412,8 @@ function startWatch(){
   document.getElementById('slowBtn').textContent='Slow';
   var moving=ours(play).filter(function(q){return pathOf(play,q).total>0;}).length;
   document.getElementById('watchNote').innerHTML=
-    '<b>'+esc(play.name)+'</b> \u2014 '+moving+' of '+ours(play).length+
+    (play.howItWorks?'<b>'+esc(play.name)+'</b> \u2014 '+esc(play.howItWorks)+'<br><br>':'<b>'+esc(play.name)+'</b> \u2014 ')+
+    moving+' of '+ours(play).length+
     ' men have a path. Drag the slider to walk through it a step at a time.';
   frameAt(0);
   watchView=VIEW;          // then lock it so the view does not jitter as they run
