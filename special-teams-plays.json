@@ -1197,7 +1197,7 @@
         {
           "id": "p3",
           "team": "us",
-          "label": "RG",
+          "label": "R2",
           "player": "Grover",
           "x": 272,
           "y": 362,
@@ -1227,7 +1227,7 @@
         {
           "id": "p6",
           "team": "us",
-          "label": "LG",
+          "label": "L2",
           "player": "Pace",
           "x": 148,
           "y": 362,
@@ -1589,92 +1589,112 @@
         {
           "id": "p0",
           "team": "us",
-          "label": "R",
-          "player": null,
+          "label": "R4",
+          "player": "Bearnson",
           "x": 362,
-          "y": 356
+          "y": 356,
+          "role": "COVER",
+          "job": "Widest man away from the kick. If they get it and try to bring it back this way, you are the edge."
         },
         {
           "id": "p1",
           "team": "us",
-          "label": "R",
-          "player": null,
+          "label": "R3",
+          "player": "Bullock",
           "x": 320,
-          "y": 356
+          "y": 356,
+          "role": "COVER",
+          "job": "Cover your lane. Stay in it even though the ball is on the far side."
         },
         {
           "id": "p2",
           "team": "us",
-          "label": "R",
-          "player": null,
+          "label": "R2",
+          "player": "Prasad",
           "x": 278,
-          "y": 356
+          "y": 356,
+          "role": "COVER",
+          "job": "Get downfield fast. If they recover it, you are the one who stops the return."
         },
         {
           "id": "p3",
           "team": "us",
-          "label": "R",
-          "player": null,
+          "label": "R1",
+          "player": "Grover",
           "x": 236,
-          "y": 356
+          "y": 356,
+          "role": "COVER",
+          "job": "The kick is going the other way. Sprint down and cover in case they come up with it — you are the tackler, not the recoverer."
         },
         {
           "id": "p4",
           "team": "us",
           "label": "K",
-          "player": null,
+          "player": "Debenham",
           "x": 214,
           "y": 380,
           "role": "KICKER",
-          "job": "Drive it into the ground so it takes two big bounces. No pop-ups, they are illegal. Get it past ten yards and give our guys a chance."
+          "job": "Drive it into the ground so it takes two big bounces. No pop-ups, they are illegal. Get it past ten yards and give our guys a chance at it."
         },
         {
           "id": "p5",
           "team": "us",
           "label": "L1",
-          "player": null,
+          "player": "Bagley",
           "x": 188,
-          "y": 356
+          "y": 356,
+          "role": "RECOVER",
+          "job": "This one is coming to you. It has to travel ten yards before we can touch it, so time your run and arrive as it crosses. Take it in the air if you can. If you cannot, fall on it and cover up."
         },
         {
           "id": "p6",
           "team": "us",
           "label": "L2",
-          "player": null,
+          "player": "Scott",
           "x": 158,
-          "y": 356
+          "y": 356,
+          "role": "RECOVER",
+          "job": "Same as the man beside you. Do not touch it early or we lose it. Get there as it crosses ten, and win the ball."
         },
         {
           "id": "p7",
           "team": "us",
           "label": "L3",
-          "player": null,
+          "player": "Black",
           "x": 128,
-          "y": 356
+          "y": 356,
+          "role": "RECOVER",
+          "job": "Third man at the ball. If the first two miss it, it is yours. Fall on it — do not try to pick it up and run."
         },
         {
           "id": "p8",
           "team": "us",
           "label": "L4",
-          "player": null,
+          "player": "Severts",
           "x": 98,
-          "y": 356
+          "y": 356,
+          "role": "SHIELD",
+          "job": "You are not recovering it. Get in the way of the first man trying to reach it so our guys can."
         },
         {
           "id": "p9",
           "team": "us",
           "label": "L5",
-          "player": null,
+          "player": "Pace",
           "x": 68,
-          "y": 356
+          "y": 356,
+          "role": "SHIELD",
+          "job": "Block the man closest to where the ball is going. Buy our recover men one extra step."
         },
         {
           "id": "p10",
           "team": "us",
           "label": "L6",
-          "player": null,
+          "player": "Martinez",
           "x": 38,
-          "y": 356
+          "y": 356,
+          "role": "SHIELD",
+          "job": "Widest man on the kick side. Nobody gets around you to the ball."
         }
       ],
       "routes": [
@@ -2077,6 +2097,14 @@
     {
       "term": "Hands",
       "text": " — the front line on a kick return. If the ball comes short, it is theirs to catch."
+    },
+    {
+      "term": "Recover",
+      "text": " — on an onside kick, the men whose job is winning the loose ball. It has to travel ten yards first."
+    },
+    {
+      "term": "Shield",
+      "text": " — block the other team away from the ball so our recover men can get to it."
     },
     {
       "term": "Returner",
