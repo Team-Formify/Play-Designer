@@ -8,6 +8,10 @@
     "sidelineRight": 406,
     "yardsWide": 53.3
   },
+  "league": {
+    "name": "UYFC",
+    "scheduleUrl": "https://utahyouthfootball.org/schedule/677551/4257838/1/8bd1"
+  },
   "roster": [
     {
       "last": "Archuletta",
