@@ -51,7 +51,8 @@
       "number": null,
       "xman": true,
       "offense": "RG",
-      "defense": "LDT"
+      "defense": "LDT",
+      "tenPlay": true
     },
     {
       "last": "Dalley",
@@ -75,7 +76,8 @@
       "number": "55",
       "xman": false,
       "offense": "H",
-      "defense": "LCB / RCB"
+      "defense": "LCB / RCB",
+      "tenPlay": true
     },
     {
       "last": "Martinez",
@@ -83,7 +85,8 @@
       "number": "22",
       "xman": false,
       "offense": "C / LT",
-      "defense": "LDT / RDT"
+      "defense": "LDT / RDT",
+      "tenPlay": true
     },
     {
       "last": "Mineer",
@@ -123,7 +126,8 @@
       "number": "67",
       "xman": false,
       "offense": "Z",
-      "defense": "LCB"
+      "defense": "LCB",
+      "tenPlay": true
     },
     {
       "last": "Reary",
