@@ -200,7 +200,9 @@
           "label": "S",
           "player": "Paulich",
           "x": 210,
-          "y": 190
+          "y": 190,
+          "role": "SNAPPER",
+          "job": "Snap it back to the punter, then get your head up. You are the middle of the coverage, so run straight down the field at the returner."
         },
         {
           "id": "p1",
@@ -208,7 +210,9 @@
           "label": "RGD",
           "player": "Prasad",
           "x": 248,
-          "y": 190
+          "y": 190,
+          "role": "PROTECT",
+          "job": "Hold your gap. Nobody comes through you. After the kick, get downfield and take the middle of the field."
         },
         {
           "id": "p2",
@@ -216,7 +220,9 @@
           "label": "LGD",
           "player": "Steinke",
           "x": 172,
-          "y": 190
+          "y": 190,
+          "role": "PROTECT",
+          "job": "Protection comes first. Punch the rusher inside and keep him off the punter. When the ball is away, release and fill the middle."
         },
         {
           "id": "p3",
@@ -224,7 +230,9 @@
           "label": "RT",
           "player": "Bearnson",
           "x": 286,
-          "y": 190
+          "y": 190,
+          "role": "COVER",
+          "job": "Block first, then go. Once the ball is gone you are coverage. Keep outside leverage and turn the returner into your help."
         },
         {
           "id": "p4",
@@ -232,7 +240,9 @@
           "label": "LT",
           "player": "Black",
           "x": 134,
-          "y": 190
+          "y": 190,
+          "role": "COVER",
+          "job": "Block the man over you for two counts so the punter is safe, then release and cover. Stay outside the returner and squeeze him back inside."
         },
         {
           "id": "p5",
@@ -240,7 +250,9 @@
           "label": "RG",
           "player": "Grover",
           "x": 376,
-          "y": 190
+          "y": 190,
+          "role": "GUNNER",
+          "job": "Same as the other gunner. Get off the line, get downfield fast, and be the first man to the returner. Do not run past the ball."
         },
         {
           "id": "p6",
@@ -248,7 +260,9 @@
           "label": "LG",
           "player": "Pace",
           "x": 44,
-          "y": 190
+          "y": 190,
+          "role": "GUNNER",
+          "job": "You are the first one down there. Release outside, beat the man trying to hold you up, and get to the returner before he starts upfield. Stay in your lane."
         },
         {
           "id": "p7",
@@ -256,7 +270,9 @@
           "label": "RW",
           "player": "Dalley",
           "x": 280,
-          "y": 230
+          "y": 230,
+          "role": "WING",
+          "job": "Seal the edge, then cover. Once you release, stay wide. If he gets outside you there is nobody behind you."
         },
         {
           "id": "p8",
@@ -264,7 +280,9 @@
           "label": "LW",
           "player": "Scott",
           "x": 140,
-          "y": 230
+          "y": 230,
+          "role": "WING",
+          "job": "You are the edge of the wall. Nobody gets around you to the punter. Block first, then release outside and keep the returner in front of you."
         },
         {
           "id": "p9",
@@ -272,7 +290,9 @@
           "label": "PP",
           "player": "Archuletta",
           "x": 192,
-          "y": 264
+          "y": 264,
+          "role": "PROTECTOR",
+          "job": "You are the last man before the punter. Check the count, call the protection, and block anybody who comes free. Then get downfield."
         },
         {
           "id": "p10",
@@ -280,7 +300,9 @@
           "label": "P",
           "player": "Debenham",
           "x": 210,
-          "y": 340
+          "y": 340,
+          "role": "PUNTER",
+          "job": "Catch it, two steps, get it off. After the kick you are the safety, so stay behind the ball and be ready to make the tackle."
         }
       ],
       "routes": []
@@ -354,7 +376,9 @@
           "label": "RW",
           "player": "Dalley",
           "x": 280,
-          "y": 230
+          "y": 230,
+          "role": "SEAL",
+          "job": "Seal the edge on the side the protector is breaking to. Your block is the play."
         },
         {
           "id": "p8",
@@ -362,7 +386,9 @@
           "label": "LW",
           "player": "Scott",
           "x": 140,
-          "y": 230
+          "y": 230,
+          "role": "CROSS",
+          "job": "Cross behind the punter like you are taking the ball. Sell it hard, because the more they chase you the more room the protector has."
         },
         {
           "id": "p9",
@@ -370,7 +396,9 @@
           "label": "PP",
           "player": "Archuletta",
           "x": 192,
-          "y": 264
+          "y": 264,
+          "role": "BALL",
+          "job": "The snap comes to you, not the punter. Sell the toss back, then break the other way and get the first down. Take what is there."
         },
         {
           "id": "p10",
@@ -378,7 +406,9 @@
           "label": "P",
           "player": "Debenham",
           "x": 210,
-          "y": 340
+          "y": 340,
+          "role": "DECOY",
+          "job": "Sell it. Fake the catch, fake the handoff to the wing crossing, and keep your eyes downfield so nobody reads you."
         }
       ],
       "routes": [
@@ -596,7 +626,9 @@
           "label": "LJ",
           "player": "Severts",
           "x": 48,
-          "y": 150
+          "y": 150,
+          "role": "JAM",
+          "job": "Hold their gunner up at the line. Get hands on him, slow him down, keep him from running free. Every second you buy is a yard for the returner."
         },
         {
           "id": "p12",
@@ -636,7 +668,9 @@
           "label": "RJ",
           "player": "Wentzel",
           "x": 372,
-          "y": 150
+          "y": 150,
+          "role": "JAM",
+          "job": "Same on your side. Body him, redirect him, do not let him release clean."
         },
         {
           "id": "p17",
@@ -676,7 +710,9 @@
           "label": "PR",
           "player": "Pace",
           "x": 210,
-          "y": 412
+          "y": 412,
+          "role": "RETURNER",
+          "job": "Catch it first, then run. Call for the fair catch if they are on top of you. Get north and south — do not run sideways."
         }
       ],
       "routes": [
@@ -906,7 +942,9 @@
           "label": "LJ",
           "player": "Prasad",
           "x": 48,
-          "y": 150
+          "y": 150,
+          "role": "JAM",
+          "job": "Hold their gunner up at the line so he cannot get down the field clean."
         },
         {
           "id": "p12",
@@ -946,7 +984,9 @@
           "label": "RJ",
           "player": "Mineer",
           "x": 372,
-          "y": 150
+          "y": 150,
+          "role": "JAM",
+          "job": "Get hands on him and slow him down. Buy the returner time."
         },
         {
           "id": "p17",
@@ -986,7 +1026,9 @@
           "label": "PR",
           "player": "Reary",
           "x": 210,
-          "y": 412
+          "y": 412,
+          "role": "RETURNER",
+          "job": "Catch it first. Only then think about running. Fair catch is always the right call if they are already there."
         }
       ],
       "routes": [
@@ -1128,7 +1170,9 @@
           "label": "R5",
           "player": "Prasad",
           "x": 386,
-          "y": 362
+          "y": 362,
+          "role": "BALL",
+          "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
         {
           "id": "p1",
@@ -1136,7 +1180,9 @@
           "label": "R4",
           "player": "Bagley",
           "x": 348,
-          "y": 362
+          "y": 362,
+          "role": "CONTAIN",
+          "job": "Nothing gets outside you. Stay wider than the returner the whole way. If he breaks out, that is on you. Squeeze him back to the middle."
         },
         {
           "id": "p2",
@@ -1144,7 +1190,9 @@
           "label": "R3",
           "player": "Bearnson",
           "x": 310,
-          "y": 362
+          "y": 362,
+          "role": "FORCE",
+          "job": "Beat your blocker and turn the returner inside. You are the one who makes him choose, so get there fast and get skinny."
         },
         {
           "id": "p3",
@@ -1152,7 +1200,9 @@
           "label": "RG",
           "player": "Grover",
           "x": 272,
-          "y": 362
+          "y": 362,
+          "role": "ALLEY",
+          "job": "Fill the gap between contain and the ball. Stay a step behind the front so you can see it, then close on whichever side he picks."
         },
         {
           "id": "p4",
@@ -1160,7 +1210,9 @@
           "label": "R1",
           "player": "Black",
           "x": 234,
-          "y": 362
+          "y": 362,
+          "role": "BALL",
+          "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
         {
           "id": "p5",
@@ -1168,7 +1220,9 @@
           "label": "L1",
           "player": "Archuletta",
           "x": 186,
-          "y": 362
+          "y": 362,
+          "role": "BALL",
+          "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
         {
           "id": "p6",
@@ -1176,7 +1230,9 @@
           "label": "LG",
           "player": "Pace",
           "x": 148,
-          "y": 362
+          "y": 362,
+          "role": "ALLEY",
+          "job": "Fill the gap between contain and the ball. Stay a step behind the front so you can see it, then close on whichever side he picks."
         },
         {
           "id": "p7",
@@ -1184,7 +1240,9 @@
           "label": "L3",
           "player": "Paulich",
           "x": 110,
-          "y": 362
+          "y": 362,
+          "role": "FORCE",
+          "job": "Beat your blocker and turn the returner inside. You are the one who makes him choose, so get there fast and get skinny."
         },
         {
           "id": "p8",
@@ -1192,7 +1250,9 @@
           "label": "L4",
           "player": "Scott",
           "x": 72,
-          "y": 362
+          "y": 362,
+          "role": "CONTAIN",
+          "job": "Nothing gets outside you. Stay wider than the returner the whole way. If he breaks out, that is on you. Squeeze him back to the middle."
         },
         {
           "id": "p9",
@@ -1200,7 +1260,9 @@
           "label": "L5",
           "player": "Severts",
           "x": 34,
-          "y": 362
+          "y": 362,
+          "role": "BALL",
+          "job": "Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."
         },
         {
           "id": "p10",
@@ -1208,7 +1270,9 @@
           "label": "K",
           "player": "Debenham",
           "x": 210,
-          "y": 410
+          "y": 410,
+          "role": "SAFETY",
+          "job": "You are the last man. Stay behind everyone, never pass the ball, and make the tackle if he gets through. If you miss, he scores."
         }
       ],
       "routes": []
@@ -1560,7 +1624,9 @@
           "label": "K",
           "player": null,
           "x": 214,
-          "y": 380
+          "y": 380,
+          "role": "KICKER",
+          "job": "Drive it into the ground so it takes two big bounces. No pop-ups, they are illegal. Get it past ten yards and give our guys a chance."
         },
         {
           "id": "p5",
@@ -1714,7 +1780,9 @@
           "label": "H5",
           "player": "Severts",
           "x": 374,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Short kick is yours. Do not back up into your own returner."
         },
         {
           "id": "p7",
@@ -1722,7 +1790,9 @@
           "label": "H4",
           "player": "Prasad",
           "x": 292,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Same as the others. Hands up, eyes on the ball, and if it clears you go find someone to block."
         },
         {
           "id": "p8",
@@ -1730,7 +1800,9 @@
           "label": "H3",
           "player": "Bearnson",
           "x": 210,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "You are in the middle. Short kick is yours. If it is deep, turn and block."
         },
         {
           "id": "p9",
@@ -1738,7 +1810,9 @@
           "label": "H2",
           "player": "Steinke",
           "x": 128,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Front line. Watch for the short kick, and if it goes over you turn and get on the man in front of you."
         },
         {
           "id": "p10",
@@ -1746,7 +1820,9 @@
           "label": "H1",
           "player": "Bagley",
           "x": 46,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "If the ball comes short and low, it is yours. Catch it, do not let it bounce, and get to the sideline."
         },
         {
           "id": "p11",
@@ -1786,7 +1862,9 @@
           "label": "RR",
           "player": "Scott",
           "x": 245,
-          "y": 356
+          "y": 356,
+          "role": "RETURNER",
+          "job": "If it is yours, catch it and go. If it is his, get in front of him and block the first man you see."
         },
         {
           "id": "p16",
@@ -1794,7 +1872,9 @@
           "label": "LR",
           "player": "Pace",
           "x": 175,
-          "y": 356
+          "y": 356,
+          "role": "RETURNER",
+          "job": "Catch it clean, then pick a side and go. One cut, then straight. Do not dance."
         }
       ],
       "routes": []
@@ -1860,7 +1940,9 @@
           "label": "H1",
           "player": "Bagley",
           "x": 46,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Front line. Short kick is yours to catch."
         },
         {
           "id": "p7",
@@ -1868,7 +1950,9 @@
           "label": "H2",
           "player": "Steinke",
           "x": 128,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Hands up. If it clears you, turn and block."
         },
         {
           "id": "p8",
@@ -1876,7 +1960,9 @@
           "label": "H3",
           "player": "Bearnson",
           "x": 210,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Middle of the front. Catch anything short, block anything deep."
         },
         {
           "id": "p9",
@@ -1884,7 +1970,9 @@
           "label": "H4",
           "player": "Prasad",
           "x": 292,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Short kick is yours. Eyes on the ball the whole way."
         },
         {
           "id": "p10",
@@ -1892,7 +1980,9 @@
           "label": "H5",
           "player": "Severts",
           "x": 374,
-          "y": 126
+          "y": 126,
+          "role": "HANDS",
+          "job": "Same job. Do not turn your back on the ball."
         },
         {
           "id": "p11",
@@ -1932,7 +2022,9 @@
           "label": "LR",
           "player": "Pace",
           "x": 175,
-          "y": 356
+          "y": 356,
+          "role": "RETURNER",
+          "job": "Catch it, one cut, get north. Trust the wall."
         },
         {
           "id": "p16",
@@ -1940,10 +2032,84 @@
           "label": "RR",
           "player": "Scott",
           "x": 245,
-          "y": 356
+          "y": 356,
+          "role": "RETURNER",
+          "job": "Yours or his — either catch it or lead him. Do not both go for it."
         }
       ],
       "routes": []
+    }
+  ],
+  "glossary": [
+    {
+      "term": "Lane",
+      "always": true,
+      "text": " — the strip of field you are responsible for. Stay in it. Eleven men in eleven lanes means there is nowhere for the returner to go."
+    },
+    {
+      "term": "Ball",
+      "text": " — go straight at the ball carrier through your lane."
+    },
+    {
+      "term": "Contain",
+      "text": " — stay wider than the ball carrier so he can never get outside you."
+    },
+    {
+      "term": "Force",
+      "text": " — beat your blocker and turn the ball carrier back inside toward help."
+    },
+    {
+      "term": "Alley",
+      "text": " — the space between contain and the ball. You fill whichever side he picks."
+    },
+    {
+      "term": "Safety",
+      "text": " — the last man back. Never pass the ball. If he beats you, it is a touchdown."
+    },
+    {
+      "term": "Gunner",
+      "text": " — on punt, the man split out wide whose only job is getting to the returner first."
+    },
+    {
+      "term": "Jam",
+      "text": " — getting your hands on their gunner at the line to slow him down."
+    },
+    {
+      "term": "Hands",
+      "text": " — the front line on a kick return. If the ball comes short, it is theirs to catch."
+    },
+    {
+      "term": "Returner",
+      "text": " — catches the kick and runs it back. Catching it clean matters more than the return."
+    },
+    {
+      "term": "Protector",
+      "text": " — the last blocker in front of the punter. He makes the calls."
+    },
+    {
+      "term": "Snapper",
+      "text": " — snaps the ball back to the punter, then covers."
+    },
+    {
+      "term": "Wing",
+      "text": " — the man on the edge of the punt formation who seals the outside."
+    },
+    {
+      "term": "Cover",
+      "text": " — block first, then run downfield and make the tackle."
+    },
+    {
+      "term": "Protect",
+      "text": " — keep the rusher off the punter. Nothing matters more until the ball is gone."
+    },
+    {
+      "term": "Decoy",
+      "text": " — you do not get the ball. Your job is making them think you do."
+    },
+    {
+      "term": "X-man",
+      "always": true,
+      "text": " — 165 lbs or more. On special teams he has to line up on the front two lines or the line of scrimmage, and he cannot fake a punt."
     }
   ]
 }

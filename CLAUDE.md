@@ -149,8 +149,8 @@ index.html
 
 **Print is the game-day output.** The app is a practice and planning tool; Dom barely
 uses a device on the sideline. Three modes, routed by `data-print` on `<body>`:
-`play` (the current unit) and `book` (all ten, one per page). Anything meant for game
-day must be printable.
+`play` (the current unit), `book` (all ten, one per page) and `jobs` (the teaching
+handout). Anything meant for game day must be printable.
 
 **Printing.** `beforeprint` (plus a `matchMedia('print')` listener) sets `printing`,
 redraws through `PAL_PRINT`, and `paintPrintSheet()` builds a plain table so the
@@ -202,7 +202,12 @@ repo as a standalone renderer for printed cards and is not yet wired into the ap
   ~~export back out as source~~, ~~print stylesheet~~, ~~game-day mode~~ — done.
 - ~~Minimum-play sheet~~ — dropped. The league hands him the form at kickoff; the app's
   job is the *planning* side, which the who's-on-what grid covers.
-- Per-player coaching notes attached to a spot, so the printed sheet carries assignments.
+- ~~Per-spot coaching notes~~ — done. Each player carries `role` (the lane name, e.g.
+  CONTAIN) and `job` (what to do, in words a first-year kid gets), both editable in the
+  Selected player panel and exported with the playbook. A `glossary` in the JSON explains
+  the terms, and only the ones used on the current unit are shown. **Print jobs** produces
+  a one-page handout per unit. Deliberately *not* on the play sheet — adding it there
+  pushed that to two pages, and the one-page play sheet is the contract.
 - Multi-device sync. Supabase is the obvious fit but is explicitly **not** wanted for the
   2026 season. Revisit in the offseason.
 
@@ -229,6 +234,15 @@ as missing, so "Add missing formations" will offer to restore it. That is the bu
 doing its job, not a bug.
 
 ## Open questions for the coach
+
+- **Kickoff lane numbering disagrees with his own sheet.** His handwritten kickoff sheet
+  reads L1 at the outside through L5 inside, then SAFETY, then R5 to R1. The app labels
+  the same row L5 L4 L3 LG L1 / R1 RG R3 R4 R5 — reversed, with the gunner spots taking
+  the 2 positions. The lanes seeded into the data (BALL CONTAIN FORCE ALLEY BALL |
+  SAFETY | BALL ALLEY FORCE CONTAIN BALL) are mapped by **where the man stands**, not by
+  his number, so they match the sheet on the field. Which numbering he wants is his call.
+- The written jobs are drafts. Punt-return wall/hold-up spots and both cluster kickoffs
+  were left blank rather than guessed at.
 
 Do not silently resolve these; they are personnel decisions, not code decisions.
 

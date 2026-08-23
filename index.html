@@ -95,12 +95,27 @@
     #psFoot{font-family:var(--mono);font-size:7.5pt;letter-spacing:.08em;text-transform:uppercase;
       color:#666;margin:3mm 0 0}
   }
-  #printTitle,#printSheet,#bookSheets{display:none}
+  #printTitle,#printSheet,#bookSheets,#jobSheet{display:none}
 
   @media print{
     body[data-print="book"] .fieldbox,body[data-print="book"] #printSheet,
-    body[data-print="book"] #printTitle{display:none!important}
+    body[data-print="book"] #printTitle,
+    body[data-print="jobs"] .fieldbox,body[data-print="jobs"] #printSheet{display:none!important}
     body[data-print="book"] #bookSheets{display:block!important}
+    body[data-print="jobs"] #jobSheet{display:block!important}
+    #jobSheet h1{font-family:var(--display);font-weight:800;text-transform:uppercase;
+      letter-spacing:.03em;font-size:17pt;margin:0 0 1mm;color:#000}
+    #jobSheet .sub{font-family:var(--mono);font-size:8pt;letter-spacing:.08em;
+      text-transform:uppercase;color:#444;margin:0 0 4mm}
+    #jobSheet .jrow{break-inside:avoid;page-break-inside:avoid;padding:1.7mm 0;
+      border-bottom:.4pt solid #bbb}
+    #jobSheet .jhd{font-size:10pt;color:#000;margin:0 0 .6mm}
+    #jobSheet .jhd .jp{font-family:var(--mono);font-weight:700;letter-spacing:.06em}
+    #jobSheet .jhd .jr{font-family:var(--mono);font-size:8pt;letter-spacing:.09em;color:#444}
+    #jobSheet .jtx{font-size:9.5pt;line-height:1.3;color:#000;margin:0}
+    #jobSheet .jgl{margin-top:3.5mm;border-top:.8pt solid #000;padding-top:2.5mm}
+    #jobSheet .jgl p{font-size:8.5pt;line-height:1.3;margin:0 0 1mm;color:#000}
+    #jobSheet .jgl b{font-family:var(--mono);font-size:8.5pt;letter-spacing:.07em}
 
     .bookSheet{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
     .bookSheet:last-child{break-after:auto;page-break-after:auto}
@@ -141,6 +156,21 @@
   #unitGrid tr.none td{color:var(--warm)}
   #unitGrid td.who{position:relative}
   #outWho,#inWho{flex:1;min-width:0;max-width:none}
+  #jobIn{width:100%;min-height:64px;font-size:14px;background:var(--deep);color:var(--chalk);
+    border:1px solid rgba(237,235,224,.25);border-radius:4px;padding:8px;margin-top:4px}
+  .job{padding:9px 0;border-bottom:1px solid rgba(237,235,224,.12)}
+  .job:last-child{border-bottom:0}
+  .job .hd{display:flex;gap:9px;align-items:baseline}
+  .job .pos{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--gold);flex:0 0 44px}
+  .job .role{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--warm)}
+  .job .who{font-size:13px;color:var(--soft)}
+  .job .txt{font-size:14px;margin:4px 0 0 53px;line-height:1.45}
+  .job .txt.none{color:var(--soft);font-style:italic}
+  .gl{padding:8px 0;border-bottom:1px solid rgba(237,235,224,.12);font-size:14px;line-height:1.45}
+  .gl:last-child{border-bottom:0}
+  .gl b{font-family:var(--mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--gold);display:block;margin-bottom:2px}
   #unitGrid tr.none td.tot{color:var(--warm);font-weight:700}
   .lgd{font-family:var(--mono);font-size:10.5px;line-height:1.7;color:var(--soft);margin:10px 0 0}
   @media print{#flagSec,#gridSec{display:none!important}}
@@ -248,6 +278,7 @@
     <button class="btn" id="fillNames">Fill names</button>
     <button class="btn gold" id="print">Print this play</button>
     <button class="btn" id="printBook">Print all plays</button>
+    <button class="btn" id="printJobs">Print jobs</button>
   </div>
 
   <div class="row" role="group" aria-label="Name labels">
@@ -288,6 +319,7 @@
   </div>
 
   <div id="bookSheets" aria-hidden="true"></div>
+  <div id="jobSheet" aria-hidden="true"></div>
 
   <div id="gdList" hidden></div>
   <p id="gdHint" hidden>Swipe the field to change units</p>
@@ -303,6 +335,17 @@
     <div class="panel"><p>Checked against the UYFC notes in the project brief, correct as of the
     2026 preseason. These are prompts to look again, not rulings &mdash; verify anything that
     matters against the current rulebook.</p></div>
+  </div>
+
+  <div class="sec" id="jobSec">
+    <h2>What each spot does</h2>
+    <p class="count" id="jobNote"></p>
+    <div id="jobs"></div>
+  </div>
+
+  <div class="sec" id="glosSec">
+    <h2>Words on this page</h2>
+    <div id="glossary"></div>
   </div>
 
   <div class="sec" id="swapSec">
@@ -400,7 +443,7 @@
 <!-- Fallback copy of special-teams-plays.json, used when fetch cannot reach the
      real file (downloaded local copy, artifact viewer). The .json file is the
      source of truth; regenerate this with `node scripts/sync-play-data.js`. -->
-<script type="application/json" id="play-data">{"schema":1,"generated":"2026-08-23","field":{"width":420,"height":500,"sidelineLeft":14,"sidelineRight":406,"yardsWide":53.3},"league":{"name":"UYFC","scheduleUrl":"https://utahyouthfootball.org/schedule/677551/4257838/1/8bd1"},"roster":[{"last":"Archuletta","first":"Cree","number":"14","xman":false,"offense":"QB / LG / X","defense":"MIKE"},{"last":"Bagley","first":"Ledger","number":"27","xman":false,"offense":"Z","defense":"LCB / SS"},{"last":"Bearnson","first":"Ryker","number":"49","xman":false,"offense":"RG / QB / Z / F / Y","defense":"SS"},{"last":"Black","first":"Brave","number":"12","xman":false,"offense":"F / Y","defense":"RDE / FS"},{"last":"Bullock","first":"Tistyn","number":null,"xman":true,"offense":"RG","defense":"LDT","tenPlay":true},{"last":"Dalley","first":"Caleb","number":"17","xman":false,"offense":"H / Y / F / RT","defense":"LDE"},{"last":"Debenham","first":"Dolan","number":"16","xman":false,"offense":"C / RT","defense":"SAM"},{"last":"Grover","first":"Ja'corey","number":"55","xman":false,"offense":"H","defense":"LCB / RCB","tenPlay":true},{"last":"Martinez","first":"Daxton","number":"22","xman":false,"offense":"C / LT","defense":"LDT / RDT","tenPlay":true},{"last":"Mineer","first":"Mason","number":"47","xman":false,"offense":"X","defense":"RCB"},{"last":"Mitchell","first":"Cole","number":"48","xman":true,"offense":"LG","defense":"RDT"},{"last":"Pace","first":"Kyler","number":"10","xman":false,"offense":"Y / H","defense":"FS"},{"last":"Paulich","first":"Andrew","number":"35","xman":false,"offense":"LT","defense":"RDE / LDT / MIKE"},{"last":"Prasad","first":"Joseph","number":"67","xman":false,"offense":"Z","defense":"LCB","tenPlay":true},{"last":"Reary","first":"Cache","number":"9","xman":false,"offense":"QB","defense":"FS"},{"last":"Rowley","first":"Mason","number":"73","xman":false,"offense":"C","defense":"RDT"},{"last":"Ruelas","first":"Jehudiel","number":"74","xman":true,"offense":"RG","defense":"LDT"},{"last":"Scott","first":"Rowan","number":"99","xman":false,"offense":"Z","defense":"RCB / WILL"},{"last":"Severts","first":"Cooper","number":"34","xman":false,"offense":"Z","defense":"WILL / FS"},{"last":"Steinke","first":"Zander","number":"33","xman":false,"offense":"—","defense":"LDE / RDT / MIKE / SAM"},{"last":"Wentzel","first":"Carter","number":"7","xman":false,"offense":"X","defense":"RCB"}],"plays":[{"slug":"std-punt","name":"Punt — Base","order":1,"lineOfScrimmage":190,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"us","label":"S","player":"Paulich","x":210,"y":190},{"id":"p1","team":"us","label":"RGD","player":"Prasad","x":248,"y":190},{"id":"p2","team":"us","label":"LGD","player":"Steinke","x":172,"y":190},{"id":"p3","team":"us","label":"RT","player":"Bearnson","x":286,"y":190},{"id":"p4","team":"us","label":"LT","player":"Black","x":134,"y":190},{"id":"p5","team":"us","label":"RG","player":"Grover","x":376,"y":190},{"id":"p6","team":"us","label":"LG","player":"Pace","x":44,"y":190},{"id":"p7","team":"us","label":"RW","player":"Dalley","x":280,"y":230},{"id":"p8","team":"us","label":"LW","player":"Scott","x":140,"y":230},{"id":"p9","team":"us","label":"PP","player":"Archuletta","x":192,"y":264},{"id":"p10","team":"us","label":"P","player":"Debenham","x":210,"y":340}],"routes":[]},{"slug":"villanova-fake-from-std-punt","name":"Punt — Villanova Fake","order":2,"lineOfScrimmage":190,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"us","label":"S","player":"Paulich","x":210,"y":190},{"id":"p1","team":"us","label":"RGD","player":"Prasad","x":248,"y":190},{"id":"p2","team":"us","label":"LGD","player":"Steinke","x":172,"y":190},{"id":"p3","team":"us","label":"RT","player":"Bearnson","x":286,"y":190},{"id":"p4","team":"us","label":"LT","player":"Black","x":134,"y":190},{"id":"p5","team":"us","label":"RG","player":"Grover","x":376,"y":190},{"id":"p6","team":"us","label":"LG","player":"Pace","x":44,"y":190},{"id":"p7","team":"us","label":"RW","player":"Dalley","x":280,"y":230},{"id":"p8","team":"us","label":"LW","player":"Scott","x":140,"y":230},{"id":"p9","team":"us","label":"PP","player":"Archuletta","x":192,"y":264},{"id":"p10","team":"us","label":"P","player":"Debenham","x":210,"y":340}],"routes":[{"playerId":"p9","points":[{"x":224,"y":272},{"x":270,"y":258},{"x":316,"y":208},{"x":324,"y":120},{"x":320,"y":40}]},{"playerId":"p10","points":[{"x":206,"y":306},{"x":188,"y":290}]},{"playerId":"p8","points":[{"x":172,"y":268},{"x":90,"y":276},{"x":38,"y":224},{"x":34,"y":150}]},{"playerId":"p7","points":[{"x":298,"y":206},{"x":312,"y":168}]},{"playerId":"p3","points":[{"x":300,"y":176},{"x":316,"y":148}]},{"playerId":"p5","points":[{"x":376,"y":120},{"x":358,"y":70}]},{"playerId":"p6","points":[{"x":44,"y":120},{"x":64,"y":70}]}]},{"slug":"punt-return-purple-d","name":"Punt Return — Purple D","order":3,"lineOfScrimmage":126,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":40,"y":126},{"id":"p1","team":"them","label":null,"player":null,"x":380,"y":126},{"id":"p2","team":"them","label":null,"player":null,"x":150,"y":126},{"id":"p3","team":"them","label":null,"player":null,"x":180,"y":126},{"id":"p4","team":"them","label":null,"player":null,"x":210,"y":126},{"id":"p5","team":"them","label":null,"player":null,"x":240,"y":126},{"id":"p6","team":"them","label":null,"player":null,"x":270,"y":126},{"id":"p7","team":"them","label":null,"player":null,"x":178,"y":92},{"id":"p8","team":"them","label":null,"player":null,"x":210,"y":92},{"id":"p9","team":"them","label":null,"player":null,"x":242,"y":92},{"id":"p10","team":"them","label":null,"player":null,"x":210,"y":30},{"id":"p11","team":"us","label":"LJ","player":"Severts","x":48,"y":150},{"id":"p12","team":"us","label":"L2","player":"Dalley","x":150,"y":150},{"id":"p13","team":"us","label":"L1","player":"Ruelas","x":190,"y":150},{"id":"p14","team":"us","label":"R1","player":"Steinke","x":232,"y":150},{"id":"p15","team":"us","label":"R2","player":"Black","x":272,"y":150},{"id":"p16","team":"us","label":"RJ","player":"Wentzel","x":372,"y":150},{"id":"p17","team":"us","label":"LM","player":"Archuletta","x":168,"y":212},{"id":"p18","team":"us","label":"RM","player":"Debenham","x":252,"y":212},{"id":"p19","team":"us","label":"LB","player":"Scott","x":142,"y":290},{"id":"p20","team":"us","label":"RB","player":"Bagley","x":278,"y":290},{"id":"p21","team":"us","label":"PR","player":"Pace","x":210,"y":412}],"routes":[{"playerId":"p11","points":[{"x":44,"y":128}]},{"playerId":"p12","points":[{"x":158,"y":128}]},{"playerId":"p13","points":[{"x":196,"y":128}]},{"playerId":"p14","points":[{"x":236,"y":128}]},{"playerId":"p15","points":[{"x":266,"y":128}]},{"playerId":"p16","points":[{"x":376,"y":128}]},{"playerId":"p17","points":[{"x":164,"y":276},{"x":186,"y":304}]},{"playerId":"p18","points":[{"x":256,"y":276},{"x":234,"y":304}]},{"playerId":"p19","points":[{"x":160,"y":346},{"x":188,"y":370}]},{"playerId":"p20","points":[{"x":262,"y":346},{"x":234,"y":370}]},{"playerId":"p21","points":[{"x":210,"y":306},{"x":210,"y":186},{"x":210,"y":86}]}]},{"slug":"punt-return-white-d","name":"Punt Return — White D","order":4,"lineOfScrimmage":126,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":40,"y":126},{"id":"p1","team":"them","label":null,"player":null,"x":380,"y":126},{"id":"p2","team":"them","label":null,"player":null,"x":150,"y":126},{"id":"p3","team":"them","label":null,"player":null,"x":180,"y":126},{"id":"p4","team":"them","label":null,"player":null,"x":210,"y":126},{"id":"p5","team":"them","label":null,"player":null,"x":240,"y":126},{"id":"p6","team":"them","label":null,"player":null,"x":270,"y":126},{"id":"p7","team":"them","label":null,"player":null,"x":178,"y":92},{"id":"p8","team":"them","label":null,"player":null,"x":210,"y":92},{"id":"p9","team":"them","label":null,"player":null,"x":242,"y":92},{"id":"p10","team":"them","label":null,"player":null,"x":210,"y":30},{"id":"p11","team":"us","label":"LJ","player":"Prasad","x":48,"y":150},{"id":"p12","team":"us","label":"L2","player":"Paulich","x":150,"y":150},{"id":"p13","team":"us","label":"L1","player":"Bullock","x":190,"y":150},{"id":"p14","team":"us","label":"R1","player":"Mitchell","x":232,"y":150},{"id":"p15","team":"us","label":"R2","player":"Rowley","x":272,"y":150},{"id":"p16","team":"us","label":"RJ","player":"Mineer","x":372,"y":150},{"id":"p17","team":"us","label":"LM","player":"Martinez","x":168,"y":212},{"id":"p18","team":"us","label":"RM","player":"Bearnson","x":252,"y":212},{"id":"p19","team":"us","label":"LB","player":"Grover","x":142,"y":290},{"id":"p20","team":"us","label":"RB","player":"Bagley","x":278,"y":290},{"id":"p21","team":"us","label":"PR","player":"Reary","x":210,"y":412}],"routes":[{"playerId":"p11","points":[{"x":44,"y":128}]},{"playerId":"p12","points":[{"x":158,"y":128}]},{"playerId":"p13","points":[{"x":196,"y":128}]},{"playerId":"p14","points":[{"x":236,"y":128}]},{"playerId":"p15","points":[{"x":266,"y":128}]},{"playerId":"p16","points":[{"x":376,"y":128}]},{"playerId":"p17","points":[{"x":164,"y":276},{"x":186,"y":304}]},{"playerId":"p18","points":[{"x":256,"y":276},{"x":234,"y":304}]},{"playerId":"p19","points":[{"x":160,"y":346},{"x":188,"y":370}]},{"playerId":"p20","points":[{"x":262,"y":346},{"x":234,"y":370}]},{"playerId":"p21","points":[{"x":210,"y":306},{"x":210,"y":186},{"x":210,"y":86}]}]},{"slug":"kickoff-check-me","name":"Kickoff — Spread","order":5,"lineOfScrimmage":330,"lineLabel":"FREE KICK LINE","players":[{"id":"p0","team":"us","label":"R5","player":"Prasad","x":386,"y":362},{"id":"p1","team":"us","label":"R4","player":"Bagley","x":348,"y":362},{"id":"p2","team":"us","label":"R3","player":"Bearnson","x":310,"y":362},{"id":"p3","team":"us","label":"RG","player":"Grover","x":272,"y":362},{"id":"p4","team":"us","label":"R1","player":"Black","x":234,"y":362},{"id":"p5","team":"us","label":"L1","player":"Archuletta","x":186,"y":362},{"id":"p6","team":"us","label":"LG","player":"Pace","x":148,"y":362},{"id":"p7","team":"us","label":"L3","player":"Paulich","x":110,"y":362},{"id":"p8","team":"us","label":"L4","player":"Scott","x":72,"y":362},{"id":"p9","team":"us","label":"L5","player":"Severts","x":34,"y":362},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":410}],"routes":[]},{"slug":"cluster-kickoff-huddle-to-twins","name":"Kickoff — Cluster Speed","order":6,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — INSIDE THE NUMBERS","players":[{"id":"p0","team":"us","label":"H5","player":"Pace","x":244,"y":356},{"id":"p1","team":"us","label":"H4","player":"Bagley","x":220,"y":352},{"id":"p2","team":"us","label":"H3","player":"Black","x":196,"y":356},{"id":"p3","team":"us","label":"H2","player":"Scott","x":172,"y":360},{"id":"p4","team":"us","label":"H1","player":"Severts","x":238,"y":380},{"id":"p5","team":"us","label":"H6","player":"Dalley","x":214,"y":376},{"id":"p6","team":"us","label":"H7","player":"Bearnson","x":190,"y":380},{"id":"p7","team":"us","label":"H8","player":"Wentzel","x":166,"y":384},{"id":"p8","team":"us","label":"H9","player":"Archuletta","x":226,"y":402},{"id":"p9","team":"us","label":"H10","player":"Mineer","x":200,"y":402},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":444}],"routes":[{"playerId":"p0","points":[{"x":300,"y":350},{"x":346,"y":346}]},{"playerId":"p3","points":[{"x":120,"y":354},{"x":74,"y":346}]},{"playerId":"p4","points":[{"x":294,"y":370},{"x":324,"y":348}]},{"playerId":"p7","points":[{"x":126,"y":374},{"x":96,"y":348}]}]},{"slug":"cluster-ko-10-play","name":"Kickoff — Cluster 10-Play","order":7,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — INSIDE THE NUMBERS","players":[{"id":"p0","team":"us","label":"H5","player":"Prasad","x":244,"y":356},{"id":"p1","team":"us","label":"H4","player":"Steinke","x":220,"y":352},{"id":"p2","team":"us","label":"H3","player":"Mitchell","x":196,"y":356},{"id":"p3","team":"us","label":"H2","player":"Grover","x":172,"y":360},{"id":"p4","team":"us","label":"H1","player":"Reary","x":238,"y":380},{"id":"p5","team":"us","label":"H6","player":"Rowley","x":214,"y":376},{"id":"p6","team":"us","label":"H7","player":"Ruelas","x":190,"y":380},{"id":"p7","team":"us","label":"H8","player":"Paulich","x":166,"y":384},{"id":"p8","team":"us","label":"H9","player":"Martinez","x":226,"y":402},{"id":"p9","team":"us","label":"H10","player":"Bullock","x":200,"y":402},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":444}],"routes":[{"playerId":"p0","points":[{"x":300,"y":350},{"x":346,"y":346}]},{"playerId":"p3","points":[{"x":120,"y":354},{"x":74,"y":346}]},{"playerId":"p4","points":[{"x":294,"y":370},{"x":324,"y":348}]},{"playerId":"p7","points":[{"x":126,"y":374},{"x":96,"y":348}]}]},{"slug":"onside-kick-kangaroo-right","name":"Kickoff — Onside","order":8,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — THE 40","players":[{"id":"p0","team":"us","label":"R","player":null,"x":362,"y":356},{"id":"p1","team":"us","label":"R","player":null,"x":320,"y":356},{"id":"p2","team":"us","label":"R","player":null,"x":278,"y":356},{"id":"p3","team":"us","label":"R","player":null,"x":236,"y":356},{"id":"p4","team":"us","label":"K","player":null,"x":214,"y":380},{"id":"p5","team":"us","label":"L1","player":null,"x":188,"y":356},{"id":"p6","team":"us","label":"L2","player":null,"x":158,"y":356},{"id":"p7","team":"us","label":"L3","player":null,"x":128,"y":356},{"id":"p8","team":"us","label":"L4","player":null,"x":98,"y":356},{"id":"p9","team":"us","label":"L5","player":null,"x":68,"y":356},{"id":"p10","team":"us","label":"L6","player":null,"x":38,"y":356}],"routes":[{"playerId":"p5","points":[{"x":128,"y":286},{"x":102,"y":262}]},{"playerId":"p6","points":[{"x":100,"y":278},{"x":80,"y":258}]},{"playerId":"p7","points":[{"x":76,"y":286},{"x":58,"y":264}]}]},{"slug":"kick-return-5-2-2-2","name":"Kick Return — 5-2-2-2","order":9,"lineOfScrimmage":60,"lineLabel":"THEIR FREE KICK LINE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":380,"y":38},{"id":"p1","team":"them","label":null,"player":null,"x":310,"y":38},{"id":"p2","team":"them","label":null,"player":null,"x":240,"y":38},{"id":"p3","team":"them","label":null,"player":null,"x":170,"y":38},{"id":"p4","team":"them","label":null,"player":null,"x":100,"y":38},{"id":"p5","team":"them","label":null,"player":null,"x":30,"y":38},{"id":"p6","team":"us","label":"H5","player":"Severts","x":374,"y":126},{"id":"p7","team":"us","label":"H4","player":"Prasad","x":292,"y":126},{"id":"p8","team":"us","label":"H3","player":"Bearnson","x":210,"y":126},{"id":"p9","team":"us","label":"H2","player":"Steinke","x":128,"y":126},{"id":"p10","team":"us","label":"H1","player":"Bagley","x":46,"y":126},{"id":"p11","team":"us","label":"RM","player":"Debenham","x":280,"y":200},{"id":"p12","team":"us","label":"LM","player":"Paulich","x":140,"y":200},{"id":"p13","team":"us","label":"RB","player":"Archuletta","x":255,"y":272},{"id":"p14","team":"us","label":"LB","player":"Black","x":165,"y":272},{"id":"p15","team":"us","label":"RR","player":"Scott","x":245,"y":356},{"id":"p16","team":"us","label":"LR","player":"Pace","x":175,"y":356}],"routes":[]},{"slug":"kick-return-5-4-2","name":"Kick Return — 5-4-2","order":10,"lineOfScrimmage":60,"lineLabel":"THEIR FREE KICK LINE","players":[{"id":"p0","team":"them","label":"","player":"","x":380,"y":38},{"id":"p1","team":"them","label":"","player":"","x":310,"y":38},{"id":"p2","team":"them","label":"","player":"","x":240,"y":38},{"id":"p3","team":"them","label":"","player":"","x":170,"y":38},{"id":"p4","team":"them","label":"","player":"","x":100,"y":38},{"id":"p5","team":"them","label":"","player":"","x":30,"y":38},{"id":"p6","team":"us","label":"H1","player":"Bagley","x":46,"y":126},{"id":"p7","team":"us","label":"H2","player":"Steinke","x":128,"y":126},{"id":"p8","team":"us","label":"H3","player":"Bearnson","x":210,"y":126},{"id":"p9","team":"us","label":"H4","player":"Prasad","x":292,"y":126},{"id":"p10","team":"us","label":"H5","player":"Severts","x":374,"y":126},{"id":"p11","team":"us","label":"LB","player":"Black","x":68,"y":230},{"id":"p12","team":"us","label":"LM","player":"Paulich","x":152,"y":230},{"id":"p13","team":"us","label":"RM","player":"Debenham","x":268,"y":230},{"id":"p14","team":"us","label":"RB","player":"Archuletta","x":352,"y":230},{"id":"p15","team":"us","label":"LR","player":"Pace","x":175,"y":356},{"id":"p16","team":"us","label":"RR","player":"Scott","x":245,"y":356}],"routes":[]}]}</script>
+<script type="application/json" id="play-data">{"schema":1,"generated":"2026-08-23","field":{"width":420,"height":500,"sidelineLeft":14,"sidelineRight":406,"yardsWide":53.3},"league":{"name":"UYFC","scheduleUrl":"https://utahyouthfootball.org/schedule/677551/4257838/1/8bd1"},"roster":[{"last":"Archuletta","first":"Cree","number":"14","xman":false,"offense":"QB / LG / X","defense":"MIKE"},{"last":"Bagley","first":"Ledger","number":"27","xman":false,"offense":"Z","defense":"LCB / SS"},{"last":"Bearnson","first":"Ryker","number":"49","xman":false,"offense":"RG / QB / Z / F / Y","defense":"SS"},{"last":"Black","first":"Brave","number":"12","xman":false,"offense":"F / Y","defense":"RDE / FS"},{"last":"Bullock","first":"Tistyn","number":null,"xman":true,"offense":"RG","defense":"LDT","tenPlay":true},{"last":"Dalley","first":"Caleb","number":"17","xman":false,"offense":"H / Y / F / RT","defense":"LDE"},{"last":"Debenham","first":"Dolan","number":"16","xman":false,"offense":"C / RT","defense":"SAM"},{"last":"Grover","first":"Ja'corey","number":"55","xman":false,"offense":"H","defense":"LCB / RCB","tenPlay":true},{"last":"Martinez","first":"Daxton","number":"22","xman":false,"offense":"C / LT","defense":"LDT / RDT","tenPlay":true},{"last":"Mineer","first":"Mason","number":"47","xman":false,"offense":"X","defense":"RCB"},{"last":"Mitchell","first":"Cole","number":"48","xman":true,"offense":"LG","defense":"RDT"},{"last":"Pace","first":"Kyler","number":"10","xman":false,"offense":"Y / H","defense":"FS"},{"last":"Paulich","first":"Andrew","number":"35","xman":false,"offense":"LT","defense":"RDE / LDT / MIKE"},{"last":"Prasad","first":"Joseph","number":"67","xman":false,"offense":"Z","defense":"LCB","tenPlay":true},{"last":"Reary","first":"Cache","number":"9","xman":false,"offense":"QB","defense":"FS"},{"last":"Rowley","first":"Mason","number":"73","xman":false,"offense":"C","defense":"RDT"},{"last":"Ruelas","first":"Jehudiel","number":"74","xman":true,"offense":"RG","defense":"LDT"},{"last":"Scott","first":"Rowan","number":"99","xman":false,"offense":"Z","defense":"RCB / WILL"},{"last":"Severts","first":"Cooper","number":"34","xman":false,"offense":"Z","defense":"WILL / FS"},{"last":"Steinke","first":"Zander","number":"33","xman":false,"offense":"—","defense":"LDE / RDT / MIKE / SAM"},{"last":"Wentzel","first":"Carter","number":"7","xman":false,"offense":"X","defense":"RCB"}],"plays":[{"slug":"std-punt","name":"Punt — Base","order":1,"lineOfScrimmage":190,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"us","label":"S","player":"Paulich","x":210,"y":190,"role":"SNAPPER","job":"Snap it back to the punter, then get your head up. You are the middle of the coverage, so run straight down the field at the returner."},{"id":"p1","team":"us","label":"RGD","player":"Prasad","x":248,"y":190,"role":"PROTECT","job":"Hold your gap. Nobody comes through you. After the kick, get downfield and take the middle of the field."},{"id":"p2","team":"us","label":"LGD","player":"Steinke","x":172,"y":190,"role":"PROTECT","job":"Protection comes first. Punch the rusher inside and keep him off the punter. When the ball is away, release and fill the middle."},{"id":"p3","team":"us","label":"RT","player":"Bearnson","x":286,"y":190,"role":"COVER","job":"Block first, then go. Once the ball is gone you are coverage. Keep outside leverage and turn the returner into your help."},{"id":"p4","team":"us","label":"LT","player":"Black","x":134,"y":190,"role":"COVER","job":"Block the man over you for two counts so the punter is safe, then release and cover. Stay outside the returner and squeeze him back inside."},{"id":"p5","team":"us","label":"RG","player":"Grover","x":376,"y":190,"role":"GUNNER","job":"Same as the other gunner. Get off the line, get downfield fast, and be the first man to the returner. Do not run past the ball."},{"id":"p6","team":"us","label":"LG","player":"Pace","x":44,"y":190,"role":"GUNNER","job":"You are the first one down there. Release outside, beat the man trying to hold you up, and get to the returner before he starts upfield. Stay in your lane."},{"id":"p7","team":"us","label":"RW","player":"Dalley","x":280,"y":230,"role":"WING","job":"Seal the edge, then cover. Once you release, stay wide. If he gets outside you there is nobody behind you."},{"id":"p8","team":"us","label":"LW","player":"Scott","x":140,"y":230,"role":"WING","job":"You are the edge of the wall. Nobody gets around you to the punter. Block first, then release outside and keep the returner in front of you."},{"id":"p9","team":"us","label":"PP","player":"Archuletta","x":192,"y":264,"role":"PROTECTOR","job":"You are the last man before the punter. Check the count, call the protection, and block anybody who comes free. Then get downfield."},{"id":"p10","team":"us","label":"P","player":"Debenham","x":210,"y":340,"role":"PUNTER","job":"Catch it, two steps, get it off. After the kick you are the safety, so stay behind the ball and be ready to make the tackle."}],"routes":[]},{"slug":"villanova-fake-from-std-punt","name":"Punt — Villanova Fake","order":2,"lineOfScrimmage":190,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"us","label":"S","player":"Paulich","x":210,"y":190},{"id":"p1","team":"us","label":"RGD","player":"Prasad","x":248,"y":190},{"id":"p2","team":"us","label":"LGD","player":"Steinke","x":172,"y":190},{"id":"p3","team":"us","label":"RT","player":"Bearnson","x":286,"y":190},{"id":"p4","team":"us","label":"LT","player":"Black","x":134,"y":190},{"id":"p5","team":"us","label":"RG","player":"Grover","x":376,"y":190},{"id":"p6","team":"us","label":"LG","player":"Pace","x":44,"y":190},{"id":"p7","team":"us","label":"RW","player":"Dalley","x":280,"y":230,"role":"SEAL","job":"Seal the edge on the side the protector is breaking to. Your block is the play."},{"id":"p8","team":"us","label":"LW","player":"Scott","x":140,"y":230,"role":"CROSS","job":"Cross behind the punter like you are taking the ball. Sell it hard, because the more they chase you the more room the protector has."},{"id":"p9","team":"us","label":"PP","player":"Archuletta","x":192,"y":264,"role":"BALL","job":"The snap comes to you, not the punter. Sell the toss back, then break the other way and get the first down. Take what is there."},{"id":"p10","team":"us","label":"P","player":"Debenham","x":210,"y":340,"role":"DECOY","job":"Sell it. Fake the catch, fake the handoff to the wing crossing, and keep your eyes downfield so nobody reads you."}],"routes":[{"playerId":"p9","points":[{"x":224,"y":272},{"x":270,"y":258},{"x":316,"y":208},{"x":324,"y":120},{"x":320,"y":40}]},{"playerId":"p10","points":[{"x":206,"y":306},{"x":188,"y":290}]},{"playerId":"p8","points":[{"x":172,"y":268},{"x":90,"y":276},{"x":38,"y":224},{"x":34,"y":150}]},{"playerId":"p7","points":[{"x":298,"y":206},{"x":312,"y":168}]},{"playerId":"p3","points":[{"x":300,"y":176},{"x":316,"y":148}]},{"playerId":"p5","points":[{"x":376,"y":120},{"x":358,"y":70}]},{"playerId":"p6","points":[{"x":44,"y":120},{"x":64,"y":70}]}]},{"slug":"punt-return-purple-d","name":"Punt Return — Purple D","order":3,"lineOfScrimmage":126,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":40,"y":126},{"id":"p1","team":"them","label":null,"player":null,"x":380,"y":126},{"id":"p2","team":"them","label":null,"player":null,"x":150,"y":126},{"id":"p3","team":"them","label":null,"player":null,"x":180,"y":126},{"id":"p4","team":"them","label":null,"player":null,"x":210,"y":126},{"id":"p5","team":"them","label":null,"player":null,"x":240,"y":126},{"id":"p6","team":"them","label":null,"player":null,"x":270,"y":126},{"id":"p7","team":"them","label":null,"player":null,"x":178,"y":92},{"id":"p8","team":"them","label":null,"player":null,"x":210,"y":92},{"id":"p9","team":"them","label":null,"player":null,"x":242,"y":92},{"id":"p10","team":"them","label":null,"player":null,"x":210,"y":30},{"id":"p11","team":"us","label":"LJ","player":"Severts","x":48,"y":150,"role":"JAM","job":"Hold their gunner up at the line. Get hands on him, slow him down, keep him from running free. Every second you buy is a yard for the returner."},{"id":"p12","team":"us","label":"L2","player":"Dalley","x":150,"y":150},{"id":"p13","team":"us","label":"L1","player":"Ruelas","x":190,"y":150},{"id":"p14","team":"us","label":"R1","player":"Steinke","x":232,"y":150},{"id":"p15","team":"us","label":"R2","player":"Black","x":272,"y":150},{"id":"p16","team":"us","label":"RJ","player":"Wentzel","x":372,"y":150,"role":"JAM","job":"Same on your side. Body him, redirect him, do not let him release clean."},{"id":"p17","team":"us","label":"LM","player":"Archuletta","x":168,"y":212},{"id":"p18","team":"us","label":"RM","player":"Debenham","x":252,"y":212},{"id":"p19","team":"us","label":"LB","player":"Scott","x":142,"y":290},{"id":"p20","team":"us","label":"RB","player":"Bagley","x":278,"y":290},{"id":"p21","team":"us","label":"PR","player":"Pace","x":210,"y":412,"role":"RETURNER","job":"Catch it first, then run. Call for the fair catch if they are on top of you. Get north and south — do not run sideways."}],"routes":[{"playerId":"p11","points":[{"x":44,"y":128}]},{"playerId":"p12","points":[{"x":158,"y":128}]},{"playerId":"p13","points":[{"x":196,"y":128}]},{"playerId":"p14","points":[{"x":236,"y":128}]},{"playerId":"p15","points":[{"x":266,"y":128}]},{"playerId":"p16","points":[{"x":376,"y":128}]},{"playerId":"p17","points":[{"x":164,"y":276},{"x":186,"y":304}]},{"playerId":"p18","points":[{"x":256,"y":276},{"x":234,"y":304}]},{"playerId":"p19","points":[{"x":160,"y":346},{"x":188,"y":370}]},{"playerId":"p20","points":[{"x":262,"y":346},{"x":234,"y":370}]},{"playerId":"p21","points":[{"x":210,"y":306},{"x":210,"y":186},{"x":210,"y":86}]}]},{"slug":"punt-return-white-d","name":"Punt Return — White D","order":4,"lineOfScrimmage":126,"lineLabel":"LINE OF SCRIMMAGE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":40,"y":126},{"id":"p1","team":"them","label":null,"player":null,"x":380,"y":126},{"id":"p2","team":"them","label":null,"player":null,"x":150,"y":126},{"id":"p3","team":"them","label":null,"player":null,"x":180,"y":126},{"id":"p4","team":"them","label":null,"player":null,"x":210,"y":126},{"id":"p5","team":"them","label":null,"player":null,"x":240,"y":126},{"id":"p6","team":"them","label":null,"player":null,"x":270,"y":126},{"id":"p7","team":"them","label":null,"player":null,"x":178,"y":92},{"id":"p8","team":"them","label":null,"player":null,"x":210,"y":92},{"id":"p9","team":"them","label":null,"player":null,"x":242,"y":92},{"id":"p10","team":"them","label":null,"player":null,"x":210,"y":30},{"id":"p11","team":"us","label":"LJ","player":"Prasad","x":48,"y":150,"role":"JAM","job":"Hold their gunner up at the line so he cannot get down the field clean."},{"id":"p12","team":"us","label":"L2","player":"Paulich","x":150,"y":150},{"id":"p13","team":"us","label":"L1","player":"Bullock","x":190,"y":150},{"id":"p14","team":"us","label":"R1","player":"Mitchell","x":232,"y":150},{"id":"p15","team":"us","label":"R2","player":"Rowley","x":272,"y":150},{"id":"p16","team":"us","label":"RJ","player":"Mineer","x":372,"y":150,"role":"JAM","job":"Get hands on him and slow him down. Buy the returner time."},{"id":"p17","team":"us","label":"LM","player":"Martinez","x":168,"y":212},{"id":"p18","team":"us","label":"RM","player":"Bearnson","x":252,"y":212},{"id":"p19","team":"us","label":"LB","player":"Grover","x":142,"y":290},{"id":"p20","team":"us","label":"RB","player":"Bagley","x":278,"y":290},{"id":"p21","team":"us","label":"PR","player":"Reary","x":210,"y":412,"role":"RETURNER","job":"Catch it first. Only then think about running. Fair catch is always the right call if they are already there."}],"routes":[{"playerId":"p11","points":[{"x":44,"y":128}]},{"playerId":"p12","points":[{"x":158,"y":128}]},{"playerId":"p13","points":[{"x":196,"y":128}]},{"playerId":"p14","points":[{"x":236,"y":128}]},{"playerId":"p15","points":[{"x":266,"y":128}]},{"playerId":"p16","points":[{"x":376,"y":128}]},{"playerId":"p17","points":[{"x":164,"y":276},{"x":186,"y":304}]},{"playerId":"p18","points":[{"x":256,"y":276},{"x":234,"y":304}]},{"playerId":"p19","points":[{"x":160,"y":346},{"x":188,"y":370}]},{"playerId":"p20","points":[{"x":262,"y":346},{"x":234,"y":370}]},{"playerId":"p21","points":[{"x":210,"y":306},{"x":210,"y":186},{"x":210,"y":86}]}]},{"slug":"kickoff-check-me","name":"Kickoff — Spread","order":5,"lineOfScrimmage":330,"lineLabel":"FREE KICK LINE","players":[{"id":"p0","team":"us","label":"R5","player":"Prasad","x":386,"y":362,"role":"BALL","job":"Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."},{"id":"p1","team":"us","label":"R4","player":"Bagley","x":348,"y":362,"role":"CONTAIN","job":"Nothing gets outside you. Stay wider than the returner the whole way. If he breaks out, that is on you. Squeeze him back to the middle."},{"id":"p2","team":"us","label":"R3","player":"Bearnson","x":310,"y":362,"role":"FORCE","job":"Beat your blocker and turn the returner inside. You are the one who makes him choose, so get there fast and get skinny."},{"id":"p3","team":"us","label":"RG","player":"Grover","x":272,"y":362,"role":"ALLEY","job":"Fill the gap between contain and the ball. Stay a step behind the front so you can see it, then close on whichever side he picks."},{"id":"p4","team":"us","label":"R1","player":"Black","x":234,"y":362,"role":"BALL","job":"Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."},{"id":"p5","team":"us","label":"L1","player":"Archuletta","x":186,"y":362,"role":"BALL","job":"Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."},{"id":"p6","team":"us","label":"LG","player":"Pace","x":148,"y":362,"role":"ALLEY","job":"Fill the gap between contain and the ball. Stay a step behind the front so you can see it, then close on whichever side he picks."},{"id":"p7","team":"us","label":"L3","player":"Paulich","x":110,"y":362,"role":"FORCE","job":"Beat your blocker and turn the returner inside. You are the one who makes him choose, so get there fast and get skinny."},{"id":"p8","team":"us","label":"L4","player":"Scott","x":72,"y":362,"role":"CONTAIN","job":"Nothing gets outside you. Stay wider than the returner the whole way. If he breaks out, that is on you. Squeeze him back to the middle."},{"id":"p9","team":"us","label":"L5","player":"Severts","x":34,"y":362,"role":"BALL","job":"Run straight at the ball. Stay in your lane, keep your shoulders square, and make the tackle. Do not run around blocks — run through your lane."},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":410,"role":"SAFETY","job":"You are the last man. Stay behind everyone, never pass the ball, and make the tackle if he gets through. If you miss, he scores."}],"routes":[]},{"slug":"cluster-kickoff-huddle-to-twins","name":"Kickoff — Cluster Speed","order":6,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — INSIDE THE NUMBERS","players":[{"id":"p0","team":"us","label":"H5","player":"Pace","x":244,"y":356},{"id":"p1","team":"us","label":"H4","player":"Bagley","x":220,"y":352},{"id":"p2","team":"us","label":"H3","player":"Black","x":196,"y":356},{"id":"p3","team":"us","label":"H2","player":"Scott","x":172,"y":360},{"id":"p4","team":"us","label":"H1","player":"Severts","x":238,"y":380},{"id":"p5","team":"us","label":"H6","player":"Dalley","x":214,"y":376},{"id":"p6","team":"us","label":"H7","player":"Bearnson","x":190,"y":380},{"id":"p7","team":"us","label":"H8","player":"Wentzel","x":166,"y":384},{"id":"p8","team":"us","label":"H9","player":"Archuletta","x":226,"y":402},{"id":"p9","team":"us","label":"H10","player":"Mineer","x":200,"y":402},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":444}],"routes":[{"playerId":"p0","points":[{"x":300,"y":350},{"x":346,"y":346}]},{"playerId":"p3","points":[{"x":120,"y":354},{"x":74,"y":346}]},{"playerId":"p4","points":[{"x":294,"y":370},{"x":324,"y":348}]},{"playerId":"p7","points":[{"x":126,"y":374},{"x":96,"y":348}]}]},{"slug":"cluster-ko-10-play","name":"Kickoff — Cluster 10-Play","order":7,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — INSIDE THE NUMBERS","players":[{"id":"p0","team":"us","label":"H5","player":"Prasad","x":244,"y":356},{"id":"p1","team":"us","label":"H4","player":"Steinke","x":220,"y":352},{"id":"p2","team":"us","label":"H3","player":"Mitchell","x":196,"y":356},{"id":"p3","team":"us","label":"H2","player":"Grover","x":172,"y":360},{"id":"p4","team":"us","label":"H1","player":"Reary","x":238,"y":380},{"id":"p5","team":"us","label":"H6","player":"Rowley","x":214,"y":376},{"id":"p6","team":"us","label":"H7","player":"Ruelas","x":190,"y":380},{"id":"p7","team":"us","label":"H8","player":"Paulich","x":166,"y":384},{"id":"p8","team":"us","label":"H9","player":"Martinez","x":226,"y":402},{"id":"p9","team":"us","label":"H10","player":"Bullock","x":200,"y":402},{"id":"p10","team":"us","label":"K","player":"Debenham","x":210,"y":444}],"routes":[{"playerId":"p0","points":[{"x":300,"y":350},{"x":346,"y":346}]},{"playerId":"p3","points":[{"x":120,"y":354},{"x":74,"y":346}]},{"playerId":"p4","points":[{"x":294,"y":370},{"x":324,"y":348}]},{"playerId":"p7","points":[{"x":126,"y":374},{"x":96,"y":348}]}]},{"slug":"onside-kick-kangaroo-right","name":"Kickoff — Onside","order":8,"lineOfScrimmage":340,"lineLabel":"FREE KICK LINE — THE 40","players":[{"id":"p0","team":"us","label":"R","player":null,"x":362,"y":356},{"id":"p1","team":"us","label":"R","player":null,"x":320,"y":356},{"id":"p2","team":"us","label":"R","player":null,"x":278,"y":356},{"id":"p3","team":"us","label":"R","player":null,"x":236,"y":356},{"id":"p4","team":"us","label":"K","player":null,"x":214,"y":380,"role":"KICKER","job":"Drive it into the ground so it takes two big bounces. No pop-ups, they are illegal. Get it past ten yards and give our guys a chance."},{"id":"p5","team":"us","label":"L1","player":null,"x":188,"y":356},{"id":"p6","team":"us","label":"L2","player":null,"x":158,"y":356},{"id":"p7","team":"us","label":"L3","player":null,"x":128,"y":356},{"id":"p8","team":"us","label":"L4","player":null,"x":98,"y":356},{"id":"p9","team":"us","label":"L5","player":null,"x":68,"y":356},{"id":"p10","team":"us","label":"L6","player":null,"x":38,"y":356}],"routes":[{"playerId":"p5","points":[{"x":128,"y":286},{"x":102,"y":262}]},{"playerId":"p6","points":[{"x":100,"y":278},{"x":80,"y":258}]},{"playerId":"p7","points":[{"x":76,"y":286},{"x":58,"y":264}]}]},{"slug":"kick-return-5-2-2-2","name":"Kick Return — 5-2-2-2","order":9,"lineOfScrimmage":60,"lineLabel":"THEIR FREE KICK LINE","players":[{"id":"p0","team":"them","label":null,"player":null,"x":380,"y":38},{"id":"p1","team":"them","label":null,"player":null,"x":310,"y":38},{"id":"p2","team":"them","label":null,"player":null,"x":240,"y":38},{"id":"p3","team":"them","label":null,"player":null,"x":170,"y":38},{"id":"p4","team":"them","label":null,"player":null,"x":100,"y":38},{"id":"p5","team":"them","label":null,"player":null,"x":30,"y":38},{"id":"p6","team":"us","label":"H5","player":"Severts","x":374,"y":126,"role":"HANDS","job":"Short kick is yours. Do not back up into your own returner."},{"id":"p7","team":"us","label":"H4","player":"Prasad","x":292,"y":126,"role":"HANDS","job":"Same as the others. Hands up, eyes on the ball, and if it clears you go find someone to block."},{"id":"p8","team":"us","label":"H3","player":"Bearnson","x":210,"y":126,"role":"HANDS","job":"You are in the middle. Short kick is yours. If it is deep, turn and block."},{"id":"p9","team":"us","label":"H2","player":"Steinke","x":128,"y":126,"role":"HANDS","job":"Front line. Watch for the short kick, and if it goes over you turn and get on the man in front of you."},{"id":"p10","team":"us","label":"H1","player":"Bagley","x":46,"y":126,"role":"HANDS","job":"If the ball comes short and low, it is yours. Catch it, do not let it bounce, and get to the sideline."},{"id":"p11","team":"us","label":"RM","player":"Debenham","x":280,"y":200},{"id":"p12","team":"us","label":"LM","player":"Paulich","x":140,"y":200},{"id":"p13","team":"us","label":"RB","player":"Archuletta","x":255,"y":272},{"id":"p14","team":"us","label":"LB","player":"Black","x":165,"y":272},{"id":"p15","team":"us","label":"RR","player":"Scott","x":245,"y":356,"role":"RETURNER","job":"If it is yours, catch it and go. If it is his, get in front of him and block the first man you see."},{"id":"p16","team":"us","label":"LR","player":"Pace","x":175,"y":356,"role":"RETURNER","job":"Catch it clean, then pick a side and go. One cut, then straight. Do not dance."}],"routes":[]},{"slug":"kick-return-5-4-2","name":"Kick Return — 5-4-2","order":10,"lineOfScrimmage":60,"lineLabel":"THEIR FREE KICK LINE","players":[{"id":"p0","team":"them","label":"","player":"","x":380,"y":38},{"id":"p1","team":"them","label":"","player":"","x":310,"y":38},{"id":"p2","team":"them","label":"","player":"","x":240,"y":38},{"id":"p3","team":"them","label":"","player":"","x":170,"y":38},{"id":"p4","team":"them","label":"","player":"","x":100,"y":38},{"id":"p5","team":"them","label":"","player":"","x":30,"y":38},{"id":"p6","team":"us","label":"H1","player":"Bagley","x":46,"y":126,"role":"HANDS","job":"Front line. Short kick is yours to catch."},{"id":"p7","team":"us","label":"H2","player":"Steinke","x":128,"y":126,"role":"HANDS","job":"Hands up. If it clears you, turn and block."},{"id":"p8","team":"us","label":"H3","player":"Bearnson","x":210,"y":126,"role":"HANDS","job":"Middle of the front. Catch anything short, block anything deep."},{"id":"p9","team":"us","label":"H4","player":"Prasad","x":292,"y":126,"role":"HANDS","job":"Short kick is yours. Eyes on the ball the whole way."},{"id":"p10","team":"us","label":"H5","player":"Severts","x":374,"y":126,"role":"HANDS","job":"Same job. Do not turn your back on the ball."},{"id":"p11","team":"us","label":"LB","player":"Black","x":68,"y":230},{"id":"p12","team":"us","label":"LM","player":"Paulich","x":152,"y":230},{"id":"p13","team":"us","label":"RM","player":"Debenham","x":268,"y":230},{"id":"p14","team":"us","label":"RB","player":"Archuletta","x":352,"y":230},{"id":"p15","team":"us","label":"LR","player":"Pace","x":175,"y":356,"role":"RETURNER","job":"Catch it, one cut, get north. Trust the wall."},{"id":"p16","team":"us","label":"RR","player":"Scott","x":245,"y":356,"role":"RETURNER","job":"Yours or his — either catch it or lead him. Do not both go for it."}],"routes":[]}],"glossary":[{"term":"Lane","always":true,"text":" — the strip of field you are responsible for. Stay in it. Eleven men in eleven lanes means there is nowhere for the returner to go."},{"term":"Ball","text":" — go straight at the ball carrier through your lane."},{"term":"Contain","text":" — stay wider than the ball carrier so he can never get outside you."},{"term":"Force","text":" — beat your blocker and turn the ball carrier back inside toward help."},{"term":"Alley","text":" — the space between contain and the ball. You fill whichever side he picks."},{"term":"Safety","text":" — the last man back. Never pass the ball. If he beats you, it is a touchdown."},{"term":"Gunner","text":" — on punt, the man split out wide whose only job is getting to the returner first."},{"term":"Jam","text":" — getting your hands on their gunner at the line to slow him down."},{"term":"Hands","text":" — the front line on a kick return. If the ball comes short, it is theirs to catch."},{"term":"Returner","text":" — catches the kick and runs it back. Catching it clean matters more than the return."},{"term":"Protector","text":" — the last blocker in front of the punter. He makes the calls."},{"term":"Snapper","text":" — snaps the ball back to the punter, then covers."},{"term":"Wing","text":" — the man on the edge of the punt formation who seals the outside."},{"term":"Cover","text":" — block first, then run downfield and make the tackle."},{"term":"Protect","text":" — keep the rusher off the punter. Nothing matters more until the ball is gone."},{"term":"Decoy","text":" — you do not get the ball. Your job is making them think you do."},{"term":"X-man","always":true,"text":" — 165 lbs or more. On special teams he has to line up on the front two lines or the line of scrimmage, and he cannot fake a punt."}]}</script>
 
 <script>
 var NS='http://www.w3.org/2000/svg';
@@ -628,6 +671,7 @@ function buildPlay(slug,name){
       var nid=uid('p');
       idmap[q.id]=nid;
       players.push({id:nid,x:q.x,y:q.y,label:q.label||'',name:q.player||'',
+                    role:q.role||'',job:q.job||'',
                     team:q.team==='them'?'x':'o',fromPreset:q.player?1:0});
     });
     (src.routes||[]).forEach(function(r){
@@ -672,7 +716,7 @@ var STORE={
     return Promise.resolve();
   }
 };
-var BUILD=11;
+var BUILD=12;
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){
@@ -811,7 +855,7 @@ function updateCount(){
 }
 
 function draw(){ drawField(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays();
-  paintFlags(); paintGrid(); paintSwap(); }
+  paintFlags(); paintGrid(); paintSwap(); paintJobs(); paintGlossary(); }
 
 function paintLineup(){
   var p=cur(), box=document.getElementById('lineup');
@@ -978,6 +1022,82 @@ function paintFlags(){
     var b=document.createElement('span'); b.textContent=x.m;
     d.appendChild(a); d.appendChild(b); box.appendChild(d);
   });
+}
+
+/* ---------- what each spot does ----------
+   Half of coaching a first-year kid is telling him what his job is in words he
+   already knows. These live on the spot, not the boy, so they survive him being
+   swapped out, and they travel with the playbook on export. */
+function paintJobs(){
+  var box=document.getElementById('jobs'); if(!box)return;
+  var p=cur(); if(!p)return;
+  var ours=p.players.filter(function(q){return q.team==='o';})
+    .sort(function(a,b){return a.y-b.y||a.x-b.x;});
+  box.innerHTML='';
+  ours.forEach(function(q){
+    var d=q.name?info(q.name):null;
+    var row=document.createElement('div'); row.className='job'+(q.id===selId?' sel':'');
+    var hd=document.createElement('div'); hd.className='hd';
+    var a=document.createElement('span'); a.className='pos'; a.textContent=q.label||'\u2014';
+    hd.appendChild(a);
+    if(q.role){var r=document.createElement('span');r.className='role';r.textContent=q.role;hd.appendChild(r);}
+    var w=document.createElement('span'); w.className='who';
+    w.textContent=d?(d.l+(d.n?' '+d.n:'')):'open';
+    hd.appendChild(w);
+    var t=document.createElement('div');
+    t.className='txt'+(q.job?'':' none');
+    t.textContent=q.job||'Nothing written yet \u2014 tap him on the field and say what he does.';
+    row.appendChild(hd); row.appendChild(t);
+    box.appendChild(row);
+  });
+  var done=ours.filter(function(q){return q.job;}).length;
+  document.getElementById('jobNote').textContent=
+    done+' of '+ours.length+' spots explained'+(done<ours.length?' \u2014 tap a man on the field to add his':'');
+}
+function paintGlossary(){
+  var box=document.getElementById('glossary'), g=PLAYDATA.glossary;
+  if(!box)return;
+  var sec=document.getElementById('glosSec');
+  if(!g||!g.length){ sec.style.display='none'; return; }
+  sec.style.display='';
+  // only the words that actually appear on this unit, plus anything marked always
+  var p=cur(), used={};
+  (p?p.players:[]).forEach(function(q){ if(q.role)used[q.role.toUpperCase()]=1; });
+  box.innerHTML='';
+  g.filter(function(e){return e.always||used[(e.term||'').toUpperCase()];}).forEach(function(e){
+    var d=document.createElement('div'); d.className='gl';
+    var b=document.createElement('b'); b.textContent=e.term;
+    var t=document.createTextNode(e.text||'');
+    d.appendChild(b); d.appendChild(t); box.appendChild(d);
+  });
+  if(!box.children.length)sec.style.display='none';
+}
+
+/* A handout for a kid who has never played: his spot, what the job is called,
+   and what to do. Deliberately NOT on the play sheet — that has to stay one page
+   and stay readable at a glance. */
+function buildJobSheet(){
+  var box=document.getElementById('jobSheet'); if(!box)return;
+  var p=cur(); if(!p)return;
+  var ours=p.players.filter(function(q){return q.team==='o';})
+    .sort(function(a,b){return a.y-b.y||a.x-b.x;});
+  var h='<h1>'+esc(p.name)+'</h1><p class="sub">What every spot does</p>';
+  ours.forEach(function(q){
+    var d=q.name?info(q.name):null;
+    h+='<div class="jrow"><p class="jhd"><span class="jp">'+esc(q.label||'\u2014')+'</span>'+
+       (q.role?' <span class="jr">'+esc(q.role)+'</span>':'')+
+       (d?' &nbsp;'+esc(d.l)+(d.n?' #'+esc(d.n):''):'')+
+       (d&&d.x?' <span class="jr">X-MAN</span>':'')+'</p>'+
+       '<p class="jtx">'+esc(q.job||'\u2014')+'</p></div>';
+  });
+  var used={}; ours.forEach(function(q){ if(q.role)used[q.role.toUpperCase()]=1; });
+  var g=(PLAYDATA.glossary||[]).filter(function(e){return e.always||used[(e.term||'').toUpperCase()];});
+  if(g.length){
+    h+='<div class="jgl">';
+    g.forEach(function(e){h+='<p><b>'+esc(e.term)+'</b>'+esc(e.text||'')+'</p>';});
+    h+='</div>';
+  }
+  box.innerHTML=h;
 }
 
 /* ---------- someone is out ----------
@@ -1363,6 +1483,10 @@ function paintSel(){
     (d0&&(d0.o||d0.d)?'<p style="font-size:13px;color:var(--soft)">Off: '+(d0.o||'\u2014')+' &nbsp;&middot;&nbsp; Def: '+(d0.d||'\u2014')+'</p>':'')+
     '<label class="f">Position label shown in the circle</label>'+
     '<input type="text" id="lblIn" maxlength="4" value="'+(pl.label||'')+'" placeholder="e.g. G, PP, R">'+
+    '<label class="f">Job name \u2014 what this lane is called</label>'+
+    '<input type="text" id="roleIn" maxlength="14" value="'+esc(pl.role||'')+'" placeholder="e.g. CONTAIN, ALLEY, GUNNER">'+
+    '<label class="f">What he does \u2014 in words a first-year kid gets</label>'+
+    '<textarea id="jobIn" rows="3" placeholder="Say it the way you would say it to him.">'+esc(pl.job||'')+'</textarea>'+
     '<div class="row"><button class="btn" id="clrName">Clear name</button>'+
     '<button class="btn" id="tgTeam">Make '+(pl.team==='o'?'opponent':'ours')+'</button></div>';
   document.getElementById('lblIn').oninput=function(e){
@@ -1370,6 +1494,12 @@ function paintSel(){
     var p2=cur(); // redraw without losing focus
     svg.querySelectorAll('text').forEach(function(){});
     draw(); var f=document.getElementById('lblIn'); if(f){f.focus();f.setSelectionRange(f.value.length,f.value.length);}
+  };
+  document.getElementById('roleIn').oninput=function(e){
+    pl.role=e.target.value.toUpperCase(); save(); paintJobs();
+  };
+  document.getElementById('jobIn').oninput=function(e){
+    pl.job=e.target.value; save(); paintJobs();
   };
   document.getElementById('clrName').onclick=function(){pl.name='';save();draw();};
   document.getElementById('tgTeam').onclick=function(){pl.team=pl.team==='o'?'x':'o';save();draw();};
@@ -1421,11 +1551,13 @@ function doPrint(what){
   document.body.setAttribute('data-print',what);
   printing=true;
   if(what==='book')buildBook();
+  else if(what==='jobs')buildJobSheet();
   drawField();
   window.print();
 }
 document.getElementById('print').onclick=function(){doPrint('play');};
 document.getElementById('printBook').onclick=function(){doPrint('book');};
+document.getElementById('printJobs').onclick=function(){doPrint('jobs');};
 document.getElementById('fillNames').onclick=function(){
   var p=cur();
   // Slug first, always. The old version matched on display name, so renaming a
@@ -1796,6 +1928,7 @@ function toSourceJSON(){
     generated:new Date().toISOString().slice(0,10),
     field:PLAYDATA.field||{width:420,height:500,sidelineLeft:14,sidelineRight:406,yardsWide:53.3},
     league:PLAYDATA.league||undefined,
+    glossary:PLAYDATA.glossary||undefined,
     roster:TEAM.map(function(t){
       return{last:t.l,first:t.f||'',number:t.n||'',xman:!!t.x,tenPlay:!!t.t,offense:t.o||'',defense:t.d||''};
     }),
@@ -1818,7 +1951,7 @@ function toSourceJSON(){
     p.players.forEach(function(q,n){
       var nid='p'+n; idmap[q.id]=nid;
       ps.push({id:nid,team:q.team==='x'?'them':'us',label:q.label||'',
-               player:q.name||'',x:r(q.x),y:r(q.y)});
+               player:q.name||'',role:q.role||'',job:q.job||'',x:r(q.x),y:r(q.y)});
     });
     (p.routes||[]).forEach(function(rt){
       if(!idmap[rt.playerId]||!rt.points||!rt.points.length)return;
@@ -1927,6 +2060,24 @@ function downloadBackup(){
     Object.keys(plays).forEach(function(k){
       var pl=plays[k], s2=slugFor(pl);
       if(s2&&pl.slug!==s2)pl.slug=s2;
+    });
+
+    /* Bring the written jobs onto saves made before they existed. Matched on
+       slug then label, and only ever written into a spot that has none — a job
+       he has typed himself is his. Additive, per rule 6. */
+    Object.keys(plays).forEach(function(k){
+      var pl=plays[k], sl=slugFor(pl), src=sl&&BY_SLUG[sl];
+      if(!src)return;
+      var byLabel={};
+      src.players.forEach(function(q){
+        if(q.team!=='them'&&q.label&&(q.role||q.job))byLabel[q.label]={role:q.role||'',job:q.job||''};
+      });
+      (pl.players||[]).forEach(function(q){
+        if(q.team!=='o'||!q.label)return;
+        var e=byLabel[q.label]; if(!e)return;
+        if(!q.role&&e.role)q.role=e.role;
+        if(!q.job&&e.job)q.job=e.job;
+      });
     });
 
     // fill only EMPTY spots from the team sheet — never overwrites anything
