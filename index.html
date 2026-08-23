@@ -81,6 +81,8 @@
   .count{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.06em}
   .count b{color:var(--gold)}
   .count.bad b{color:var(--warm)}
+  .count.bad{color:var(--warm)}
+  .count.ok{color:#8FD19E}
 
   /* One play, one sheet: title, diagram, lineup. Black on white. */
   @page{size:letter portrait;margin:12mm}
@@ -409,10 +411,12 @@
     That file <b>is</b> the playbook &mdash; drop it in the repo or send it over and the app ships
     your version. No code change, and you never have to describe an alignment to anyone.</p></div>
     <div class="row">
-      <button class="btn gold" id="doSource">Export as playbook source</button>
+      <button class="btn gold" id="doRepo">Save to repo</button>
+      <button class="btn" id="doSource">Export as file</button>
       <button class="btn" id="doSourceCopy">Copy as text</button>
     </div>
     <p class="count" id="srcNote"></p>
+    <p class="count" id="repoNote"></p>
   </div>
 
   <div class="sec">
@@ -620,7 +624,7 @@ function swapSideLabel(l){
    Regenerate that block with `node scripts/sync-play-data.js` after editing the
    JSON — never by hand. The mirroring the coach's sheets needed is already baked
    into the stored coordinates, so nothing flips them at load time any more. */
-var PLAYDATA={plays:[],roster:[]}, BY_SLUG={};
+var PLAYDATA={plays:[],roster:[]}, BY_SLUG={}, PUBLISHED=null;
 
 function indexPlayData(d){
   if(!d||!Array.isArray(d.plays)||!d.plays.length)return false;
@@ -635,7 +639,7 @@ function loadPlayData(){
   }
   return fetch('special-teams-plays.json',{cache:'no-store'})
     .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){ if(!indexPlayData(d))throw 0; })
+    .then(function(d){ if(!indexPlayData(d))throw 0; PUBLISHED=d; })
     .catch(function(){ return indexPlayData(embedded()); });
 }
 /* The league's schedule lives in the data too, so the link can change without a
@@ -877,6 +881,7 @@ function drawField(){
 
   updateCount();
   try{sourceNote();}catch(e){}
+  try{paintRepo();}catch(e){}
   document.getElementById('printTitle').textContent=p.name;
   paintPrintSheet(p);
 }
@@ -2012,6 +2017,60 @@ function toSourceJSON(){
   });
   return out;
 }
+/* What is on this device that is not in the repo. Compared against the file the
+   site is actually serving, so it is the real answer and not a guess. */
+function playFingerprint(p){
+  var out=[];
+  (p.players||[]).filter(function(q){return q.team!=='them'&&q.team!=='x';})
+    .slice().sort(function(a,b){return a.y-b.y||a.x-b.x;})
+    .forEach(function(q){
+      out.push([q.label||'',(q.player!==undefined?q.player:q.name)||'',q.role||'',q.job||'',
+                Math.round(q.x),Math.round(q.y)].join('\u0001'));
+    });
+  out.push('R'+(p.routes||[]).length);
+  out.push('L'+Math.round(p.lineOfScrimmage!==undefined?p.lineOfScrimmage:p.los));
+  return out.join('\u0002');
+}
+/* The file omits tenPlay/xman when false; toSourceJSON always writes them. Compare
+   the values, not the key sets, or a clean device reports a phantom roster edit. */
+function rosterFingerprint(list){
+  return (list||[]).map(function(r){
+    return [r.last||'',r.first||'',r.number||'',r.xman?1:0,r.tenPlay?1:0,
+            r.offense||'',r.defense||''].join('\u0001');
+  }).sort().join('\u0002');
+}
+function repoDiff(){
+  if(!PUBLISHED)return null;                       // fetch failed; cannot know
+  var mine=toSourceJSON(), pub={}, out={changed:[],added:[],removed:[]}, seen={};
+  PUBLISHED.plays.forEach(function(p){pub[p.slug]=p;});
+  mine.plays.forEach(function(p){
+    seen[p.slug]=1;
+    if(!pub[p.slug]){out.added.push(p.name);return;}
+    if(playFingerprint(p)!==playFingerprint(pub[p.slug]))out.changed.push(p.name);
+  });
+  PUBLISHED.plays.forEach(function(p){ if(!seen[p.slug])out.removed.push(p.name); });
+  out.roster=(rosterFingerprint(mine.roster)!==rosterFingerprint(PUBLISHED.roster||[]));
+  out.total=out.changed.length+out.added.length+out.removed.length+(out.roster?1:0);
+  return out;
+}
+function paintRepo(){
+  var el=document.getElementById('repoNote'); if(!el)return;
+  var d=repoDiff();
+  if(!d){ el.className='count';
+    el.textContent='Could not reach the published playbook, so I cannot tell what is unsaved. Export to be safe.';
+    return; }
+  if(!d.total){ el.className='count ok';
+    el.innerHTML='\u2713 Everything on this device matches the repo.'; return; }
+  var bits=[];
+  if(d.changed.length)bits.push('<b>'+d.changed.length+'</b> changed: '+d.changed.join(', '));
+  if(d.added.length)bits.push('<b>'+d.added.length+'</b> new: '+d.added.join(', '));
+  if(d.removed.length)bits.push('<b>'+d.removed.length+'</b> deleted here: '+d.removed.join(', '));
+  if(d.roster)bits.push('roster edited');
+  el.className='count bad';
+  el.innerHTML='<b>Not in the repo yet</b> \u2014 '+bits.join(' \u00b7 ')+
+    '. Export and send it over, or it only exists on this device.';
+}
+
 function sourceNote(){
   var d=toSourceJSON(), spots=0, named=0;
   d.plays.forEach(function(p){p.players.forEach(function(q){
@@ -2041,6 +2100,50 @@ function exportSource(download){
     alert('This browser would not hand over a file. The full text is in the box below \u2014 copy it instead.');
   }
 }
+
+/* One tap to commit. The GitHub token lives on the server; the browser only ever
+   holds the passphrase, which it asks for once and keeps on this device. */
+function saveSecret(ask){
+  var k='pd-repo-secret', v=null;
+  try{ v=localStorage.getItem(k); }catch(e){}
+  if(!v&&ask){
+    v=prompt('Passphrase for saving to the repo.\n\nThis is the SAVE_SECRET set on the '+
+             'Vercel project. It is kept on this device only.');
+    if(v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  }
+  return v;
+}
+function saveToRepo(){
+  var btn=document.getElementById('doRepo'), el=document.getElementById('repoNote');
+  var secret=saveSecret(true);
+  if(!secret)return;
+  var body;
+  try{ body=JSON.stringify(toSourceJSON()); }
+  catch(e){ alert('Could not build the playbook to send.'); return; }
+  btn.disabled=true; var was=btn.textContent; btn.textContent='Saving\u2026';
+  fetch('/api/save-playbook',{method:'POST',
+      headers:{'Content-Type':'application/json','x-save-secret':secret},body:body})
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+    .then(function(res){
+      btn.disabled=false; btn.textContent=was;
+      if(!res.ok){
+        if(res.status===401){ try{localStorage.removeItem('pd-repo-secret');}catch(e){} }
+        alert(res.j&&res.j.error?res.j.error:('Save failed ('+res.status+').'));
+        return;
+      }
+      alert(res.j.message||'Saved.');
+      // Re-read what is now published so the badge tells the truth again.
+      return fetch('special-teams-plays.json',{cache:'no-store'})
+        .then(function(r){return r.json();})
+        .then(function(d){ PUBLISHED=d; paintRepo(); })
+        .catch(function(){});
+    })
+    .catch(function(){
+      btn.disabled=false; btn.textContent=was;
+      alert('Could not reach the server. If you are offline, use Export as file instead.');
+    });
+}
+document.getElementById('doRepo').onclick=saveToRepo;
 
 function downloadBackup(){
   var body=stateJSON(), d=new Date();

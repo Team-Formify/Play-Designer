@@ -277,6 +277,24 @@ Do not silently resolve these; they are personnel decisions, not code decisions.
 
 ---
 
+## Saving to the repo
+
+Edits live in `localStorage` until they are pushed. Two things close that gap:
+
+- **The badge.** `repoDiff()` compares the current state against the
+  `special-teams-plays.json` the site is actually serving and says, by name, which plays
+  differ. Green means this device matches the repo. Compare on *values*, not key sets —
+  the file omits `xman`/`tenPlay` when false and `toSourceJSON()` always writes them, so a
+  raw stringify reports a phantom roster edit.
+- **Save to repo.** `api/save-playbook.js` on Vercel commits straight from the app. The
+  GitHub token is a server-side env var and never reaches the browser; the browser only
+  holds a passphrase, checked against `SAVE_SECRET`. It writes the JSON **and** the
+  embedded block in `index.html` in one commit via the git trees API, so the two cannot
+  drift. Needs `GITHUB_TOKEN` (fine-grained, this repo, Contents: read+write) and
+  `SAVE_SECRET` set on the Vercel project. Without both it returns 501 and says so.
+
+`Export as file` still works and is the offline path.
+
 ## Deploy
 
 Static. Vercel serves `index.html` at the root; `vercel.json` disables aggressive caching
