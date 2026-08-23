@@ -90,6 +90,11 @@
   label.f{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin:10px 0 4px}
   input[type=text]{width:100%;font-family:var(--body);font-size:15px;padding:9px 10px;border-radius:4px;border:1px solid rgba(237,235,224,.25);background:var(--deep);color:var(--chalk)}
   input[type=text]:focus{outline:2px solid var(--gold);outline-offset:-1px}
+  /* the pickers in the Selected player panel: full width, or a long option is
+     clipped to nothing useful on a phone */
+  #selPanel select{width:100%;font-family:var(--body);font-size:15px;padding:9px 10px;
+    border-radius:4px;border:1px solid rgba(237,235,224,.25);
+    background:var(--deep);color:var(--chalk);margin:0 0 8px}
 
   ul{margin:0;padding-left:18px}
   li{margin-bottom:6px;color:rgba(237,235,224,.85);font-size:14px}
@@ -662,24 +667,42 @@ function matchups(p){
   var th=themOf(p), out={};
   if(!th.men.length)return out;
   var ours=p.players.filter(function(q){return q.team==='o';});
+  var usedA={},usedB={};
+  /* Anything he has assigned by hand is the answer, and it takes its man off the
+     board before the rest are worked out. Nearest-man is a fair guess on a kickoff
+     and a poor one on a return, where a wall man blocks the cover man arriving in
+     his zone rather than the one standing closest to him at the snap. */
+  ours.forEach(function(a){
+    if(!a.covers)return;
+    var bi=-1;
+    th.men.forEach(function(m,i){ if(bi<0&&m.q&&m.q.label===a.covers)bi=i; });
+    if(bi<0||usedB[bi])return;      // a label he renamed on the other play: fall back to auto
+    usedA[a.id]=1; usedB[bi]=1;
+    out[a.id]=manRec(th,bi,true);
+  });
   var pairs=[];
   ours.forEach(function(a){
+    if(usedA[a.id])return;
     th.men.forEach(function(b,bi){
+      if(usedB[bi])return;
       pairs.push({a:a,bi:bi,d:Math.hypot(a.x-b.x,a.y-b.y)});
     });
   });
   pairs.sort(function(x,y){return x.d-y.d;});
-  var usedA={},usedB={};
   pairs.forEach(function(pr){
     if(usedA[pr.a.id]||usedB[pr.bi])return;
     usedA[pr.a.id]=1; usedB[pr.bi]=1;
     var m=th.men[pr.bi];
-    out[pr.a.id]={x:m.x,y:m.y,path:m.path||[{x:m.x,y:m.y}],
-                  label:(m.q&&m.q.label)||'',
-                  role:(m.q&&(m.q.role||''))||'',job:(m.q&&(m.q.job||''))||'',
-                  unit:th.name||''};
+    out[pr.a.id]=manRec(th,pr.bi,false);
   });
   return out;
+}
+function manRec(th,bi,assigned){
+  var m=th.men[bi];
+  return {x:m.x,y:m.y,path:m.path||[{x:m.x,y:m.y}],bi:bi,assigned:!!assigned,
+          label:(m.q&&m.q.label)||'',
+          role:(m.q&&(m.q.role||''))||'',job:(m.q&&(m.q.job||''))||'',
+          unit:th.name||''};
 }
 
 /* Where each matched pair actually comes together — the block, or the tackle.
@@ -720,9 +743,15 @@ function meetsOf(p){
       if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
       if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}
     }
-    var c=hit||((near&&near.d<=MEET_NEAR)?near:null);
+    /* A pair he has assigned always gets a mark, however far apart their routes
+       keep them — he has said this man takes that man, so the closest they come
+       IS where it has to happen, and a mark way off on its own is the app telling
+       him the route needs redrawing. A pair matched only by proximity has to
+       actually come close, or it is two men passing on opposite sides. */
+    var c=hit||((near&&(m.assigned||near.d<=MEET_NEAR))?near:null);
     if(!c)return;
-    out.push({x:(c.a.x+c.b.x)/2,y:(c.a.y+c.b.y)/2,id:q.id,label:q.label||'',vs:m.label||''});
+    out.push({x:(c.a.x+c.b.x)/2,y:(c.a.y+c.b.y)/2,id:q.id,label:q.label||'',
+              vs:m.label||'',assigned:!!m.assigned,apart:Math.round(c.d)});
   });
   return out;
 }
@@ -1034,7 +1063,7 @@ function buildPlay(slug,name){
       var nid=uid('p');
       idmap[q.id]=nid;
       players.push({id:nid,x:q.x,y:q.y,label:q.label||'',name:q.player||'',
-                    role:q.role||'',job:q.job||'',
+                    role:q.role||'',job:q.job||'',covers:q.covers||'',
                     team:q.team==='them'?'x':'o',fromPreset:q.player?1:0});
     });
     function mapRoutes(list){
@@ -1192,11 +1221,11 @@ function drawField(){
     });
     // where each pair is going to come together
     meetsOf(p).forEach(function(c){
-      var on=(c.id===selId);
+      var on=(c.id===selId), loose=(c.apart>MEET_NEAR);
       svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:on?11:9,
         fill:on?'rgba(229,138,107,.2)':'none',
-        stroke:printing?C.chalk:C.hot,'stroke-opacity':on?.95:.5,
-        'stroke-width':on?2:1.2,'stroke-dasharray':on?'':'3 3'}));
+        stroke:printing?C.chalk:C.hot,'stroke-opacity':on?.95:(loose?.32:.5),
+        'stroke-width':on?2:1.2,'stroke-dasharray':on&&!loose?'':'3 3'}));
     });
     // tapping one of ours draws the line to the man he has to beat
     if(sel){
@@ -1998,6 +2027,15 @@ function paintSel(){
   document.getElementById('jobIn').oninput=function(e){
     pl.job=e.target.value; save(); paintJobs();
   };
+  var cv=document.getElementById('coversIn');
+  if(cv)cv.onchange=function(e){
+    var want=e.target.value;
+    // one man cannot be covered twice: whoever had him goes back to Auto
+    if(want)p.players.forEach(function(q){
+      if(q.team==='o'&&q.id!==pl.id&&q.covers===want)q.covers='';
+    });
+    pl.covers=want; save(); draw();
+  };
   document.getElementById('clrName').onclick=function(){pl.name='';save();draw();};
   document.getElementById('tgTeam').onclick=function(){pl.team=pl.team==='o'?'x':'o';save();draw();};
 }
@@ -2006,14 +2044,36 @@ function paintSel(){
    here is invented. Shown only when the other team is on screen, because it is a
    statement about a picture he can see. */
 function beatBlock(p,pl){
-  if(!showThem)return '<p class="mu">Turn <b>Them</b> on to see who he is across from.</p>';
-  var m=matchups(p)[pl.id];
-  if(!m)return '';
-  return '<div class="mu"><p><b>Across from him:</b> '+esc(m.label||'their man')+
-    (m.role?' <span class="mur">'+esc(m.role)+'</span>':'')+
-    (m.unit?' <span class="muu">from '+esc(m.unit)+'</span>':'')+'</p>'+
-    (m.job?'<p class="mut"><b>He will try to:</b> '+esc(m.job)+'</p>':'')+
-    (pl.job?'<p class="mut"><b>Beat him by:</b> '+esc(pl.job)+'</p>':'')+'</div>';
+  if(!showThem)return '<p class="mu">Turn <b>Them</b> on to pick who he covers.</p>';
+  var th=themOf(p), m=matchups(p)[pl.id];
+  if(!th.men.length)return '';
+  /* Who he covers is a coaching decision, not a distance. Nearest man is the
+     default because it is right often enough to be useful; this is how he says
+     otherwise, and once he does, that man is taken off the board for everyone
+     else. Their labels come from the play they are standing in. */
+  var opts=['<option value="">Auto \u2014 nearest man'+
+            (m&&!m.assigned&&m.label?' (now '+esc(m.label)+')':'')+'</option>'];
+  var taken={};
+  p.players.forEach(function(q){ if(q.team==='o'&&q.covers&&q.id!==pl.id)taken[q.covers]=q.label||'another man'; });
+  th.men.slice().sort(function(a,b){
+    return ((a.q&&a.q.label)||'')<((b.q&&b.q.label)||'')?-1:1;
+  }).forEach(function(mm){
+    var lb=(mm.q&&mm.q.label)||''; if(!lb)return;
+    opts.push('<option value="'+esc(lb)+'"'+(pl.covers===lb?' selected':'')+'>'+
+      esc(lb)+(mm.q&&mm.q.role?' \u2014 '+esc(mm.q.role):'')+
+      (taken[lb]?' (on '+esc(taken[lb])+')':'')+'</option>');
+  });
+  var h='<div class="mu">'+
+    '<label class="f">Who he covers'+(m&&m.unit?' \u2014 on '+esc(m.unit):'')+'</label>'+
+    '<select id="coversIn">'+opts.join('')+'</select>';
+  if(m){
+    h+='<p><b>Across from him:</b> '+esc(m.label||'their man')+
+       (m.role?' <span class="mur">'+esc(m.role)+'</span>':'')+
+       (m.assigned?' <span class="mur">set by you</span>':'')+'</p>'+
+       (m.job?'<p class="mut"><b>He will try to:</b> '+esc(m.job)+'</p>':'')+
+       (pl.job?'<p class="mut"><b>Beat him by:</b> '+esc(pl.job)+'</p>':'');
+  }
+  return h+'</div>';
 }
 
 /* The target mark's own editor. Removing it is a button press and nothing else,
@@ -2534,8 +2594,11 @@ function toSourceJSON(){
     var idmap={}, ps=[];
     p.players.forEach(function(q,n){
       var nid='p'+n; idmap[q.id]=nid;
-      ps.push({id:nid,team:q.team==='x'?'them':'us',label:q.label||'',
-               player:q.name||'',role:q.role||'',job:q.job||'',x:r(q.x),y:r(q.y)});
+      var rec={id:nid,team:q.team==='x'?'them':'us',label:q.label||'',
+               player:q.name||'',role:q.role||'',job:q.job||''};
+      if(q.covers)rec.covers=q.covers;   // omitted when he has left it on Auto
+      rec.x=r(q.x); rec.y=r(q.y);
+      ps.push(rec);
     });
     function outRoutes(list){
       var out=[];
@@ -2586,6 +2649,7 @@ function playFingerprint(p){
     .slice().sort(function(a,b){return a.y-b.y||a.x-b.x;})
     .forEach(function(q){
       out.push([q.label||'',(q.player!==undefined?q.player:q.name)||'',q.role||'',q.job||'',
+                q.covers||'',
                 Math.round(q.x),Math.round(q.y)].join('\u0001'));
     });
   out.push('L'+Math.round(p.lineOfScrimmage!==undefined?p.lineOfScrimmage:p.los));
@@ -2876,13 +2940,15 @@ function downloadBackup(){
       if(!src)return;
       var byLabel={};
       src.players.forEach(function(q){
-        if(q.team!=='them'&&q.label&&(q.role||q.job))byLabel[q.label]={role:q.role||'',job:q.job||''};
+        if(q.team!=='them'&&q.label&&(q.role||q.job||q.covers))
+          byLabel[q.label]={role:q.role||'',job:q.job||'',covers:q.covers||''};
       });
       (pl.players||[]).forEach(function(q){
         if(q.team!=='o'||!q.label)return;
         var e=byLabel[q.label]; if(!e)return;
         if(!q.role&&e.role)q.role=e.role;
         if(!q.job&&e.job)q.job=e.job;
+        if(!q.covers&&e.covers)q.covers=e.covers;
       });
       if(!pl.howItWorks&&src.howItWorks)pl.howItWorks=src.howItWorks;
       /* Looks, for saves made before a play could have more than one. look() has

@@ -205,10 +205,18 @@ function matchups(p){
     pairs.push({a:a,bi:bi,d:Math.hypot(a.x-b.x,a.y-b.y)}); }); });
   pairs.sort(function(x,y){return x.d-y.d;});
   var ua={},ub={};
+  // what the coach has assigned wins, and takes his man off the board
+  ours(p).forEach(function(a){
+    if(!a.covers)return;
+    var bi=-1;
+    th.men.forEach(function(m,i){ if(bi<0&&m.label===a.covers)bi=i; });
+    if(bi<0||ub[bi])return;
+    ua[a.id]=1; ub[bi]=1; out[a.id]=th.men[bi]; out[a.id].bi=bi; out[a.id].assigned=true;
+  });
   pairs.forEach(function(pr){
     if(ua[pr.a.id]||ub[pr.bi])return;
     ua[pr.a.id]=1; ub[pr.bi]=1;
-    out[pr.a.id]=th.men[pr.bi]; out[pr.a.id].bi=pr.bi;
+    out[pr.a.id]=th.men[pr.bi]; out[pr.a.id].bi=pr.bi; out[pr.a.id].assigned=false;
   });
   return out;
 }
@@ -239,7 +247,9 @@ function meets(p){
       if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
       if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}
     }
-    var c=hit||((near&&near.d<=MEET_NEAR)?near:null);
+    // a pair the coach assigned always gets a meeting point, however far apart
+    // their routes keep them; a pair matched by proximity has to actually close
+    var c=hit||((near&&(m.assigned||near.d<=MEET_NEAR))?near:null);
     if(!c)return;
     c.mine=q; c.his=m;
     c.x=(c.a.x+c.b.x)/2; c.y=(c.a.y+c.b.y)/2;

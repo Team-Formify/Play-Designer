@@ -256,8 +256,18 @@ too. The one cache is on the boys' page, keyed by slug and look and dropped when
 arrives from the coach's app — a stale cache there would answer with the old geometry.
 
 **Matchups.** Because the other team is a real play, every opposing man has a label, a lane
-and a written job. `matchups(p)` pairs each of our eleven with the nearest of theirs,
-best-pair-first so two of ours cannot claim the same man while a third goes unmatched.
+and a written job. `matchups(p)` honours anything he has assigned first — a player carries
+an optional `covers`, the label of the man he takes — and takes those men off the board
+before pairing whoever is left with the nearest of theirs, best-pair-first so two of ours
+cannot claim the same man while a third goes unmatched. Nearest-man is a fair guess on a
+kickoff and a poor one on a return, where a wall man blocks the cover man arriving in his
+zone rather than the one standing closest at the snap; the picker in the Selected player
+panel is how he says so, and handing a man to somebody else puts the previous owner back on
+Auto. `covers` is written to the file only when set, so a unit left on Auto produces no
+diff, and a label he later renames on the other play simply falls back to Auto rather than
+dangling. An assigned pair always gets a meeting mark however far apart their routes keep
+them — he has said this man takes that man, so a mark sitting off on its own is the app
+telling him the route needs redrawing; a pair matched only by proximity still has to close.
 Selecting a player lights up the man he has to beat and draws the line between them; the
 Selected panel and the printed handout name the matchup; the boys' **My job** answers with
 *who you are across from*, *what he will try*, and *how you beat him* — all three read off
