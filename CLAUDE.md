@@ -128,8 +128,11 @@ a normalized copy is in `special-teams-plays.json`.
 
 1. **Punt — Base** — spread punt, 1-yard splits, punter at 14 yards. Personal protector
    sits ~2 yards off the midline so the snap lane is clear.
-2. **Punt — Villanova Fake** — snap to the protector, fake toss back to the punter, punter
-   fakes a handoff to the crossing wing, protector breaks the other way.
+2. **Punt — Villanova Fake** — his play, in his words: hiked to **Archuletta** at protector,
+   Archuletta fakes the handoff to the crossing wing (Scott here, Dalley on the mirror), then
+   Archuletta runs it behind the other wing's seal. The point is to send them the wrong way
+   after the ball. **The punter never touches it** — he sells a punt that is not happening.
+   Nobody on this unit is an X-man, which matters: an X-man may not fake a punt.
 3. **Punt Return — Purple D** — 6-2-2-1. Starting defense.
 4. **Punt Return — White D** — same shape, second unit.
 5. **Kickoff — Spread** — from the 40, ten across, four each side of the kicker.

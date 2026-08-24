@@ -507,7 +507,7 @@
           "x": 210,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Snap it to Archuletta, not the punter. Same snap, same speed, then block two counts before you go find somebody."
         },
         {
           "id": "p1",
@@ -517,7 +517,7 @@
           "x": 248,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
         },
         {
           "id": "p2",
@@ -527,7 +527,7 @@
           "x": 172,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
         },
         {
           "id": "p3",
@@ -537,7 +537,7 @@
           "x": 286,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
         },
         {
           "id": "p4",
@@ -547,7 +547,7 @@
           "x": 134,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
         },
         {
           "id": "p5",
@@ -557,7 +557,7 @@
           "x": 376,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
         },
         {
           "id": "p6",
@@ -567,7 +567,7 @@
           "x": 44,
           "y": 190,
           "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. If you release early they read the fake and it is dead. Two counts, then find someone to block for the runner."
+          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
         },
         {
           "id": "p7",
@@ -577,7 +577,7 @@
           "x": 280,
           "y": 230,
           "role": "SEAL",
-          "job": "Seal the edge on the side the protector is breaking to. Your block is the play."
+          "job": "Seal the edge Archuletta is breaking to. Block the first man outside you and turn him in. Your block is the play."
         },
         {
           "id": "p8",
@@ -586,8 +586,8 @@
           "player": "Scott",
           "x": 140,
           "y": 230,
-          "role": "CROSS",
-          "job": "Cross behind the punter like you are taking the ball. Sell it hard, because the more they chase you the more room the protector has."
+          "role": "FAKE",
+          "job": "You are the fake. Cross in front of Archuletta, take the ball into your belly and run like you have it. The harder they chase you, the more grass he has."
         },
         {
           "id": "p9",
@@ -597,7 +597,7 @@
           "x": 192,
           "y": 264,
           "role": "BALL",
-          "job": "The snap comes to you, not the punter. Sell the toss back, then break the other way and get the first down. Take what is there."
+          "job": "The snap comes to you, not the punter. Ride the ball into Scott’s belly as he crosses, pull it back out, then break the other way behind Dalley and get the first down. Sell it with your eyes and shoulders, not just your hands."
         },
         {
           "id": "p10",
@@ -607,95 +607,10 @@
           "x": 210,
           "y": 340,
           "role": "DECOY",
-          "job": "Sell it. Fake the catch, fake the handoff to the wing crossing, and keep your eyes downfield so nobody reads you."
+          "job": "You never touch it. Sell the punt — catch nothing, take your steps and swing your leg. Do not look at Archuletta."
         }
       ],
       "routes": [
-        {
-          "playerId": "p9",
-          "points": [
-            {
-              "x": 224,
-              "y": 272
-            },
-            {
-              "x": 270,
-              "y": 258
-            },
-            {
-              "x": 316,
-              "y": 208
-            },
-            {
-              "x": 324,
-              "y": 120
-            },
-            {
-              "x": 320,
-              "y": 40
-            }
-          ]
-        },
-        {
-          "playerId": "p10",
-          "points": [
-            {
-              "x": 206,
-              "y": 306
-            },
-            {
-              "x": 188,
-              "y": 290
-            }
-          ]
-        },
-        {
-          "playerId": "p8",
-          "points": [
-            {
-              "x": 172,
-              "y": 268
-            },
-            {
-              "x": 90,
-              "y": 276
-            },
-            {
-              "x": 38,
-              "y": 224
-            },
-            {
-              "x": 34,
-              "y": 150
-            }
-          ]
-        },
-        {
-          "playerId": "p7",
-          "points": [
-            {
-              "x": 298,
-              "y": 206
-            },
-            {
-              "x": 312,
-              "y": 168
-            }
-          ]
-        },
-        {
-          "playerId": "p3",
-          "points": [
-            {
-              "x": 300,
-              "y": 176
-            },
-            {
-              "x": 316,
-              "y": 148
-            }
-          ]
-        },
         {
           "playerId": "p5",
           "points": [
@@ -721,14 +636,155 @@
               "y": 70
             }
           ]
+        },
+        {
+          "playerId": "p9",
+          "points": [
+            {
+              "x": 178,
+              "y": 270
+            },
+            {
+              "x": 232,
+              "y": 266
+            },
+            {
+              "x": 282,
+              "y": 242
+            },
+            {
+              "x": 318,
+              "y": 188
+            },
+            {
+              "x": 326,
+              "y": 108
+            },
+            {
+              "x": 322,
+              "y": 40
+            }
+          ]
+        },
+        {
+          "playerId": "p8",
+          "points": [
+            {
+              "x": 176,
+              "y": 266
+            },
+            {
+              "x": 110,
+              "y": 274
+            },
+            {
+              "x": 52,
+              "y": 236
+            },
+            {
+              "x": 36,
+              "y": 158
+            }
+          ]
+        },
+        {
+          "playerId": "p7",
+          "points": [
+            {
+              "x": 300,
+              "y": 208
+            },
+            {
+              "x": 314,
+              "y": 170
+            }
+          ]
+        },
+        {
+          "playerId": "p10",
+          "points": [
+            {
+              "x": 208,
+              "y": 308
+            },
+            {
+              "x": 212,
+              "y": 282
+            }
+          ]
+        },
+        {
+          "playerId": "p0",
+          "points": [
+            {
+              "x": 212,
+              "y": 178
+            },
+            {
+              "x": 218,
+              "y": 164
+            }
+          ]
+        },
+        {
+          "playerId": "p2",
+          "points": [
+            {
+              "x": 174,
+              "y": 178
+            },
+            {
+              "x": 182,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "playerId": "p1",
+          "points": [
+            {
+              "x": 246,
+              "y": 178
+            },
+            {
+              "x": 254,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "playerId": "p4",
+          "points": [
+            {
+              "x": 136,
+              "y": 178
+            },
+            {
+              "x": 142,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "playerId": "p3",
+          "points": [
+            {
+              "x": 300,
+              "y": 176
+            },
+            {
+              "x": 316,
+              "y": 148
+            }
+          ]
         }
       ],
-      "howItWorks": "A fake out of the base punt, so it has to look identical until the snap is gone. The snap goes to the protector instead of the punter. He fakes the toss back, the punter fakes a handoff to the wing crossing behind him, and the protector breaks the other way with the ball. Everything sells for two counts — a lineman who releases early gives it away.",
+      "howItWorks": "A fake out of the base punt, so it has to look exactly like the punt until the ball is gone. The snap goes to Archuletta at protector, not to the punter. Scott crosses in front of him and Archuletta rides the ball into his belly and pulls it back out — whichever way they chase Scott is the way they are wrong. Archuletta breaks back behind Dalley’s seal and runs for the first down. The punter never touches it.",
       "aim": {
-        "x": 96,
-        "y": 105,
-        "from": "PP",
-        "label": "BALL GOES HERE — OUTSIDE THE SEAL, GET THE STICKS"
+        "x": 330,
+        "y": 126,
+        "label": "ARCHULETTA RUNS HERE — OUTSIDE DALLEY’S SEAL, GET THE STICKS",
+        "from": ""
       },
       "mirrorOf": "punt-return-purple-d",
       "phase": "special"
