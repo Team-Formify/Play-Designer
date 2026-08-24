@@ -722,7 +722,7 @@ function manRec(th,bi,assigned){
    collision and not two men passing on opposite sides of the field.
    Worked out from the two plays every time it is drawn, never stored, so dragging
    a man or redrawing a lane moves the contact point with him as he moves. */
-var MEET_TOUCH=22, MEET_NEAR=44;
+var MEET_TOUCH=22, MEET_NEAR=44, MEET_MOVED=16;
 /* Nobody runs in straight lines with corners on them. The points he taps are the
    shape of the run; this rounds them into one continuous path — a Catmull-Rom
    spline written as cubic Béziers — so a route bends the way a boy actually runs
@@ -782,9 +782,15 @@ function meetsOf(p){
     var a=smoothPts([{x:q.x,y:q.y}].concat(r?r.points:[]));
     var b=smoothPts(m.path||[{x:m.x,y:m.y}]);
     if(a.length<2&&b.length<2)return;
-    var hit=null,near=null;
+    /* A pair lined up across the ball starts inside touching distance, so the very
+       first sample "collides" and both men freeze on their own alignment without
+       ever running. That is not a block, it is two men standing still. So a
+       meeting only counts once somebody has actually travelled to it. */
+    var hit=null,near=null,a0=a[0],b0=b[0];
     for(var i=0;i<=120;i++){
       var t=i/120, pa=walk(a,t), pb=walk(b,t);
+      var gone=Math.hypot(pa.x-a0.x,pa.y-a0.y)+Math.hypot(pb.x-b0.x,pb.y-b0.y);
+      if(gone<MEET_MOVED)continue;
       var d=Math.hypot(pa.x-pb.x,pa.y-pb.y);
       if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
       if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}

@@ -275,7 +275,9 @@ search runs on the sampled curve too, so a meeting point sits on the path.
 
 **Where they collide.** `meetsOf(p)` (`meets(p)` on the boys' page) walks each matched
 pair down their own two routes on one clock and takes the first step where they are within
-touching distance; a pair that never quite touches counts at its closest approach, provided
+touching distance **and somebody has actually run there** (`MEET_MOVED`) — a pair lined up
+across the ball starts inside touching distance, so without that the very first sample
+counts as a collision and both men freeze on their own alignment without ever moving; a pair that never quite touches counts at its closest approach, provided
 that is close enough to be a collision rather than two men passing on opposite sides of the
 field. In the animation both men **stop there** for the rest of the run — that is the block,
 or the tackle. The spot is ringed from the first frame, dashed until they reach it and

@@ -236,7 +236,7 @@ function matchups(p){
    take their closest approach — provided it is close enough to be a collision and
    not two men passing on opposite sides of the field. Once a pair has met, both
    stop there for the rest of the run. */
-var MEET_TOUCH=22, MEET_NEAR=44;
+var MEET_TOUCH=22, MEET_NEAR=44, MEET_MOVED=16;
 var meetCache=null, meetKey='';
 function meets(p){
   var key=(p&&p.slug)+'|'+lookIx;
@@ -248,9 +248,14 @@ function meets(p){
     var m=mu[q.id]; if(!m||!th.men.length)return;
     var a=pathOf(p,q), b=m.path;
     if(a.total<=0&&b.length<2)return;      // nobody is moving; there is no collision
-    var hit=null, near=null;
+    /* A meeting only counts once somebody has run to it. Two men lined up across
+       the ball start inside touching distance, and without this they both freeze
+       on their own alignment at the snap and never move. */
+    var hit=null, near=null, a0=a.pts[0], b0=b[0];
     for(var i=0;i<=120;i++){
       var t=i/120, pa=atT(a,t), pb=segAt(b,t);
+      var gone=Math.hypot(pa.x-a0.x,pa.y-a0.y)+Math.hypot(pb.x-b0.x,pb.y-b0.y);
+      if(gone<MEET_MOVED)continue;
       var d=Math.hypot(pa.x-pb.x,pa.y-pb.y);
       if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
       if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}
