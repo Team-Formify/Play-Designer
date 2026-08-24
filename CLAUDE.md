@@ -251,11 +251,27 @@ that play's eleven across the line of scrimmage and flips it left-to-right — t
 our right — scaled to fit the host play's depth. Nothing is stored: there is no opponent
 data to overwrite, to lose, or to keep in sync, and when he edits a return the kickoff it
 faces changes with it. Only Onside has no true counterpart; it borrows the 5-2-2-2 hands
-team. A **Them** toggle shows or hides them, default off in the coach's app and on in the
-boys' animation. Hidden opponents do not widen `computeView`; they are never hit-testable,
+team. A **Them** toggle shows or hides them, on by default in both now that they are his own
+plays rather than a guess about somebody else's; pressing Run it turns them on regardless,
+because there is nothing to watch without them. Hidden opponents do not widen `computeView`; they are never hit-testable,
 because they belong to another play and are edited there; and they are drawn underneath our
 eleven so our circles are never covered. Older saves may still carry `team:'x'` players from
 when they were seeded — those are left alone and simply ignored.
+
+**Running the play.** Both apps have it now. `Run it` / `Slow` / `Again` and a scrub bar
+sit under the field in the coach's app; the boys' page has the same thing in Watch it.
+The clock only changes where men are **drawn** — `animPos()` returns a position, nothing
+mutates `pl.x/pl.y` — because a debounced save landing mid-run would otherwise write the
+halfway picture over his alignment. Touching the field stops the run and puts everybody
+back. `#animBar` is in the print hide list and hidden by `body.gd`, for the same reason
+`#lookBar` and `#gdBar` are.
+
+**Curves, not corners.** `smoothD()` draws a route as a Catmull-Rom spline written as
+cubic Béziers, and `smoothPts()` samples the same curve so a man runs along the line that
+is drawn rather than cutting its corners. The stored points are untouched — this is only
+how they are drawn and walked, so dragging a point still does exactly what he expects.
+Two points stay a straight line, because that is what a straight line is. The collision
+search runs on the sampled curve too, so a meeting point sits on the path.
 
 **Where they collide.** `meetsOf(p)` (`meets(p)` on the boys' page) walks each matched
 pair down their own two routes on one clock and takes the first step where they are within

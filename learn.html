@@ -190,7 +190,8 @@ function buildThem(p){
   var men=so.map(function(q){
     var m=M(q.x,q.y);
     var r=(sLook.routes||[]).filter(function(x){return x.playerId===q.id;})[0];
-    m.path=[{x:m.x,y:m.y}].concat(r?r.points.map(function(t){return M(t.x,t.y);}):[]);
+    m.raw=[{x:m.x,y:m.y}].concat(r?r.points.map(function(t){return M(t.x,t.y);}):[]);
+    m.path=smoothPts(m.raw);
     m.label=q.label||''; m.role=q.role||''; m.job=q.job||'';
     return m;
   });
@@ -351,10 +352,39 @@ function placeLabels(people){
 }
 
 /* ---- path helpers, used by the animation ---- */
+/* Same curve as the coach's app: the points are the shape of the run, and this
+   rounds them so a route bends the way a boy actually runs it. */
+var CURVE=0.5;
+function smoothD(pts){
+  if(!pts||pts.length<2)return '';
+  var d='M'+pts[0].x+','+pts[0].y;
+  if(pts.length===2)return d+' L'+pts[1].x+','+pts[1].y;
+  for(var i=0;i<pts.length-1;i++){
+    var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
+    d+=' C'+(p1.x+(p2.x-p0.x)/6*CURVE)+','+(p1.y+(p2.y-p0.y)/6*CURVE)+
+       ' '+(p2.x-(p3.x-p1.x)/6*CURVE)+','+(p2.y-(p3.y-p1.y)/6*CURVE)+
+       ' '+p2.x+','+p2.y;
+  }
+  return d;
+}
+function smoothPts(pts){
+  if(!pts||pts.length<3)return pts||[];
+  var out=[{x:pts[0].x,y:pts[0].y}], STEP=6;
+  for(var i=0;i<pts.length-1;i++){
+    var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
+    var c1x=p1.x+(p2.x-p0.x)/6*CURVE, c1y=p1.y+(p2.y-p0.y)/6*CURVE;
+    var c2x=p2.x-(p3.x-p1.x)/6*CURVE, c2y=p2.y-(p3.y-p1.y)/6*CURVE;
+    for(var k=1;k<=STEP;k++){
+      var u=k/STEP, v=1-u;
+      out.push({x:v*v*v*p1.x+3*v*v*u*c1x+3*v*u*u*c2x+u*u*u*p2.x,
+                y:v*v*v*p1.y+3*v*v*u*c1y+3*v*u*u*c2y+u*u*u*p2.y});
+    }
+  }
+  return out;
+}
 function pathOf(p,q){
   var r=(look(p).routes||[]).filter(function(x){return x.playerId===q.id;})[0];
-  var pts=[{x:q.x,y:q.y}];
-  if(r&&r.points)r.points.forEach(function(t){pts.push({x:t.x,y:t.y});});
+  var pts=smoothPts([{x:q.x,y:q.y}].concat((r&&r.points)?r.points:[]));
   var segs=[],total=0;
   for(var i=1;i<pts.length;i++){
     var L=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
@@ -400,10 +430,9 @@ function drawField(opts){
     (look(p).routes||[]).forEach(function(r){
       var q=p.players.filter(function(z){return z.id===r.playerId;})[0];
       if(!q||!r.points.length)return;
-      var d='M'+q.x+','+q.y;
-      r.points.forEach(function(t){d+=' L'+t.x+','+t.y;});
-      svg.appendChild(E('path',{d:d,fill:'none',stroke:'#E3B547','stroke-opacity':.28,
-        'stroke-width':2,'stroke-linecap':'round'}));
+      svg.appendChild(E('path',{d:smoothD([{x:q.x,y:q.y}].concat(r.points)),fill:'none',
+        stroke:'#E3B547','stroke-opacity':.28,'stroke-width':2,
+        'stroke-linecap':'round','stroke-linejoin':'round'}));
     });
   }
   /* Where the ball is meant to end up. Same mark the coach places, drawn the same
@@ -482,10 +511,9 @@ function drawField(opts){
     });
     TH.men.forEach(function(m,bi){
       if(m.path.length>1){
-        var d='M'+m.path[0].x+','+m.path[0].y;
-        m.path.forEach(function(t,i){ if(i)d+=' L'+t.x+','+t.y; });
-        svg.appendChild(E('path',{d:d,fill:'none',stroke:'#EDEBE0','stroke-opacity':.16,
-          'stroke-width':1.5,'stroke-linecap':'round','stroke-dasharray':'5 4'}));
+        svg.appendChild(E('path',{d:smoothD(m.raw||m.path),fill:'none',stroke:'#EDEBE0',
+          'stroke-opacity':.16,'stroke-width':1.5,'stroke-linecap':'round',
+          'stroke-linejoin':'round','stroke-dasharray':'5 4'}));
       }
       var mc=MT.them[bi];
       var at=(mc&&tt>=mc.t)?mc.b:segAt(m.path,tt);

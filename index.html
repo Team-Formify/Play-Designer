@@ -71,6 +71,9 @@
   details.fold:not([open])>summary{margin-bottom:0}
   details.fold:not([open])>summary .fx::after{content:'Show'}
 
+  #animBar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;align-items:center}
+  #animBar input[type=range]{flex:1 1 100%;margin:2px 0 0;accent-color:var(--gold)}
+  body.gd #animBar{display:none}
   #lookBar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;align-items:center}
   #lookBar .lkHint{font-family:var(--mono);font-size:11px;letter-spacing:.08em;
     text-transform:uppercase;color:var(--soft);margin-right:2px}
@@ -119,7 +122,7 @@
     /* #lookBar belongs here, not left to inherit: a new element outside this list
        prints, which is exactly how the game-day bar once leaked onto the screen.
        The book names the look in its page title instead. */
-    header,.bar,.hint,.row,.panel,.chips,#lookBar,#schedLink,#learnLink,.sec{display:none!important}
+    header,.bar,.hint,.row,.panel,.chips,#lookBar,#animBar,#schedLink,#learnLink,.sec{display:none!important}
     html,body{background:#fff!important;color:#000!important}
     .wrap{max-width:none;padding:0}
     #printTitle{display:block!important;font-family:var(--display);font-weight:800;
@@ -321,6 +324,13 @@
   </div>
 
   <div id="lookBar" role="group" aria-label="Which kick" hidden></div>
+
+  <div id="animBar" role="group" aria-label="Run the play">
+    <button class="btn gold" id="animPlay">&#9654; Run it</button>
+    <button class="btn" id="animSlow">Slow</button>
+    <button class="btn" id="animAgain">Again</button>
+    <input type="range" id="animScrub" min="0" max="1000" value="0" aria-label="Scrub the play">
+  </div>
 
   <div class="fieldbox">
     <svg id="field" viewBox="0 0 420 500" role="img" aria-label="Play diagram"></svg>
@@ -562,9 +572,9 @@ var VB={w:420,h:500};
    crop to the play and everything on screen roughly doubles in size. */
 var VIEW={x:0,y:0,w:420,h:500};
 var fitMode='fit';
-/* The other team's likely look. Off by default — it is a guess about them, not a
-   fact about us, and it doubles what is on the field. */
-var showThem=false;
+/* The other team. On by default now that it is one of his own plays rather than a
+   guess about theirs — the whole point is seeing what he is running into. */
+var showThem=true;
 
 /* The diagram is drawn with inline colour attributes, which CSS cannot override,
    so printing swaps the palette and redraws rather than trying to restyle it.
@@ -713,6 +723,42 @@ function manRec(th,bi,assigned){
    Worked out from the two plays every time it is drawn, never stored, so dragging
    a man or redrawing a lane moves the contact point with him as he moves. */
 var MEET_TOUCH=22, MEET_NEAR=44;
+/* Nobody runs in straight lines with corners on them. The points he taps are the
+   shape of the run; this rounds them into one continuous path — a Catmull-Rom
+   spline written as cubic Béziers — so a route bends the way a boy actually runs
+   it. The points themselves are untouched: this is only how they are drawn and
+   walked, so dragging a point still does exactly what he expects.
+   Two points stay a straight line, because a straight line is what that is. */
+var CURVE=0.5;
+function smoothD(pts){
+  if(!pts||pts.length<2)return '';
+  var d='M'+pts[0].x+','+pts[0].y;
+  if(pts.length===2)return d+' L'+pts[1].x+','+pts[1].y;
+  for(var i=0;i<pts.length-1;i++){
+    var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
+    d+=' C'+(p1.x+(p2.x-p0.x)/6*CURVE)+','+(p1.y+(p2.y-p0.y)/6*CURVE)+
+       ' '+(p2.x-(p3.x-p1.x)/6*CURVE)+','+(p2.y-(p3.y-p1.y)/6*CURVE)+
+       ' '+p2.x+','+p2.y;
+  }
+  return d;
+}
+/* The same curve, sampled, so a man runs along the line that is drawn rather than
+   cutting the corners of it. */
+function smoothPts(pts){
+  if(!pts||pts.length<3)return pts||[];
+  var out=[{x:pts[0].x,y:pts[0].y}], STEP=6;
+  for(var i=0;i<pts.length-1;i++){
+    var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
+    var c1x=p1.x+(p2.x-p0.x)/6*CURVE, c1y=p1.y+(p2.y-p0.y)/6*CURVE;
+    var c2x=p2.x-(p3.x-p1.x)/6*CURVE, c2y=p2.y-(p3.y-p1.y)/6*CURVE;
+    for(var k=1;k<=STEP;k++){
+      var u=k/STEP, v=1-u;
+      out.push({x:v*v*v*p1.x+3*v*v*u*c1x+3*v*u*u*c2x+u*u*u*p2.x,
+                y:v*v*v*p1.y+3*v*v*u*c1y+3*v*u*u*c2y+u*u*u*p2.y});
+    }
+  }
+  return out;
+}
 function walk(pts,t){
   var segs=[],total=0,i;
   for(i=1;i<pts.length;i++){var L=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);segs.push(L);total+=L;}
@@ -733,8 +779,8 @@ function meetsOf(p){
   p.players.filter(function(q){return q.team==='o';}).forEach(function(q){
     var m=mu[q.id]; if(!m)return;
     var r=byRoute[q.id];
-    var a=[{x:q.x,y:q.y}].concat(r?r.points:[]);
-    var b=m.path||[{x:m.x,y:m.y}];
+    var a=smoothPts([{x:q.x,y:q.y}].concat(r?r.points:[]));
+    var b=smoothPts(m.path||[{x:m.x,y:m.y}]);
     if(a.length<2&&b.length<2)return;
     var hit=null,near=null;
     for(var i=0;i<=120;i++){
@@ -751,9 +797,60 @@ function meetsOf(p){
     var c=hit||((near&&(m.assigned||near.d<=MEET_NEAR))?near:null);
     if(!c)return;
     out.push({x:(c.a.x+c.b.x)/2,y:(c.a.y+c.b.y)/2,id:q.id,label:q.label||'',
+              t:c.t,a:c.a,b:c.b,bi:m.bi,
               vs:m.label||'',assigned:!!m.assigned,apart:Math.round(c.d)});
   });
   return out;
+}
+
+/* Running the play. Nothing is mutated: the men keep their real positions and the
+   clock only changes where they are DRAWN, because a save landing mid-animation
+   would otherwise write the halfway picture over his alignment. */
+var ANIM=null;
+function animStop(){
+  if(ANIM&&ANIM.raf)cancelAnimationFrame(ANIM.raf);
+  ANIM=null; paintAnim(); drawField();
+}
+function animStart(){
+  var p=cur(); if(!p)return;
+  var routes={};
+  look(p).routes.forEach(function(r){
+    var o=p.players.filter(function(q){return q.id===r.playerId;})[0];
+    if(o&&o.team==='o')routes[o.id]=[{x:o.x,y:o.y}].concat(r.points);
+  });
+  var mts=meetsOf(p), us={}, them={};
+  mts.forEach(function(c){ us[c.id]=c; if(c.bi!==undefined)them[c.bi]=c; });
+  ANIM={t:0,playing:false,speed:1,raf:null,routes:routes,us:us,them:them,
+        marks:mts,slug:slugFor(p),ix:p.lookIx||0};
+}
+function animAlive(){
+  var p=cur();
+  if(!ANIM||!p)return false;
+  // a different play or a different kick is a different run
+  if(ANIM.slug!==slugFor(p)||ANIM.ix!==(p.lookIx||0)){animStop();return false;}
+  return true;
+}
+function animPos(pl){
+  if(!ANIM||pl.team!=='o')return {x:pl.x,y:pl.y};
+  var c=ANIM.us[pl.id];
+  if(c&&ANIM.t>=c.t)return c.a;          // he has met his man; that is the block
+  var r=ANIM.routes[pl.id];
+  return r?walk(smoothPts(r),ANIM.t):{x:pl.x,y:pl.y};
+}
+function animThemPos(bi,m){
+  if(!ANIM)return {x:m.x,y:m.y};
+  var c=ANIM.them[bi];
+  if(c&&ANIM.t>=c.t)return c.b;
+  return walk(smoothPts(m.path&&m.path.length?m.path:[{x:m.x,y:m.y}]),ANIM.t);
+}
+function animTick(ts){
+  if(!ANIM||!ANIM.playing)return;
+  if(ANIM.last===undefined)ANIM.last=ts;
+  var dt=(ts-ANIM.last)/1000; ANIM.last=ts;
+  ANIM.t+=dt/(2.4/ANIM.speed);
+  if(ANIM.t>=1){ANIM.t=1;ANIM.playing=false;}
+  paintAnim(); drawField();
+  if(ANIM&&ANIM.playing)ANIM.raf=requestAnimationFrame(animTick);
 }
 
 function computeView(p,lay){
@@ -916,7 +1013,9 @@ function drawAim(p,C){
 }
 function placeLabels(p){
   var FS=9.5, LH=12;
-  var obstacles=p.players.map(function(q){return{x:q.x-13,y:q.y-13,w:26,h:26,wt:10};});
+  var obstacles=p.players.map(function(q){
+    var a=animPos(q); return{x:a.x-13,y:a.y-13,w:26,h:26,wt:10};
+  });
   var PA=look(p).aim;
   if(PA){
     obstacles.push({x:PA.x-14,y:PA.y-14,w:28,h:28,wt:10});
@@ -933,7 +1032,8 @@ function placeLabels(p){
   var out={};
   p.players.filter(function(q){return q.name&&q.team==='o';})
     .slice().sort(function(a,b){return a.y-b.y||a.x-b.x;})
-    .forEach(function(q){
+    .forEach(function(q0){
+      var ap=animPos(q0), q={id:q0.id,name:q0.name,x:ap.x,y:ap.y};
       var d=info(q.name);
       var full=d.l.toUpperCase()+(d.n?' '+d.n:''), short=d.l.toUpperCase();
       var texts = lblMode==='num' ? [d.n||short.slice(0,4)]
@@ -1203,11 +1303,12 @@ function drawField(){
   look(p).routes.forEach(function(r){
     var owner=p.players.filter(function(pl){return pl.id===r.playerId;})[0];
     if(!owner||owner.team!=='o'||!r.points.length)return;
-    var d='M'+owner.x+','+owner.y;
-    r.points.forEach(function(pt){d+=' L'+pt.x+','+pt.y;});
-    svg.appendChild(E('path',{d:d,fill:'none',stroke:C.gold,'stroke-width':C.stroke,'stroke-linecap':'round'}));
+    var pts=[{x:owner.x,y:owner.y}].concat(r.points);
+    svg.appendChild(E('path',{d:smoothD(pts),fill:'none',stroke:C.gold,
+      'stroke-width':C.stroke,'stroke-linecap':'round','stroke-linejoin':'round'}));
+    var sm=smoothPts(pts);
     var last=r.points[r.points.length-1];
-    var prev=r.points.length>1?r.points[r.points.length-2]:owner;
+    var prev=sm.length>2?sm[sm.length-2]:(r.points.length>1?r.points[r.points.length-2]:owner);
     var ang=Math.atan2(last.y-prev.y,last.x-prev.x);
     [2.8,-2.8].forEach(function(s){
       svg.appendChild(E('line',{x1:last.x,y1:last.y,
@@ -1221,32 +1322,34 @@ function drawField(){
   if(showThem){
     var TH2=themOf(p);
     TH2.routes.forEach(function(r){
-      var d='M'+r.from.x+','+r.from.y;
-      r.points.forEach(function(t){d+=' L'+t.x+','+t.y;});
-      svg.appendChild(E('path',{d:d,fill:'none',stroke:C.chalk,'stroke-opacity':C.themOp*0.7,
-        'stroke-width':1.5,'stroke-linecap':'round','stroke-dasharray':'5 4'}));
+      svg.appendChild(E('path',{d:smoothD([r.from].concat(r.points)),fill:'none',
+        stroke:C.chalk,'stroke-opacity':C.themOp*0.7,'stroke-width':1.5,
+        'stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':'5 4'}));
     });
     var MU=matchups(p), sel=MU[selId];
-    TH2.men.forEach(function(m){
-      var on=sel&&Math.abs(sel.x-m.x)<0.6&&Math.abs(sel.y-m.y)<0.6;
+    TH2.men.forEach(function(m,bi){
+      var on=sel&&sel.bi===bi, at=animThemPos(bi,m);
       [[-7,-7,7,7],[-7,7,7,-7]].forEach(function(dd){
-        svg.appendChild(E('line',{x1:m.x+dd[0],y1:m.y+dd[1],x2:m.x+dd[2],y2:m.y+dd[3],
+        svg.appendChild(E('line',{x1:at.x+dd[0],y1:at.y+dd[1],x2:at.x+dd[2],y2:at.y+dd[3],
           stroke:on&&!printing?C.hot:C.chalk,'stroke-opacity':on?1:C.themOp,
           'stroke-width':on?3:2.2,'stroke-linecap':'round'}));
       });
     });
-    // where each pair is going to come together
-    meetsOf(p).forEach(function(c){
+    /* Where each pair comes together: ringed from the start so he can see the
+       block before it happens, filled in once they get there. */
+    (ANIM?ANIM.marks:meetsOf(p)).forEach(function(c){
       var on=(c.id===selId), loose=(c.apart>MEET_NEAR);
-      svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:on?11:9,
-        fill:on?'rgba(229,138,107,.2)':'none',
-        stroke:printing?C.chalk:C.hot,'stroke-opacity':on?.95:(loose?.32:.5),
-        'stroke-width':on?2:1.2,'stroke-dasharray':on&&!loose?'':'3 3'}));
+      var here=ANIM&&ANIM.t>=c.t;
+      svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:(on||here)?11:9,
+        fill:(on||here)?'rgba(229,138,107,.2)':'none',
+        stroke:printing?C.chalk:C.hot,'stroke-opacity':(on||here)?.95:(loose?.32:.5),
+        'stroke-width':(on||here)?2:1.2,'stroke-dasharray':(on||here)&&!loose?'':'3 3'}));
+      if(here)svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:2.4,fill:printing?C.chalk:C.hot}));
     });
     // tapping one of ours draws the line to the man he has to beat
     if(sel){
       var me=p.players.filter(function(q){return q.id===selId;})[0];
-      if(me)svg.appendChild(E('line',{x1:me.x,y1:me.y,x2:sel.x,y2:sel.y,
+      if(me)svg.appendChild(E('line',{x1:animPos(me).x,y1:animPos(me).y,x2:sel.x,y2:sel.y,
         stroke:printing?C.chalk:C.hot,'stroke-opacity':.55,'stroke-width':1.2,
         'stroke-dasharray':'3 3'}));
     }
@@ -1259,18 +1362,19 @@ function drawField(){
     if(pl.team==='x')return;             // theirs is drawn above, from themOf()
     var grp=E('g',{'data-id':pl.id,style:'cursor:pointer'});
     var isSel=(pl.id===selId), isRt=(routing&&routing.playerId===pl.id);
+    var AP=animPos(pl);
     {
-      grp.appendChild(E('circle',{cx:pl.x,cy:pl.y,r:12,fill:isRt?C.routeFill:C.circleFill,
+      grp.appendChild(E('circle',{cx:AP.x,cy:AP.y,r:12,fill:isRt?C.routeFill:C.circleFill,
         stroke:(isSel||isRt)&&!printing?C.hot:C.gold,'stroke-width':(isSel||isRt)&&!printing?2.6:C.stroke}));
       if(pl.label){
-        var t=E('text',{x:pl.x,y:pl.y+3.4,'text-anchor':'middle',fill:C.gold,
+        var t=E('text',{x:AP.x,y:AP.y+3.4,'text-anchor':'middle',fill:C.gold,
           'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':9});
         t.textContent=pl.label; grp.appendChild(t);
       }
     }
     if(pl.name&&lblMode!=='off'&&pl.team==='o'&&lay[pl.id]){
       var d=info(pl.name);
-      var L=lay[pl.id], lx=pl.x+L.dx, ly=pl.y+L.dy;
+      var L=lay[pl.id], lx=AP.x+L.dx, ly=AP.y+L.dy;
       grp.appendChild(E('rect',{x:lx-L.w/2,y:ly,width:L.w,height:12,rx:2,
         fill:C.deep,'fill-opacity':C.chipOp}));
       var n=E('text',{x:lx,y:ly+9,'text-anchor':'middle',fill:C.chalk,
@@ -1279,11 +1383,11 @@ function drawField(){
       // leader line whenever the name had to move off its default spot
       if(Math.abs(L.dx)>4||L.dy<0||L.dy>20){
         var ty=L.dy<0?ly+12:ly;
-        grp.appendChild(E('line',{x1:pl.x,y1:pl.y+(L.dy<0?-12:12),x2:lx,y2:ty,
+        grp.appendChild(E('line',{x1:AP.x,y1:AP.y+(L.dy<0?-12:12),x2:lx,y2:ty,
           stroke:C.chalk,'stroke-opacity':C.leadOp}));
       }
       if(d.x){
-        var xb=E('text',{x:pl.x+15,y:pl.y-9,'text-anchor':'middle',fill:C.hot,
+        var xb=E('text',{x:AP.x+15,y:AP.y-9,'text-anchor':'middle',fill:C.hot,
           'font-family':'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace','font-size':8.5,'font-weight':'bold'});
         xb.textContent='X'; grp.appendChild(xb);
       }
@@ -1308,7 +1412,16 @@ function updateCount(){
   cn.className='count'+(ours===11?'':' bad');
 }
 
-function draw(){ drawField(); paintLooks(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays();
+function paintAnim(){
+  var b=document.getElementById('animPlay');
+  if(!b)return;
+  b.innerHTML=(ANIM&&ANIM.playing)?'&#10073;&#10073; Pause':'&#9654; Run it';
+  var sl=document.getElementById('animSlow');
+  if(sl)sl.textContent=(ANIM&&ANIM.speed<1)?'Normal':'Slow';
+  var sc=document.getElementById('animScrub');
+  if(sc&&document.activeElement!==sc)sc.value=Math.round((ANIM?ANIM.t:0)*1000);
+}
+function draw(){ drawField(); paintLooks(); paintAnim(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays();
   paintFlags(); paintGrid(); paintSwap(); paintJobs(); paintGlossary(); }
 
 /* One chip per look. Hidden entirely on a unit that only has one, so the seven
@@ -1945,6 +2058,7 @@ svg.addEventListener('pointerdown',function(e){
     return;
   }
 
+  if(ANIM){ animStop(); }      // touching the field puts the play back to the start
   // move
   if(h){
     selId=h.id; drag={id:h.id,dx:h.x-c.x,dy:h.y-c.y};
@@ -2273,6 +2387,36 @@ function paintThemBtns(){
     o.setAttribute('aria-pressed',(o.dataset.t==='on')===showThem);
   });
 }
+/* Run the play. The clock only moves where men are drawn — it never touches the
+   alignment, so a save landing mid-run cannot write the halfway picture over it. */
+document.getElementById('animPlay').onclick=function(){
+  if(!animAlive())animStart();
+  if(ANIM.t>=1)ANIM.t=0;
+  ANIM.playing=!ANIM.playing; ANIM.last=undefined;
+  if(ANIM.playing){
+    showThem=true; paintThemBtns();      // there is nothing to watch without them
+    ANIM.raf=requestAnimationFrame(animTick);
+  }else if(ANIM.raf){cancelAnimationFrame(ANIM.raf);ANIM.raf=null;}
+  paintAnim(); drawField();
+};
+document.getElementById('animSlow').onclick=function(){
+  if(!animAlive())animStart();
+  ANIM.speed=ANIM.speed<1?1:0.4; ANIM.last=undefined; paintAnim();
+};
+document.getElementById('animAgain').onclick=function(){
+  animStart(); showThem=true; paintThemBtns();
+  ANIM.playing=true; ANIM.last=undefined;
+  ANIM.raf=requestAnimationFrame(animTick);
+  paintAnim(); drawField();
+};
+document.getElementById('animScrub').oninput=function(e){
+  if(!animAlive())animStart();
+  ANIM.playing=false;
+  if(ANIM.raf){cancelAnimationFrame(ANIM.raf);ANIM.raf=null;}
+  ANIM.t=(+e.target.value)/1000;
+  showThem=true; paintThemBtns();
+  paintAnim(); drawField();
+};
 document.getElementById('doDownload').onclick=downloadBackup;
 document.getElementById('doSource').onclick=function(){exportSource(true);};
 document.getElementById('doSourceCopy').onclick=function(){exportSource(false);};
