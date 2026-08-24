@@ -379,6 +379,8 @@
     <div class="chips" id="presets"></div>
     <div class="row">
       <button class="btn" id="addMissing">Add missing formations</button>
+      <button class="btn gold" id="pullOne">Update this play from the playbook</button>
+      <button class="btn" id="pullAll">Update ALL plays</button>
       <button class="btn" id="resetAll">Reset everything</button>
     </div>
     <div class="panel"><p>The three formations with names come straight from your notes. The kickoff one is my best
@@ -2465,6 +2467,63 @@ document.getElementById('addMissing').onclick=function(){
   });
   save();paintPlays();draw();
   alert(added?('Added '+added+'. Nothing else was touched.'):'You already have all of them.');
+};
+/* Taking the shipped version of a play.
+   Everything else in here is built never to overwrite what he has saved, which is
+   right — but it left no way for a correction in the playbook to reach his device
+   at all. A play he already has keeps its own routes for ever, so a play I have
+   rewritten simply never arrives. This is the escape hatch, and it is a button
+   press and nothing else: never automatic, never on load.
+   His personnel is kept. Names are his (rule 2), so they are carried across by
+   position label; the design — where they stand, what they run, the looks, the
+   target, the lanes and the written jobs — comes from the file. A snapshot is
+   taken first so it is reversible from Restore. */
+function pullFromBook(pl){
+  var slug=slugFor(pl), src=slug&&BY_SLUG[slug];
+  if(!src)return null;
+  var fresh=buildPlay(slug,pl.name);       // keeps HIS name for the play
+  var mine={};
+  (pl.players||[]).forEach(function(q){ if(q.team==='o'&&q.label&&q.name)mine[q.label]=q.name; });
+  var kept=0;
+  fresh.players.forEach(function(q){
+    if(q.team==='o'&&mine[q.label]){ q.name=mine[q.label]; kept++; }
+  });
+  fresh.id=pl.id;                           // same play, same slot in the list
+  fresh.flipped=false;
+  if(flipAll)flipPlay(fresh);
+  fresh.lookIx=0;
+  plays[pl.id]=fresh;
+  return {kept:kept, of:fresh.players.filter(function(q){return q.team==='o';}).length};
+}
+function pullConfirm(names){
+  return confirm(
+    'Take the playbook\u2019s version of '+names+'?\n\n'+
+    'This REPLACES the alignment, the routes, the looks, the target mark, the lane '+
+    'names and the written jobs with what is in the repo.\n\n'+
+    'Your player names are kept, matched to their position.\n\n'+
+    'A snapshot is saved first, so Restore puts it back.');
+}
+document.getElementById('pullOne').onclick=function(){
+  var p=cur(), slug=slugFor(p);
+  if(!slug||!BY_SLUG[slug]){alert('This play is not in the playbook, so there is nothing to take.');return;}
+  if(!pullConfirm('"'+p.name+'"'))return;
+  bakWrite(stateJSON(),'pre-update');
+  var r=pullFromBook(p);
+  selId=null; routing=null; animStop();
+  save(); paintPlays(); draw();
+  alert('"'+plays[p.id].name+'" is now the playbook version. '+
+        r.kept+' of '+r.of+' names carried across.');
+};
+document.getElementById('pullAll').onclick=function(){
+  var mine=Object.keys(plays).filter(function(k){return BY_SLUG[slugFor(plays[k])||''];});
+  if(!mine.length){alert('None of your plays are in the playbook.');return;}
+  if(!pullConfirm('all '+mine.length+' plays'))return;
+  bakWrite(stateJSON(),'pre-update');
+  var kept=0, of=0;
+  mine.forEach(function(k){ var r=pullFromBook(plays[k]); if(r){kept+=r.kept;of+=r.of;} });
+  selId=null; routing=null; animStop();
+  save(); paintPlays(); draw();
+  alert(mine.length+' plays are now the playbook version. '+kept+' of '+of+' names carried across.');
 };
 document.getElementById('resetAll').onclick=function(){
   if(!confirm('This DELETES every play and starts over. Export first if you want to keep your work. Continue?'))return;

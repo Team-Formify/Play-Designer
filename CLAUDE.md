@@ -31,6 +31,15 @@ it was broken once and cost him hours of re-entry. Treat them as hard constraint
    `savedSeq` up to meet it. Never make it green on anything but a resolved write.
 6. **Migrations rename, they never rewrite.** If a data shape changes, migrate forward
    additively.
+7. **A correction in the playbook does not reach a play he already has.** That is rule 2
+   working as designed, and for a long time it left no way in at all: a play rewritten in
+   the JSON simply never arrived on his device, and worse, a *renamed* look would arrive
+   while its routes did not — so a look called "Ball left" sat there running right.
+   **Update this play from the playbook** is the escape hatch. It is a button press and
+   nothing else, never automatic and never on load: it replaces the alignment, routes,
+   looks, target, lanes and jobs with the file's, keeps the play's name and carries his
+   player names across by position label, and writes a `pre-update` snapshot first so
+   Restore puts it back. When you correct a shipped play, tell him to press it.
 
 ---
 
