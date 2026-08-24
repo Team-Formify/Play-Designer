@@ -506,8 +506,8 @@
           "player": "Paulich",
           "x": 210,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Snap it to Archuletta, not the punter. Same snap, same speed, then block two counts before you go find somebody."
+          "role": "BLOCK FLOW",
+          "job": "Snap it to Archuletta, not the punter. Same snap, same speed, then block down to the fake side with everybody else."
         },
         {
           "id": "p1",
@@ -516,8 +516,8 @@
           "player": "Prasad",
           "x": 248,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
+          "role": "BLOCK FLOW",
+          "job": "Block down to the fake side, exactly like the base punt for two counts. Everything going that way is what empties the other side for him."
         },
         {
           "id": "p2",
@@ -526,8 +526,8 @@
           "player": "Steinke",
           "x": 172,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
+          "role": "BLOCK FLOW",
+          "job": "Block down to the fake side, exactly like the base punt for two counts. Everything going that way is what empties the other side for him."
         },
         {
           "id": "p3",
@@ -536,8 +536,8 @@
           "player": "Bearnson",
           "x": 286,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
+          "role": "BLOCK FLOW",
+          "job": "Block down to the fake side, exactly like the base punt for two counts. Everything going that way is what empties the other side for him."
         },
         {
           "id": "p4",
@@ -546,8 +546,8 @@
           "player": "Black",
           "x": 134,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
+          "role": "BLOCK FLOW",
+          "job": "Block down to the fake side, exactly like the base punt for two counts. Everything going that way is what empties the other side for him."
         },
         {
           "id": "p5",
@@ -556,8 +556,8 @@
           "player": "Grover",
           "x": 376,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
+          "role": "GUNNER",
+          "job": "If the ball is coming your way you are his escort: up the sideline, block the first man inside you, stay on your feet. If it is going away, block down with the flow and sell it."
         },
         {
           "id": "p6",
@@ -566,8 +566,8 @@
           "player": "Pace",
           "x": 44,
           "y": 190,
-          "role": "SELL IT",
-          "job": "Block exactly like the base punt for two counts. Release early and they read the fake. Then go find somebody to block for Archuletta."
+          "role": "GUNNER",
+          "job": "If the ball is coming your way you are his escort: up the sideline, block the first man inside you, stay on your feet. If it is going away, block down with the flow and sell it."
         },
         {
           "id": "p7",
@@ -576,8 +576,8 @@
           "player": "Dalley",
           "x": 280,
           "y": 230,
-          "role": "SEAL",
-          "job": "Seal the edge Archuletta is breaking to. Block the first man outside you and turn him in. Your block is the play."
+          "role": "FLOW",
+          "job": "Same as the other wing — go to the fake side, right behind him. Two men running one way is what makes them bite. Block whoever chases you."
         },
         {
           "id": "p8",
@@ -586,8 +586,8 @@
           "player": "Scott",
           "x": 140,
           "y": 230,
-          "role": "FAKE",
-          "job": "You are the fake. Cross in front of Archuletta, take the ball into your belly and run like you have it. The harder they chase you, the more grass he has."
+          "role": "FLOW",
+          "job": "Run to the fake side like you have the ball. You and the other wing going the same way is what sells it. The harder they chase you, the emptier the other side gets."
         },
         {
           "id": "p9",
@@ -597,7 +597,7 @@
           "x": 192,
           "y": 264,
           "role": "BALL",
-          "job": "The snap comes to you, not the punter. Ride the ball into Scott’s belly as he crosses, pull it back out, then break the other way behind Dalley and get the first down. Sell it with your eyes and shoulders, not just your hands."
+          "job": "The snap comes to you, not the punter. Show it hard to the wings going one way — eyes, shoulders, the whole thing — then pull it out and come out the back door the other side. Your gunner on that side is your escort. Do not turn upfield until you are past the numbers."
         },
         {
           "id": "p10",
@@ -610,184 +610,395 @@
           "job": "You never touch it. Sell the punt — catch nothing, take your steps and swing your leg. Do not look at Archuletta."
         }
       ],
-      "routes": [
+      "howItWorks": "A fake out of the base punt, and it has to look exactly like the punt until the ball is gone. The snap goes to Archuletta at protector. Both wings and the whole line flow one way, Archuletta shows them the ball going that way, and then he comes out the back door the other side and runs the sideline behind his gunner. The punter never touches it. The play is not the run — the play is that eleven of them chase the wrong side of the field. It runs either direction; the chips above the field pick which.",
+      "mirrorOf": "punt-return-purple-d",
+      "phase": "special",
+      "looks": [
         {
-          "playerId": "p5",
-          "points": [
+          "id": "left",
+          "name": "Ball left",
+          "how": "Scott and Dalley both run right and the line blocks right, so everything they can see is going that way. Archuletta shows them the ball going right, pulls it out and comes out the back door to the left, where Pace leads him up the sideline.",
+          "aim": {
+            "x": 38,
+            "y": 40,
+            "label": "ARCHULETTA — LEFT SIDELINE BEHIND PACE, TO THE END ZONE",
+            "from": ""
+          },
+          "routes": [
             {
-              "x": 376,
-              "y": 120
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 218,
+                  "y": 262
+                },
+                {
+                  "x": 168,
+                  "y": 274
+                },
+                {
+                  "x": 104,
+                  "y": 266
+                },
+                {
+                  "x": 56,
+                  "y": 226
+                },
+                {
+                  "x": 42,
+                  "y": 160
+                },
+                {
+                  "x": 36,
+                  "y": 86
+                },
+                {
+                  "x": 34,
+                  "y": 28
+                }
+              ]
             },
             {
-              "x": 358,
-              "y": 70
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 188,
+                  "y": 252
+                },
+                {
+                  "x": 250,
+                  "y": 244
+                },
+                {
+                  "x": 306,
+                  "y": 220
+                },
+                {
+                  "x": 348,
+                  "y": 182
+                }
+              ]
+            },
+            {
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 318,
+                  "y": 224
+                },
+                {
+                  "x": 352,
+                  "y": 194
+                },
+                {
+                  "x": 372,
+                  "y": 156
+                }
+              ]
+            },
+            {
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 52,
+                  "y": 154
+                },
+                {
+                  "x": 62,
+                  "y": 98
+                },
+                {
+                  "x": 66,
+                  "y": 46
+                }
+              ]
+            },
+            {
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 386,
+                  "y": 164
+                },
+                {
+                  "x": 392,
+                  "y": 122
+                }
+              ]
+            },
+            {
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 208,
+                  "y": 308
+                },
+                {
+                  "x": 212,
+                  "y": 282
+                }
+              ]
+            },
+            {
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 222,
+                  "y": 180
+                },
+                {
+                  "x": 230,
+                  "y": 168
+                }
+              ]
+            },
+            {
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 184,
+                  "y": 180
+                },
+                {
+                  "x": 192,
+                  "y": 168
+                }
+              ]
+            },
+            {
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 260,
+                  "y": 180
+                },
+                {
+                  "x": 268,
+                  "y": 168
+                }
+              ]
+            },
+            {
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 146,
+                  "y": 180
+                },
+                {
+                  "x": 154,
+                  "y": 170
+                }
+              ]
+            },
+            {
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 298,
+                  "y": 180
+                },
+                {
+                  "x": 306,
+                  "y": 170
+                }
+              ]
             }
           ]
         },
         {
-          "playerId": "p6",
-          "points": [
+          "id": "right",
+          "name": "Ball right",
+          "how": "The same play the other way. Scott and Dalley both run left and the line blocks left; Archuletta shows it left, pulls it out and comes out the back door to the right, up the sideline behind Grover.",
+          "aim": {
+            "x": 372,
+            "y": 40,
+            "label": "ARCHULETTA — RIGHT SIDELINE BEHIND GROVER, TO THE END ZONE",
+            "from": ""
+          },
+          "routes": [
             {
-              "x": 44,
-              "y": 120
+              "playerId": "p9",
+              "points": [
+                {
+                  "x": 166,
+                  "y": 262
+                },
+                {
+                  "x": 224,
+                  "y": 272
+                },
+                {
+                  "x": 290,
+                  "y": 264
+                },
+                {
+                  "x": 338,
+                  "y": 224
+                },
+                {
+                  "x": 352,
+                  "y": 158
+                },
+                {
+                  "x": 358,
+                  "y": 84
+                },
+                {
+                  "x": 360,
+                  "y": 26
+                }
+              ]
             },
             {
-              "x": 64,
-              "y": 70
-            }
-          ]
-        },
-        {
-          "playerId": "p9",
-          "points": [
-            {
-              "x": 178,
-              "y": 270
+              "playerId": "p7",
+              "points": [
+                {
+                  "x": 240,
+                  "y": 252
+                },
+                {
+                  "x": 178,
+                  "y": 244
+                },
+                {
+                  "x": 120,
+                  "y": 220
+                },
+                {
+                  "x": 76,
+                  "y": 182
+                }
+              ]
             },
             {
-              "x": 232,
-              "y": 266
+              "playerId": "p8",
+              "points": [
+                {
+                  "x": 104,
+                  "y": 224
+                },
+                {
+                  "x": 68,
+                  "y": 194
+                },
+                {
+                  "x": 48,
+                  "y": 156
+                }
+              ]
             },
             {
-              "x": 282,
-              "y": 242
+              "playerId": "p5",
+              "points": [
+                {
+                  "x": 368,
+                  "y": 154
+                },
+                {
+                  "x": 358,
+                  "y": 98
+                },
+                {
+                  "x": 354,
+                  "y": 46
+                }
+              ]
             },
             {
-              "x": 318,
-              "y": 188
+              "playerId": "p6",
+              "points": [
+                {
+                  "x": 34,
+                  "y": 164
+                },
+                {
+                  "x": 28,
+                  "y": 122
+                }
+              ]
             },
             {
-              "x": 326,
-              "y": 108
+              "playerId": "p10",
+              "points": [
+                {
+                  "x": 212,
+                  "y": 308
+                },
+                {
+                  "x": 208,
+                  "y": 282
+                }
+              ]
             },
             {
-              "x": 322,
-              "y": 40
-            }
-          ]
-        },
-        {
-          "playerId": "p8",
-          "points": [
-            {
-              "x": 176,
-              "y": 266
+              "playerId": "p0",
+              "points": [
+                {
+                  "x": 198,
+                  "y": 180
+                },
+                {
+                  "x": 190,
+                  "y": 168
+                }
+              ]
             },
             {
-              "x": 110,
-              "y": 274
+              "playerId": "p1",
+              "points": [
+                {
+                  "x": 236,
+                  "y": 180
+                },
+                {
+                  "x": 228,
+                  "y": 168
+                }
+              ]
             },
             {
-              "x": 52,
-              "y": 236
+              "playerId": "p2",
+              "points": [
+                {
+                  "x": 160,
+                  "y": 180
+                },
+                {
+                  "x": 152,
+                  "y": 168
+                }
+              ]
             },
             {
-              "x": 36,
-              "y": 158
-            }
-          ]
-        },
-        {
-          "playerId": "p7",
-          "points": [
-            {
-              "x": 300,
-              "y": 208
+              "playerId": "p3",
+              "points": [
+                {
+                  "x": 274,
+                  "y": 180
+                },
+                {
+                  "x": 266,
+                  "y": 170
+                }
+              ]
             },
             {
-              "x": 314,
-              "y": 170
-            }
-          ]
-        },
-        {
-          "playerId": "p10",
-          "points": [
-            {
-              "x": 208,
-              "y": 308
-            },
-            {
-              "x": 212,
-              "y": 282
-            }
-          ]
-        },
-        {
-          "playerId": "p0",
-          "points": [
-            {
-              "x": 212,
-              "y": 178
-            },
-            {
-              "x": 218,
-              "y": 164
-            }
-          ]
-        },
-        {
-          "playerId": "p2",
-          "points": [
-            {
-              "x": 174,
-              "y": 178
-            },
-            {
-              "x": 182,
-              "y": 160
-            }
-          ]
-        },
-        {
-          "playerId": "p1",
-          "points": [
-            {
-              "x": 246,
-              "y": 178
-            },
-            {
-              "x": 254,
-              "y": 160
-            }
-          ]
-        },
-        {
-          "playerId": "p4",
-          "points": [
-            {
-              "x": 136,
-              "y": 178
-            },
-            {
-              "x": 142,
-              "y": 160
-            }
-          ]
-        },
-        {
-          "playerId": "p3",
-          "points": [
-            {
-              "x": 300,
-              "y": 176
-            },
-            {
-              "x": 316,
-              "y": 148
+              "playerId": "p4",
+              "points": [
+                {
+                  "x": 122,
+                  "y": 180
+                },
+                {
+                  "x": 114,
+                  "y": 170
+                }
+              ]
             }
           ]
         }
-      ],
-      "howItWorks": "A fake out of the base punt, so it has to look exactly like the punt until the ball is gone. The snap goes to Archuletta at protector, not to the punter. Scott crosses in front of him and Archuletta rides the ball into his belly and pulls it back out — whichever way they chase Scott is the way they are wrong. Archuletta breaks back behind Dalley’s seal and runs for the first down. The punter never touches it.",
-      "aim": {
-        "x": 330,
-        "y": 126,
-        "label": "ARCHULETTA RUNS HERE — OUTSIDE DALLEY’S SEAL, GET THE STICKS",
-        "from": ""
-      },
-      "mirrorOf": "punt-return-purple-d",
-      "phase": "special"
+      ]
     },
     {
       "slug": "punt-return-purple-d",
