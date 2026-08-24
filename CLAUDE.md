@@ -35,7 +35,13 @@ it was broken once and cost him hours of re-entry. Treat them as hard constraint
    working as designed, and for a long time it left no way in at all: a play rewritten in
    the JSON simply never arrived on his device, and worse, a *renamed* look would arrive
    while its routes did not — so a look called "Ball left" sat there running right.
-   **Update this play from the playbook** is the escape hatch. It is a button press and
+   **The banner at the top of the page** is how he finds out: it compares each play
+   against the shipped fingerprint he last accepted — not against his own copy, so his own
+   edits never trigger it — names the plays the file has moved on, and offers one tap.
+   Answering it, either way, records what he saw so it never nags again until the file
+   actually changes. Buried in a section further down, the button may as well not exist;
+   that is where it was for a whole message and he never found it.
+   **Update this play from the playbook** is the same escape hatch, by hand. It is a button press and
    nothing else, never automatic and never on load: it replaces the alignment, routes,
    looks, target, lanes and jobs with the file's, keeps the play's name and carries his
    player names across by position label, and writes a `pre-update` snapshot first so

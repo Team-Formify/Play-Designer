@@ -71,6 +71,12 @@
   details.fold:not([open])>summary{margin-bottom:0}
   details.fold:not([open])>summary .fx::after{content:'Show'}
 
+  /* The playbook has moved on and his device has not. This is the only place that
+     says so; buried in a section further down, the button may as well not exist. */
+  #bookNews{margin:0 0 12px;padding:11px 13px;border-radius:8px;
+    border:1px solid var(--gold);background:rgba(227,181,71,.1)}
+  #bookNews p{margin:0 0 9px;font-size:14px;line-height:1.45}
+  body.gd #bookNews{display:none}
   #animBar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;align-items:center}
   #animBar input[type=range]{flex:1 1 100%;margin:2px 0 0;accent-color:var(--gold)}
   body.gd #animBar{display:none}
@@ -122,7 +128,7 @@
     /* #lookBar belongs here, not left to inherit: a new element outside this list
        prints, which is exactly how the game-day bar once leaked onto the screen.
        The book names the look in its page title instead. */
-    header,.bar,.hint,.row,.panel,.chips,#lookBar,#animBar,#schedLink,#learnLink,.sec{display:none!important}
+    header,.bar,.hint,.row,.panel,.chips,#lookBar,#animBar,#bookNews,#schedLink,#learnLink,.sec{display:none!important}
     html,body{background:#fff!important;color:#000!important}
     .wrap{max-width:none;padding:0}
     #printTitle{display:block!important;font-family:var(--display);font-weight:800;
@@ -314,6 +320,13 @@
 </div>
 
 <div class="wrap">
+  <div id="bookNews" hidden>
+    <p id="bookNewsTx"></p>
+    <div class="row">
+      <button class="btn gold" id="bookTake">Update them</button>
+      <button class="btn" id="bookSkip">Not now</button>
+    </div>
+  </div>
   <div id="printTitle"></div>
 
   <div class="bar" role="group" aria-label="Mode">
@@ -1253,11 +1266,11 @@ var STORE={
     return Promise.resolve();
   }
 };
-var BUILD=16;
+var BUILD=17;
 /* Bumped by hand whenever something ships. It is printed under the export buttons
    so "is it actually updating" can be answered by reading a number off the screen
    instead of guessing — which cost this project most of a session. */
-var BUILD_TAG='16 \u00b7 24 Aug';
+var BUILD_TAG='17 \u00b7 24 Aug';
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){
@@ -1434,7 +1447,40 @@ function paintAnim(){
   var sc=document.getElementById('animScrub');
   if(sc&&document.activeElement!==sc)sc.value=Math.round((ANIM?ANIM.t:0)*1000);
 }
-function draw(){ drawField(); paintLooks(); paintAnim(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays();
+/* Which plays the file has changed since he last took them. Compared against the
+   shipped fingerprint he last accepted, not against his own copy — so his own
+   edits never trigger it, and it stops asking once he has answered. */
+var bookSeen={};
+function bookBehind(){
+  var out=[];
+  Object.keys(plays).forEach(function(k){
+    var slug=slugFor(plays[k]), src=slug&&BY_SLUG[slug];
+    if(!src)return;
+    var shipped=playFingerprint(src);
+    if(bookSeen[slug]===shipped)return;          // he has already answered for this one
+    if(playFingerprint(plays[k])===shipped)return; // already identical, nothing to offer
+    out.push({key:k,slug:slug,name:plays[k].name,shipped:shipped});
+  });
+  return out;
+}
+function paintBookNews(){
+  var box=document.getElementById('bookNews'); if(!box)return;
+  var behind=bookBehind();
+  if(!behind.length){box.hidden=true;return;}
+  box.hidden=false;
+  var names=behind.map(function(b){return b.name;});
+  document.getElementById('bookNewsTx').innerHTML=
+    '<b>The playbook has a newer version of '+behind.length+
+    (behind.length===1?' play':' plays')+'.</b> '+esc(names.slice(0,4).join(', '))+
+    (names.length>4?' and '+(names.length-4)+' more':'')+
+    '. Updating replaces the routes, looks, target and jobs with the repo\u2019s and '+
+    'keeps your player names. A snapshot is saved first.';
+}
+function bookRemember(list){
+  list.forEach(function(b){ bookSeen[b.slug]=b.shipped; });
+  try{ STORE.set('pd-book-seen',JSON.stringify(bookSeen)).catch(function(){}); }catch(e){}
+}
+function draw(){ drawField(); paintLooks(); paintAnim(); paintBookNews(); paintRoster(); paintSel(); paintLineup(); paintGameDay(); paintPlays();
   paintFlags(); paintGrid(); paintSwap(); paintJobs(); paintGlossary(); }
 
 /* One chip per look. Hidden entirely on a unit that only has one, so the seven
@@ -2512,6 +2558,22 @@ function pullConfirm(names){
     'Your player names are kept, matched to their position.\n\n'+
     'A snapshot is saved first, so Restore puts it back.');
 }
+document.getElementById('bookTake').onclick=function(){
+  var behind=bookBehind();
+  if(!behind.length)return;
+  bakWrite(stateJSON(),'pre-update');
+  var kept=0, of=0;
+  behind.forEach(function(b){ var r=pullFromBook(plays[b.key]); if(r){kept+=r.kept;of+=r.of;} });
+  bookRemember(behind);
+  selId=null; routing=null; animStop();
+  save(); paintPlays(); draw();
+  alert(behind.length+(behind.length===1?' play is':' plays are')+
+        ' now the playbook version. '+kept+' of '+of+' names carried across.');
+};
+document.getElementById('bookSkip').onclick=function(){
+  bookRemember(bookBehind());
+  draw();
+};
 document.getElementById('pullOne').onclick=function(){
   var p=cur(), slug=slugFor(p);
   if(!slug||!BY_SLUG[slug]){alert('This play is not in the playbook, so there is nothing to take.');return;}
@@ -3132,6 +3194,10 @@ function downloadBackup(){
   var loaded=false, savedBuild=0, rawLoaded=null;
   try{
     {
+      try{
+        var bs=await STORE.get('pd-book-seen');
+        if(bs&&bs.value)bookSeen=JSON.parse(bs.value)||{};
+      }catch(e){ bookSeen={}; }
       var r=await STORE.get('pd-state');
       if(r&&r.value){
         var d=JSON.parse(r.value);
