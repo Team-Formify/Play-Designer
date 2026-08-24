@@ -476,6 +476,7 @@
     </div>
     <p class="count" id="srcNote"></p>
     <p class="count" id="repoNote"></p>
+    <p class="count" id="buildNote"></p>
 
     <div id="setupBox" hidden>
       <p class="setup-h">Turn on Save to repo &mdash; about four minutes, once</p>
@@ -1252,7 +1253,11 @@ var STORE={
     return Promise.resolve();
   }
 };
-var BUILD=15;
+var BUILD=16;
+/* Bumped by hand whenever something ships. It is printed under the export buttons
+   so "is it actually updating" can be answered by reading a number off the screen
+   instead of guessing — which cost this project most of a session. */
+var BUILD_TAG='16 \u00b7 24 Aug';
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){
@@ -2425,6 +2430,10 @@ document.getElementById('animScrub').oninput=function(e){
   showThem=true; paintThemBtns();
   paintAnim(); drawField();
 };
+(function(){
+  var el=document.getElementById('buildNote');
+  if(el)el.textContent='App build '+BUILD_TAG+'. If this is not the newest one, the page is cached — pull down to refresh.';
+})();
 document.getElementById('doDownload').onclick=downloadBackup;
 document.getElementById('doSource').onclick=function(){exportSource(true);};
 document.getElementById('doSourceCopy').onclick=function(){exportSource(false);};

@@ -467,6 +467,14 @@ Edits live in `localStorage` until they are pushed. Two things close that gap:
 ## Deploy
 
 Static. Vercel serves `index.html` at the root; `vercel.json` disables aggressive caching
-so a redeploy shows up immediately. Plays live in `localStorage` keyed to the deployed
+so a redeploy shows up immediately. **The no-cache header must be on `/(.*)`, not on
+`/index.html`** — `cleanUrls` is on, so he loads `/`, and a rule scoped to `/index.html`
+never matches it. That one line meant his phone was free to hold a stale page for a whole
+session while every push landed correctly. `/learn` had no rule at all.
+
+**Both pages print their build number** — under the export buttons in the coach's app, next
+to the back link on the boys' page. `BUILD_TAG` is bumped by hand when something ships.
+"Is it actually updating" is then a question he can answer by reading the screen, instead
+of me guessing; check it first, before anything else. Plays live in `localStorage` keyed to the deployed
 origin, so **replacing index.html does not touch the user's data** — that is the entire
 reason this is hosted rather than passed around as a file.
