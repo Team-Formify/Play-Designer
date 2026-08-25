@@ -98,7 +98,7 @@
   <h1>Learn <span>the Plays</span></h1>
   <select id="playSel" aria-label="Pick a play"></select>
   <a class="back" href="/" id="backLink">&#8592; Designer</a>
-  <span class="bld" id="buildNote">b17</span>
+  <span class="bld" id="buildNote">b18</span>
 </header>
 
 <div id="lookBar" role="group" aria-label="Which kick" hidden></div>
@@ -144,6 +144,225 @@
   </div>
 </div>
 
+<script id="play-engine">
+/* Generated from play-engine.js by scripts/sync-engine.js. Do not edit here —
+   edit play-engine.js and re-run it, or the two copies drift apart again. */
+/* play-engine.js — the shared geometry behind both apps.
+ *
+ * The coach's app and the boys' app were each carrying their own copy of this,
+ * and every fix had to be written twice. Four times in one day the second copy
+ * was the one that went wrong. This is the one source of truth for it.
+ *
+ * Pure functions only: no DOM, no storage, no knowledge of either page's data
+ * shapes. Each page passes plain numbers in and decorates what comes back.
+ *
+ * It is INLINED into index.html and learn.html by scripts/sync-engine.js, the
+ * same way special-teams-plays.json is, because a <script src> cannot be read
+ * when the page is opened as a downloaded file or run inside the artifact
+ * viewer. Edit this file, then run:
+ *
+ *     node scripts/sync-engine.js
+ *     node scripts/sync-engine.js --check     # exit 1 if they have drifted
+ *
+ * No dependencies, no build step. Running the app needs nothing.
+ */
+var PE = (function () {
+  var VBW = 420, VBH = 500;
+
+  /* ---------- curves ----------
+     Nobody runs in straight lines with corners on them. The stored points are
+     the shape of the run; these round them into one continuous path and sample
+     that same path, so a man runs along the line that is drawn rather than
+     cutting its corners. Two points stay a straight line, because that is what
+     a straight line is. */
+  var CURVE = 0.5;
+
+  function smoothD(pts) {
+    if (!pts || pts.length < 2) return '';
+    var d = 'M' + pts[0].x + ',' + pts[0].y;
+    if (pts.length === 2) return d + ' L' + pts[1].x + ',' + pts[1].y;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      d += ' C' + (p1.x + (p2.x - p0.x) / 6 * CURVE) + ',' + (p1.y + (p2.y - p0.y) / 6 * CURVE) +
+           ' ' + (p2.x - (p3.x - p1.x) / 6 * CURVE) + ',' + (p2.y - (p3.y - p1.y) / 6 * CURVE) +
+           ' ' + p2.x + ',' + p2.y;
+    }
+    return d;
+  }
+
+  function smoothPts(pts) {
+    if (!pts || pts.length < 3) return pts || [];
+    var out = [{ x: pts[0].x, y: pts[0].y }], STEP = 6;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      var c1x = p1.x + (p2.x - p0.x) / 6 * CURVE, c1y = p1.y + (p2.y - p0.y) / 6 * CURVE;
+      var c2x = p2.x - (p3.x - p1.x) / 6 * CURVE, c2y = p2.y - (p3.y - p1.y) / 6 * CURVE;
+      for (var k = 1; k <= STEP; k++) {
+        var u = k / STEP, v = 1 - u;
+        out.push({ x: v * v * v * p1.x + 3 * v * v * u * c1x + 3 * v * u * u * c2x + u * u * u * p2.x,
+                   y: v * v * v * p1.y + 3 * v * v * u * c1y + 3 * v * u * u * c2y + u * u * u * p2.y });
+      }
+    }
+    return out;
+  }
+
+  /* Where a man is when the clock reads t, along the whole path. */
+  function walk(pts, t) {
+    if (!pts || !pts.length) return { x: 0, y: 0 };
+    var segs = [], total = 0, i;
+    for (i = 1; i < pts.length; i++) {
+      var L = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      segs.push(L); total += L;
+    }
+    if (total <= 0) return pts[0];
+    var want = total * t, run = 0;
+    for (i = 0; i < segs.length; i++) {
+      if (run + segs[i] >= want) {
+        var f = segs[i] ? (want - run) / segs[i] : 0;
+        return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f,
+                 y: pts[i].y + (pts[i + 1].y - pts[i].y) * f };
+      }
+      run += segs[i];
+    }
+    return pts[pts.length - 1];
+  }
+
+  function rectsOverlap(a, b) {
+    return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
+  }
+
+  /* ---------- the other team ----------
+     A kickoff and a kick return are the two sides of the same snap, so the
+     likely opposing look on one IS the other: his own coached play, reflected
+     across the line of scrimmage and flipped left to right, because their left
+     is our right. Scaled so it fits the depth the host play has to spare.
+
+       host = {los, ours:[{x,y}]}
+       src  = {los, ours:[{id,x,y,...}], routes:[{playerId, points:[{x,y}]}]}
+
+     Returns {men:[{x,y,q,path}], routes:[{from,points}]}, where q is the source
+     player untouched — labels, lanes and jobs come along with him, which is what
+     lets the matchup be named instead of invented. */
+  function mid(list, key) {
+    return list.reduce(function (a, q) { return a + q[key]; }, 0) / (list.length || 1);
+  }
+
+  function mirror(host, src) {
+    var ho = host.ours || [], so = src.ours || [];
+    if (!ho.length || !so.length) return { men: [], routes: [] };
+    var sSgn = Math.sign(mid(so, 'y') - src.los) || 1;
+    var hSgn = -(Math.sign(mid(ho, 'y') - host.los) || 1);
+    var depth = Math.max.apply(null, so.map(function (q) { return Math.abs(q.y - src.los); })) || 1;
+    var room = (hSgn < 0 ? (host.los - 18) : (VBH - 18 - host.los));
+    var k = Math.min(1, Math.max(0.2, room / depth));
+    function M(x, y) { return { x: VBW - x, y: host.los + hSgn * ((y - src.los) * sSgn) * k }; }
+
+    var rt = {};
+    (src.routes || []).forEach(function (r) { rt[r.playerId] = r; });
+    var routes = [];
+    var men = so.map(function (q) {
+      var m = M(q.x, q.y);
+      m.q = q;
+      var r = rt[q.id];
+      m.path = [{ x: m.x, y: m.y }].concat(
+        (r && r.points) ? r.points.map(function (t) { return M(t.x, t.y); }) : []);
+      if (m.path.length > 1) routes.push({ from: m.path[0], points: m.path.slice(1) });
+      return m;
+    });
+    return { men: men, routes: routes };
+  }
+
+  /* ---------- who is across from whom ----------
+     Anything he has assigned by hand is the answer and takes its man off the
+     board first. Nearest-man is a fair guess on a kickoff and a poor one on a
+     return, where a wall man blocks the cover man arriving in his zone rather
+     than the one standing closest at the snap. Best pair first, so two of ours
+     cannot claim the same man while a third goes unmatched.
+
+       ours = [{id, x, y, covers}]        men = from mirror(), or stored X's
+       labelOf(man) -> the label to match `covers` against
+
+     Returns {ourId: {bi, assigned}}. */
+  function matchups(ours, men, labelOf) {
+    var out = {}, usedA = {}, usedB = {};
+    if (!men.length) return out;
+    labelOf = labelOf || function (m) { return (m.q && m.q.label) || m.label || ''; };
+
+    ours.forEach(function (a) {
+      if (!a.covers) return;
+      var bi = -1;
+      men.forEach(function (m, i) { if (bi < 0 && labelOf(m) === a.covers) bi = i; });
+      if (bi < 0 || usedB[bi]) return;   // a label renamed on the other play: fall back to auto
+      usedA[a.id] = 1; usedB[bi] = 1;
+      out[a.id] = { bi: bi, assigned: true };
+    });
+
+    var pairs = [];
+    ours.forEach(function (a) {
+      if (usedA[a.id]) return;
+      men.forEach(function (b, bi) {
+        if (usedB[bi]) return;
+        pairs.push({ a: a, bi: bi, d: Math.hypot(a.x - b.x, a.y - b.y) });
+      });
+    });
+    pairs.sort(function (x, y) { return x.d - y.d; });
+    pairs.forEach(function (pr) {
+      if (usedA[pr.a.id] || usedB[pr.bi]) return;
+      usedA[pr.a.id] = 1; usedB[pr.bi] = 1;
+      out[pr.a.id] = { bi: pr.bi, assigned: false };
+    });
+    return out;
+  }
+
+  /* ---------- where they collide ----------
+     Both men are walked down their own routes on one clock. The collision is the
+     first step where they are within touching distance AND somebody has actually
+     run there — a pair lined up across the ball starts inside touching distance,
+     and without that check the very first sample counts and both men freeze on
+     their own alignment without ever moving. A pair that never quite touches
+     counts at its closest approach, provided that is close enough to be a
+     collision and not two men passing on opposite sides of the field. A pair he
+     assigned himself always gets a mark, however far apart their routes keep
+     them: he has said this man takes that man, so a mark sitting off on its own
+     is the app telling him the route needs redrawing.
+
+       pairs = [{id, bi, assigned, ours:[pts], theirs:[pts]}]
+
+     Returns [{id, bi, assigned, t, a, b, d, x, y}] — a and b are where each man
+     stops, x/y the point between them. */
+  var TOUCH = 22, NEAR = 44, MOVED = 16;
+
+  function meets(pairs) {
+    var out = [];
+    (pairs || []).forEach(function (pr) {
+      var a = pr.ours || [], b = pr.theirs || [];
+      if (a.length < 2 && b.length < 2) return;   // nobody moves; there is no collision
+      var a0 = a[0], b0 = b[0], hit = null, near = null;
+      for (var i = 0; i <= 120; i++) {
+        var t = i / 120, pa = walk(a, t), pb = walk(b, t);
+        var gone = Math.hypot(pa.x - a0.x, pa.y - a0.y) + Math.hypot(pb.x - b0.x, pb.y - b0.y);
+        if (gone < MOVED) continue;
+        var d = Math.hypot(pa.x - pb.x, pa.y - pb.y);
+        if (!near || d < near.d) near = { t: t, a: pa, b: pb, d: d };
+        if (d <= TOUCH) { hit = { t: t, a: pa, b: pb, d: d }; break; }
+      }
+      var c = hit || ((near && (pr.assigned || near.d <= NEAR)) ? near : null);
+      if (!c) return;
+      out.push({ id: pr.id, bi: pr.bi, assigned: !!pr.assigned,
+                 t: c.t, a: c.a, b: c.b, d: c.d,
+                 x: (c.a.x + c.b.x) / 2, y: (c.a.y + c.b.y) / 2 });
+    });
+    return out;
+  }
+
+  return {
+    VBW: VBW, VBH: VBH, CURVE: CURVE,
+    MEET_TOUCH: TOUCH, MEET_NEAR: NEAR, MEET_MOVED: MOVED,
+    smoothD: smoothD, smoothPts: smoothPts, walk: walk, rectsOverlap: rectsOverlap,
+    mirror: mirror, matchups: matchups, meets: meets
+  };
+})();
+</script>
 <script>
 var NS='http://www.w3.org/2000/svg';
 function E(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
@@ -175,7 +394,6 @@ function look(p){
 /* The other team is one of the coach's own plays — a kickoff faces a kick return,
    a punt faces a punt return — reflected across the line and flipped left to right,
    because their left is our right. Derived, never stored. */
-function mid(list,key){return list.reduce(function(a,q){return a+q[key];},0)/(list.length||1);}
 var themCache=null, themKey='';
 function themOf(p){
   var key=(p&&p.slug)+'|'+lookIx;
@@ -187,50 +405,31 @@ function buildThem(p){
   var src=BY_SLUG[p.mirrorOf||''];
   var ho=ours(p), so=src?src.players.filter(function(q){return q.team==='us';}):[];
   if(!src||!ho.length||!so.length)return {men:[],routes:[],name:''};
-  var sLos=src.lineOfScrimmage, hLos=p.lineOfScrimmage;
-  var sSgn=Math.sign(mid(so,'y')-sLos)||1;
-  var hSgn=-(Math.sign(mid(ho,'y')-hLos)||1);
-  var depth=Math.max.apply(null,so.map(function(q){return Math.abs(q.y-sLos);}))||1;
-  var room=(hSgn<0?(hLos-18):(500-18-hLos));
-  var k=Math.min(1,Math.max(0.2,room/depth));
-  function M(x,y){return {x:420-x, y:hLos+hSgn*((y-sLos)*sSgn)*k};}
-  var byId={}; so.forEach(function(q){byId[q.id]=q;});
+  // the opposing play's first look; the boys' page does not pick theirs
   var sLook=(src.looks&&src.looks.length)?src.looks[0]:{routes:src.routes||[]};
-  var men=so.map(function(q){
-    var m=M(q.x,q.y);
-    var r=(sLook.routes||[]).filter(function(x){return x.playerId===q.id;})[0];
-    m.raw=[{x:m.x,y:m.y}].concat(r?r.points.map(function(t){return M(t.x,t.y);}):[]);
-    m.path=smoothPts(m.raw);
-    m.label=q.label||''; m.role=q.role||''; m.job=q.job||'';
-    return m;
+  var out=PE.mirror({los:p.lineOfScrimmage,ours:ho},
+                    {los:src.lineOfScrimmage,ours:so,routes:sLook.routes||[]});
+  out.men.forEach(function(m){
+    m.raw=[{x:m.x,y:m.y}].concat((m.path||[]).slice(1));
+    m.path=PE.smoothPts(m.raw);
+    m.label=(m.q&&m.q.label)||''; m.role=(m.q&&m.q.role)||''; m.job=(m.q&&m.q.job)||'';
   });
-  return {men:men,routes:men.filter(function(m){return m.path.length>1;}),name:src.name};
+  out.routes=out.men.filter(function(m){return m.path.length>1;});
+  out.name=src.name;
+  return out;
 }
 /* Who is across from each of ours, best pair first. */
 function matchups(p){
   var th=themOf(p), out={};
   if(!th.men.length)return out;
-  var pairs=[];
-  ours(p).forEach(function(a){ th.men.forEach(function(b,bi){
-    pairs.push({a:a,bi:bi,d:Math.hypot(a.x-b.x,a.y-b.y)}); }); });
-  pairs.sort(function(x,y){return x.d-y.d;});
-  var ua={},ub={};
-  // what the coach has assigned wins, and takes his man off the board
-  ours(p).forEach(function(a){
-    if(!a.covers)return;
-    var bi=-1;
-    th.men.forEach(function(m,i){ if(bi<0&&m.label===a.covers)bi=i; });
-    if(bi<0||ub[bi])return;
-    ua[a.id]=1; ub[bi]=1; out[a.id]=th.men[bi]; out[a.id].bi=bi; out[a.id].assigned=true;
-  });
-  pairs.forEach(function(pr){
-    if(ua[pr.a.id]||ub[pr.bi])return;
-    ua[pr.a.id]=1; ub[pr.bi]=1;
-    out[pr.a.id]=th.men[pr.bi]; out[pr.a.id].bi=pr.bi; out[pr.a.id].assigned=false;
+  var pairs=PE.matchups(ours(p),th.men,function(m){return m.label||'';});
+  Object.keys(pairs).forEach(function(id){
+    var m=th.men[pairs[id].bi];
+    m.bi=pairs[id].bi; m.assigned=pairs[id].assigned;
+    out[id]=m;
   });
   return out;
 }
-
 /* Where each pair actually meets. Two men who are matched up run their own routes
    until they come together; that spot is the block, or the tackle, and it is the
    thing the boys need to see. Walk both paths on the same clock, take the first
@@ -238,54 +437,27 @@ function matchups(p){
    take their closest approach — provided it is close enough to be a collision and
    not two men passing on opposite sides of the field. Once a pair has met, both
    stop there for the rest of the run. */
-var MEET_TOUCH=22, MEET_NEAR=44, MEET_MOVED=16;
 var meetCache=null, meetKey='';
 function meets(p){
   var key=(p&&p.slug)+'|'+lookIx;
   if(meetKey===key&&meetCache)return meetCache;
   meetKey=key;
   var out={us:{},them:{},list:[]};
-  var th=themOf(p), mu=matchups(p);
+  var th=themOf(p), mu=matchups(p), pairs=[], mine={};
   ours(p).forEach(function(q){
     var m=mu[q.id]; if(!m||!th.men.length)return;
-    var a=pathOf(p,q), b=m.path;
-    if(a.total<=0&&b.length<2)return;      // nobody is moving; there is no collision
-    /* A meeting only counts once somebody has run to it. Two men lined up across
-       the ball start inside touching distance, and without this they both freeze
-       on their own alignment at the snap and never move. */
-    var hit=null, near=null, a0=a.pts[0], b0=b[0];
-    for(var i=0;i<=120;i++){
-      var t=i/120, pa=atT(a,t), pb=segAt(b,t);
-      var gone=Math.hypot(pa.x-a0.x,pa.y-a0.y)+Math.hypot(pb.x-b0.x,pb.y-b0.y);
-      if(gone<MEET_MOVED)continue;
-      var d=Math.hypot(pa.x-pb.x,pa.y-pb.y);
-      if(!near||d<near.d)near={t:t,a:pa,b:pb,d:d};
-      if(d<=MEET_TOUCH){hit={t:t,a:pa,b:pb,d:d};break;}
-    }
-    // a pair the coach assigned always gets a meeting point, however far apart
-    // their routes keep them; a pair matched by proximity has to actually close
-    var c=hit||((near&&(m.assigned||near.d<=MEET_NEAR))?near:null);
-    if(!c)return;
-    c.mine=q; c.his=m;
-    c.x=(c.a.x+c.b.x)/2; c.y=(c.a.y+c.b.y)/2;
-    out.us[q.id]=c; out.them[m.bi]=c; out.list.push(c);
+    mine[q.id]={q:q,m:m};
+    pairs.push({id:q.id,bi:m.bi,assigned:m.assigned,
+      ours:pathOf(p,q).pts, theirs:m.path});
+  });
+  PE.meets(pairs).forEach(function(c){
+    var e=mine[c.id];
+    c.mine=e.q; c.his=e.m;
+    out.us[c.id]=c; out.them[c.bi]=c; out.list.push(c);
   });
   meetCache=out;
   return out;
 }
-function segAt(path,t){
-  var segs=[],total=0,i;
-  for(i=1;i<path.length;i++){var L=Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y);segs.push(L);total+=L;}
-  if(total<=0)return path[0];
-  var want=total*t,run=0;
-  for(i=0;i<segs.length;i++){
-    if(run+segs[i]>=want){var f=segs[i]?(want-run)/segs[i]:0;
-      return {x:path[i].x+(path[i+1].x-path[i].x)*f,y:path[i].y+(path[i+1].y-path[i].y)*f};}
-    run+=segs[i];
-  }
-  return path[path.length-1];
-}
-
 /* Same fit as the coach's app, same cap, so a cluster does not blow up. */
 function computeView(p,extra){
   var xs=[],ys=[],c;
@@ -366,39 +538,9 @@ function placeLabels(people){
 }
 
 /* ---- path helpers, used by the animation ---- */
-/* Same curve as the coach's app: the points are the shape of the run, and this
-   rounds them so a route bends the way a boy actually runs it. */
-var CURVE=0.5;
-function smoothD(pts){
-  if(!pts||pts.length<2)return '';
-  var d='M'+pts[0].x+','+pts[0].y;
-  if(pts.length===2)return d+' L'+pts[1].x+','+pts[1].y;
-  for(var i=0;i<pts.length-1;i++){
-    var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
-    d+=' C'+(p1.x+(p2.x-p0.x)/6*CURVE)+','+(p1.y+(p2.y-p0.y)/6*CURVE)+
-       ' '+(p2.x-(p3.x-p1.x)/6*CURVE)+','+(p2.y-(p3.y-p1.y)/6*CURVE)+
-       ' '+p2.x+','+p2.y;
-  }
-  return d;
-}
-function smoothPts(pts){
-  if(!pts||pts.length<3)return pts||[];
-  var out=[{x:pts[0].x,y:pts[0].y}], STEP=6;
-  for(var i=0;i<pts.length-1;i++){
-    var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||pts[i+1];
-    var c1x=p1.x+(p2.x-p0.x)/6*CURVE, c1y=p1.y+(p2.y-p0.y)/6*CURVE;
-    var c2x=p2.x-(p3.x-p1.x)/6*CURVE, c2y=p2.y-(p3.y-p1.y)/6*CURVE;
-    for(var k=1;k<=STEP;k++){
-      var u=k/STEP, v=1-u;
-      out.push({x:v*v*v*p1.x+3*v*v*u*c1x+3*v*u*u*c2x+u*u*u*p2.x,
-                y:v*v*v*p1.y+3*v*v*u*c1y+3*v*u*u*c2y+u*u*u*p2.y});
-    }
-  }
-  return out;
-}
 function pathOf(p,q){
   var r=(look(p).routes||[]).filter(function(x){return x.playerId===q.id;})[0];
-  var pts=smoothPts([{x:q.x,y:q.y}].concat((r&&r.points)?r.points:[]));
+  var pts=PE.smoothPts([{x:q.x,y:q.y}].concat((r&&r.points)?r.points:[]));
   var segs=[],total=0;
   for(var i=1;i<pts.length;i++){
     var L=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
@@ -406,19 +548,7 @@ function pathOf(p,q){
   }
   return {pts:pts,segs:segs,total:total};
 }
-function atT(path,t){
-  if(path.total<=0)return path.pts[0];
-  var want=path.total*t, run=0;
-  for(var i=0;i<path.segs.length;i++){
-    if(run+path.segs[i]>=want){
-      var f=path.segs[i]?(want-run)/path.segs[i]:0, a=path.pts[i], b=path.pts[i+1];
-      return {x:a.x+(b.x-a.x)*f, y:a.y+(b.y-a.y)*f};
-    }
-    run+=path.segs[i];
-  }
-  return path.pts[path.pts.length-1];
-}
-
+function atT(path,t){ return PE.walk(path.pts,t); }
 /* ---- render ---- */
 function drawField(opts){
   opts=opts||{};
@@ -444,7 +574,7 @@ function drawField(opts){
     (look(p).routes||[]).forEach(function(r){
       var q=p.players.filter(function(z){return z.id===r.playerId;})[0];
       if(!q||!r.points.length)return;
-      svg.appendChild(E('path',{d:smoothD([{x:q.x,y:q.y}].concat(r.points)),fill:'none',
+      svg.appendChild(E('path',{d:PE.smoothD([{x:q.x,y:q.y}].concat(r.points)),fill:'none',
         stroke:'#E3B547','stroke-opacity':.28,'stroke-width':2,
         'stroke-linecap':'round','stroke-linejoin':'round'}));
     });
@@ -525,12 +655,12 @@ function drawField(opts){
     });
     TH.men.forEach(function(m,bi){
       if(m.path.length>1){
-        svg.appendChild(E('path',{d:smoothD(m.raw||m.path),fill:'none',stroke:'#EDEBE0',
+        svg.appendChild(E('path',{d:PE.smoothD(m.raw||m.path),fill:'none',stroke:'#EDEBE0',
           'stroke-opacity':.16,'stroke-width':1.5,'stroke-linecap':'round',
           'stroke-linejoin':'round','stroke-dasharray':'5 4'}));
       }
       var mc=MT.them[bi];
-      var at=(mc&&tt>=mc.t)?mc.b:segAt(m.path,tt);
+      var at=(mc&&tt>=mc.t)?mc.b:PE.walk(m.path,tt);
       var on=opts.beat&&opts.beat===m;
       [[-7,-7,7,7],[-7,7,7,-7]].forEach(function(dd){
         svg.appendChild(E('line',{x1:at.x+dd[0],y1:at.y+dd[1],x2:at.x+dd[2],y2:at.y+dd[3],

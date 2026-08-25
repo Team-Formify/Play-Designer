@@ -189,6 +189,17 @@ bug, but this app was built for men spread across a field.
 
 Vanilla JS, SVG, no dependencies, no build.
 
+**One engine, two pages.** `play-engine.js` holds the shared geometry — the curves,
+walking a path on a clock, the mirror that derives the other team, the matchup pairing and
+the collision search. Both pages used to carry their own copy and every fix had to be
+written twice; four times in one day the second copy was the one that went wrong. It is
+pure: no DOM, no storage, no knowledge of either page's data shapes, so each page passes
+plain numbers in and decorates what comes back. `scripts/sync-engine.js` inlines it into
+the `<script id="play-engine">` block in both files — same pattern as the play data, and
+for the same reason (a `<script src>` cannot be read from a downloaded file or the artifact
+viewer); `--check` exits non-zero on drift. Because it is a real file it also has real
+tests: `node scripts/test-engine.js` runs the geometry in Node with no browser.
+
 **Plays are data.** `special-teams-plays.json` is the source of truth — edit it, push,
 and the app changes with no code edit. `index.html` also carries a byte-identical copy
 in a `<script type="application/json" id="play-data">` block, because `fetch()` cannot
@@ -376,8 +387,11 @@ used by the Mirror button — reuse it, don't hand-roll.
 ## What to fix first
 
 ~~Split data from code.~~ Done. `PRESETS` is gone; plays load from
-`special-teams-plays.json` and `buildPlay()` is pure. `play-diagram.js` is still in the
-repo as a standalone renderer for printed cards and is not yet wired into the app.
+`special-teams-plays.json` and `buildPlay()` is pure. `play-diagram.js` is **gone** — it was
+a standalone renderer that was never wired in and had fallen four features behind (it knew
+nothing about looks, target marks, the mirrored opposition, matchups, collisions or
+curves). Anyone opening this repo would reasonably have taken it for the engine.
+`play-engine.js` is the real one.
 
 **Then, roughly in value order:**
 
