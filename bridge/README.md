@@ -15,6 +15,8 @@ and nowhere to put a collision. This adds the model without changing a drawing.
 | `playEngine.ts` | The geometry, ported from `play-engine.js` in this repo. Pure — no DOM, no React, no imports. Curves, walking a path on a clock, matchup pairing, contact points. |
 | `sceneToPlay.ts` | The bridge. Turns the planner's `PlayScene` into what the engine needs. About a hundred lines, and most of that is comments. |
 | `prove.ts` | Runs the whole pipeline end to end and reports. Not shipped — it exists to answer "does this work on real diagrams" from outside their repo. |
+| `build-combined.mjs` | Builds `combined.html` — both playbooks in one page, one engine. Reads his `diagramArt.ts` and `diagrams.ts` off a local checkout; converts our plays into his SVG format so there is one data model. |
+| `combined-shell.html` | The page it fills in. Picker, filters, Run it, matchups, the teaching panel. Ships empty — the playbook is injected at build. |
 | `fixtures/` | One diagram in the planner's exact SVG format, generated from **our** Offense — Base and Defense — Purple. See the note on artwork below. |
 
 ## Why it is small
@@ -35,6 +37,25 @@ Two things the artwork gives us for free:
   blocked, so `coversFromBlocks()` reads that pairing straight off the drawing
   rather than guessing at it. Everyone else pairs by distance, and a coach can
   override any of it.
+
+## Both books in one app
+
+```bash
+node bridge/build-combined.mjs ../8th-grade-practice-planner
+```
+
+Writes `bridge/combined.html`: our 19 special teams looks and 90 of his plays
+behind one picker, drawn by one engine, every one of them runnable with matchups
+and contact points. His diagrams are **read, not redrawn** — the artwork that comes
+out is the artwork that went in, and `Original` shows it untouched. Ours are
+written out in his format, which is where the two books actually meet.
+
+Our plays don't store an opposing eleven — they name the play they face and the
+app reflects it across the ball at draw time. His format has both sides in the
+picture, so the mirror is resolved once, at build.
+
+**The output is gitignored and must stay that way.** It carries his artwork and
+this repo is public.
 
 ## Running it
 
@@ -59,6 +80,6 @@ format, which exercises the same code paths.
 
 ## What it does not do yet
 
-No rendering and no React. The next piece is a component that draws a scene on a
-field and plays it — that belongs in their repo, in their tokens, and it should be
-written there rather than guessed at from a zip.
+No React. `combined-shell.html` proves the whole thing works on his real book, but
+it is vanilla — the next piece is the same behaviour as a component in his tokens,
+and that should be written in his repo rather than guessed at from a zip.
