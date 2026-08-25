@@ -15,8 +15,8 @@ and nowhere to put a collision. This adds the model without changing a drawing.
 | `playEngine.ts` | The geometry, ported from `play-engine.js` in this repo. Pure — no DOM, no React, no imports. Curves, walking a path on a clock, matchup pairing, contact points. |
 | `sceneToPlay.ts` | The bridge. Turns the planner's `PlayScene` into what the engine needs. About a hundred lines, and most of that is comments. |
 | `prove.ts` | Runs the whole pipeline end to end and reports. Not shipped — it exists to answer "does this work on real diagrams" from outside their repo. |
-| `build-combined.mjs` | Builds `combined.html` — both playbooks in one page, one engine. Reads his `diagramArt.ts` and `diagrams.ts` off a local checkout; converts our plays into his SVG format so there is one data model. |
-| `combined-shell.html` | The page it fills in. Picker, filters, Run it, matchups, the teaching panel. Ships empty — the playbook is injected at build. |
+| `build-combined.mjs` | Builds `combined.html`. Reads his `diagramArt.ts` and `diagrams.ts` off a local checkout, converts our plays into his SVG format, and fills in the shell. |
+| `combined-shell.html` | **His app**, reproduced from his own `globals.css` and `PlaybookGrid` — navy bar, call-sheet rows, three-tap viewer — with Run it, Matchups and Edit added to it. Ships empty; the playbook is injected at build. |
 | `fixtures/` | One diagram in the planner's exact SVG format, generated from **our** Offense — Base and Defense — Purple. See the note on artwork below. |
 
 ## Why it is small
@@ -38,21 +38,41 @@ Two things the artwork gives us for free:
   rather than guessing at it. Everyone else pairs by distance, and a coach can
   override any of it.
 
-## Both books in one app
+## His app, with the field code threaded in
 
 ```bash
 node bridge/build-combined.mjs ../8th-grade-practice-planner
 ```
 
-Writes `bridge/combined.html`: our 19 special teams looks and 90 of his plays
-behind one picker, drawn by one engine, every one of them runnable with matchups
-and contact points. His diagrams are **read, not redrawn** — the artwork that comes
-out is the artwork that went in, and `Original` shows it untouched. Ours are
-written out in his format, which is where the two books actually meet.
+**His app is the app.** His navy bar and nav, his tokens straight out of
+`src/app/globals.css`, his call-sheet rows, his section headings, his three-tap
+path — list, play, card — and his `‹ ›` viewer nav. None of it is
+reinterpreted. `Original` drops his exact generated SVG on screen, arrowhead
+markers and all.
 
-Our plays don't store an opposing eleven — they name the play they face and the
-app reflects it across the ball at draw time. His format has both sides in the
-picture, so the mirror is resolved once, at build.
+What the special teams designer adds, and all it adds:
+
+| | |
+|---|---|
+| **Run it** | every play walks its own routes on one clock — his too, which they have never done |
+| **Matchups** | who takes whom, and the ring where they actually meet |
+| **Edit** | drag a man and the pairings and contact points follow him |
+| **Special teams** | Dom's kicking units, threaded into *his* list as one more section between THE CORE and EVERYTHING ELSE — not a second app, not a second picker |
+
+Two things had to give to fit his format, and both are recorded here because
+they are the parts a reader would otherwise call bugs:
+
+- **A punt is not a 2:1 picture.** His box is 920×460, right for a snap from
+  scrimmage. The punter stands fourteen yards back, so our plays size the box to
+  the play — his width, whatever height the play needs — or the punter is simply
+  cut off the bottom.
+- **Our plays don't store an opposing eleven.** They name the play they face and
+  reflect it across the ball at draw time. His pictures hold both sides, so the
+  mirror is resolved once, at build.
+
+Edits are kept per play in `localStorage` as a nudge against a man, never
+written back to his artwork — the same shape as the diffs his own `playScene.ts`
+keeps. **Undo my moves** puts one play back and touches no other.
 
 **The output is gitignored and must stay that way.** It carries his artwork and
 this repo is public.

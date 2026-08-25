@@ -41,22 +41,58 @@ function objectAfter(src, marker) {
 const art = objectAfter(readFileSync(join(root, "src/lib/diagramArt.ts"), "utf8"), "DIAGRAM_SVG");
 const meta = objectAfter(readFileSync(join(root, "src/lib/diagrams.ts"), "utf8"), "DIAGRAMS");
 
-/* title and caption live in the metadata, keyed by diagram id inside groups */
+/* title and caption live in the metadata, keyed by diagram id inside groups.
+   The group name is his baseKey, which is what CORE_EIGHT matches on. */
 const byId = {};
-for (const group of Object.values(meta)) {
-  for (const d of group) byId[d.id] = d;
+for (const [group, arr] of Object.entries(meta)) {
+  for (const d of arr) byId[d.id] = { ...d, baseKey: group };
 }
 
-const his = Object.keys(art)
-  .filter((k) => /data-man="D:/.test(art[k]))
-  .map((k) => ({ k, routes: (art[k].match(/data-role="route"/g) || []).length }))
-  .sort((a, b) => b.routes - a.routes)          // the ones with the most to watch, first
-  .slice(0, HOW_MANY)
-  .map(({ k }) => ({
-    id: k, side: "his", svg: art[k],
-    title: byId[k]?.title || k,
-    caption: byId[k]?.caption || "",
-  }));
+/* His arrowhead markers. Every diagram references them by url(#arN); without
+   them the untouched artwork draws its routes with no points on the end. Taken
+   from his file rather than redrawn, same as everything else of his. */
+const defsSrc = readFileSync(join(root, "src/lib/diagrams.ts"), "utf8");
+const defs = JSON.parse(
+  defsSrc.slice(defsSrc.indexOf('"', defsSrc.indexOf("DIAGRAM_DEFS")),
+                defsSrc.indexOf(";", defsSrc.indexOf("DIAGRAM_DEFS"))).trim(),
+);
+
+/* THE CORE, straight out of src/lib/playbook.ts. Matched on baseKey + side +
+   formation, never on the call string — same rule his own code follows. */
+const CORE_EIGHT = [
+  ["run-12-13-power", "Right", "trey"],   ["run-12-13-power", "Left", "trey"],
+  ["run-14-15-counter", "Right", "denver"], ["run-14-15-counter", "Left", "denver"],
+  ["run-20-21-zone", "Right", "denver"],  ["run-20-21-zone", "Left", "denver"],
+  ["run-28-29-stretch", "Right", "denver"], ["run-28-29-stretch", "Left", "denver"],
+];
+const isCore = (d) =>
+  CORE_EIGHT.some(([k, side, form]) =>
+    d.baseKey === k && d.side === side && d.formation === form);
+
+const KIND = { run: "RUN", pass: "PASS", screen: "SCREEN", boot: "BOOT",
+               formation: "FORMATION", reference: "REFERENCE" };
+
+const withBoth = Object.keys(art).filter((k) => /data-man="D:/.test(art[k]));
+const routesIn = (k) => (art[k].match(/data-role="route"/g) || []).length;
+
+/* The core eight always come, whatever else does. The rest fill the quota by
+   how much there is to watch — a play with more routes shows more of what the
+   engine now does with them. */
+const core = withBoth.filter((k) => byId[k] && isCore(byId[k]));
+const rest = withBoth.filter((k) => !core.includes(k))
+  .sort((a, b) => routesIn(b) - routesIn(a))
+  .slice(0, Math.max(0, HOW_MANY - core.length));
+
+const his = [...core, ...rest].map((k) => {
+  const d = byId[k] || {};
+  return {
+    id: k, side: "his", section: core.includes(k) ? "core" : "rest",
+    call: d.title || k,
+    meta: KIND[d.kind] || (d.kind || "").toUpperCase(),
+    caption: d.caption || "",
+    svg: art[k],
+  };
+});
 
 /* ── our side, written out in his format ──────────────────────────────────── */
 
@@ -89,31 +125,43 @@ function toSvg(play, look) {
   const los = play.lineOfScrimmage;
   const routes = look ? look.routes : play.routes || [];
   const men = [], lines = [];
+  /* His field box is 920x460 — a 2:1 picture, which is the right shape for a
+     snap from scrimmage. A punt is not that shape: the punter stands fourteen
+     yards back and the coverage runs forty downfield, so the box has to grow to
+     the play or the punter is simply cut off the bottom. Width stays his; only
+     the vertical extent follows the play. */
+  const ys = [];
+  const seen = (cy) => { ys.push(cy); return cy; };
 
   for (const m of opponentOf(play).men) {
     const id = `D:${m.q.label || "X"}`;
-    const cx = X(m.x), cy = Y(m.y, los);
+    const cx = X(m.x), cy = seen(Y(m.y, los));
     men.push(`<g data-man="${id}"><rect x="${cx - 11}" y="${cy - 11}" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="${cx}" y="${cy + 4}" fill="#c1121f">${m.q.label || ""}</text></g>`);
     if (!m.path || m.path.length < 2) continue;
-    const d = `M${cx},${cy} ` + m.path.slice(1).map((t) => `L${X(t.x)},${Y(t.y, los)}`).join(" ");
+    const d = `M${cx},${cy} ` + m.path.slice(1).map((t) => `L${X(t.x)},${seen(Y(t.y, los))}`).join(" ");
     lines.push(`<path d="${d}" stroke="#c1121f" stroke-width="2.2" fill="none" marker-end="url(#arR)" data-owner="${id}" data-role="route"/>`);
   }
 
   for (const p of play.players) {
     const them = p.team === "them";
     const id = them ? `D:${p.label || "X"}` : (p.label || "?");
-    const cx = X(p.x), cy = Y(p.y, los);
+    const cx = X(p.x), cy = seen(Y(p.y, los));
     men.push(them
       ? `<g data-man="${id}"><rect x="${cx - 11}" y="${cy - 11}" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="${cx}" y="${cy + 4}" fill="#c1121f">${p.label || ""}</text></g>`
       : `<g data-man="${id}"><circle cx="${cx}" cy="${cy}" r="11" fill="#e8edf7" stroke="#0b2545" stroke-width="2.4"/><text x="${cx}" y="${cy + 4}" fill="#0b2545">${p.label || ""}</text></g>`);
     const r = routes.find((z) => z.playerId === p.id);
     if (!r || !r.points.length) continue;
-    const d = `M${cx},${cy} ` + r.points.map((t) => `L${X(t.x)},${Y(t.y, los)}`).join(" ");
+    const d = `M${cx},${cy} ` + r.points.map((t) => `L${X(t.x)},${seen(Y(t.y, los))}`).join(" ");
     lines.push(`<path d="${d}" stroke="#0b2545" stroke-width="2.6" fill="none" marker-end="url(#arN)" data-owner="${id}" data-role="route"/>`);
   }
   const L = Y(los, los);
-  return `<svg viewBox="0 0 920 460" role="img" aria-label="${play.name}" text-anchor="middle" style="font:800 10px system-ui">` +
-    `<rect x="0" y="0" width="920" height="460" fill="#fbfcfe"/>` + men.join("") +
+  ys.push(L);
+  const PAD = 26;
+  const y0 = Math.round(Math.min(0, Math.min(...ys) - PAD));
+  const y1 = Math.round(Math.max(460, Math.max(...ys) + PAD));
+  const h = y1 - y0;
+  return `<svg viewBox="0 ${y0} 920 ${h}" role="img" aria-label="${play.name}" text-anchor="middle" style="font:800 10px system-ui">` +
+    `<rect x="0" y="${y0}" width="920" height="${h}" fill="#fbfcfe"/>` + men.join("") +
     `<line x1="28" y1="${L}" x2="892" y2="${L}" stroke="#0b2545" stroke-width="2.2"/>` +
     lines.join("") + `</svg>`;
 }
@@ -126,12 +174,15 @@ for (const play of book.plays) {
     for (const p of play.players) {
       if (p.team !== "them" && p.label) jobs[p.label] = { role: p.role || "", job: p.job || "" };
     }
+    const svg = toSvg(play, look);
     ours.push({
       id: play.slug + (look ? ":" + look.id : ""),
       side: "ours",
-      title: play.name + (look ? " — " + look.name : ""),
+      section: "special",
+      call: (play.name + (look ? " \u2014 " + look.name : "")).toUpperCase(),
+      meta: (play.phase === "special" || !play.phase) ? "SPECIAL" : play.phase.toUpperCase(),
       caption: [play.howItWorks, look?.how, look?.aim?.label].filter(Boolean).join(" "),
-      svg: toSvg(play, look),
+      svg,
       jobs,
     });
   }
@@ -139,7 +190,7 @@ for (const play of book.plays) {
 
 /* ── write it ─────────────────────────────────────────────────────────────── */
 
-const data = JSON.stringify({ plays: [...ours, ...his] });
+const data = JSON.stringify({ defs, plays: [...his, ...ours] });
 if (data.includes("</script")) {
   console.error('The play data contains "</script" and would break out of the tag. Refusing.');
   process.exit(1);
@@ -152,6 +203,6 @@ const out = shell.replace(
 );
 writeFileSync("bridge/combined.html", out);
 
-console.log(`combined.html — ${ours.length} of ours, ${his.length} of his, ` +
+console.log(`combined.html — ${his.length} of his (${core.length} core), ${ours.length} of ours, ` +
             `${Math.round(out.length / 1024)} KB`);
 console.log("NOT committed: it carries his artwork and this repo is public.");

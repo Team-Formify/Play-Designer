@@ -18,7 +18,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const SRC = path.join(root, 'play-engine.js');
-const PAGES = ['index.html', 'learn.html', 'bridge/demo.html'];
+const PAGES = ['index.html', 'learn.html', 'bridge/demo.html', 'bridge/combined-shell.html'];
 const OPEN = '<script id="play-engine">';
 const CLOSE = '</script>';
 
@@ -79,5 +79,5 @@ if (check && drifted.length) {
 
 const lines = engine.trimEnd().split('\n').length;
 console.log(wrote.length
-  ? `Synced — ${lines} lines of engine into ${wrote.join(' and ')}.`
-  : `In sync — ${lines} lines of engine in both pages.`);
+  ? `Synced — ${lines} lines of engine into ${wrote.join(', ')}.`
+  : `In sync — ${lines} lines of engine across ${PAGES.length} pages.`);
