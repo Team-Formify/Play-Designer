@@ -1,0 +1,607 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Planner plays, running</title>
+<!--
+  A working demo of the bridge: one of the practice planner's diagrams, read as
+  data and played on a clock, with the matchups and the contact points our engine
+  works out from it.
+
+  It ships with a safe fixture — OUR Offense — Base against Defense — Purple,
+  written out in the planner's SVG format. His artwork is password-protected, so
+  none of it is in here.
+
+  To see HIS plays run: tap "Open a diagram file" and pick his
+  src/lib/diagramArt.ts off your own machine. It is read in the browser and never
+  uploaded anywhere.
+
+  No dependencies, no build. Open it and it works.
+-->
+<style>
+  :root{
+    --grass:#1D3A31; --deep:#13251F; --chalk:#EDEBE0; --gold:#E3B547;
+    --hot:#E58A6B; --soft:#8FA69C; --edge:rgba(237,235,224,.18);
+    --navy:#9BB8DC;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; background:var(--deep); color:var(--chalk);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-text-size-adjust:100%}
+  .wrap{max-width:760px; margin:0 auto; padding:14px 14px 46px}
+  header{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px}
+  h1{font-size:19px; margin:0; letter-spacing:.01em; font-weight:800;
+    text-transform:uppercase}
+  h1 span{color:var(--gold)}
+  .sub{color:var(--soft); font-size:13px; margin:2px 0 14px; line-height:1.5}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+  .row{display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:9px}
+  button,select,label.file{
+    font:inherit; font-size:14px; padding:9px 13px; border-radius:7px; cursor:pointer;
+    border:1px solid var(--edge); background:transparent; color:var(--chalk);
+    -webkit-tap-highlight-color:transparent}
+  button.gold{background:var(--gold); border-color:var(--gold); color:#20180a; font-weight:700}
+  button[aria-pressed="true"]{border-color:var(--gold); color:var(--gold)}
+  button:focus-visible,select:focus-visible,label.file:focus-within{outline:2px solid var(--gold);
+    outline-offset:2px}
+  select{max-width:240px}
+  input[type=file]{display:none}
+  input[type=range]{flex:1 1 100%; accent-color:var(--gold); margin:2px 0 0}
+
+  .fieldbox{background:var(--grass); border-radius:9px; overflow:hidden;
+    border:1px solid var(--edge)}
+  svg{display:block; width:100%; height:auto}
+  .orig{background:#fbfcfe; border-radius:9px; overflow:hidden; border:1px solid var(--edge)}
+  .orig svg{width:100%; height:auto}
+
+  .note{margin:12px 0 0; font-size:13.5px; line-height:1.55; color:var(--soft)}
+  .note b{color:var(--chalk)}
+  .tally{display:flex; gap:14px; flex-wrap:wrap; margin:11px 0 0; font-size:13px; color:var(--soft)}
+  .tally b{color:var(--gold); font-variant-numeric:tabular-nums}
+  .pairs{margin:11px 0 0; font-size:13px; line-height:1.75; color:var(--soft)}
+  .pairs code{font-family:ui-monospace,Menlo,monospace; color:var(--chalk); font-size:12.5px}
+  .warn{color:var(--hot)}
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <header><h1>Planner plays, <span>running</span></h1></header>
+  <p class="sub">One of the practice planner's diagrams, read as data and played on a clock &mdash;
+  with who blocks whom and where they meet, worked out from the drawing itself. Nothing is redrawn.</p>
+
+  <div class="row">
+    <select id="pick" aria-label="Which play"></select>
+    <label class="file" tabindex="0">Open a diagram file
+      <input type="file" id="file" accept=".ts,.js,.json,.txt">
+    </label>
+  </div>
+
+  <div class="row">
+    <button class="gold" id="play">&#9654; Run it</button>
+    <button id="slow">Slow</button>
+    <button id="again">Again</button>
+    <button id="marks" aria-pressed="true">Matchups</button>
+    <button id="orig" aria-pressed="false">Original</button>
+    <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Scrub the play">
+  </div>
+
+  <div class="fieldbox" id="box"><svg id="field" viewBox="0 0 920 460" role="img"
+    aria-label="Play diagram"></svg></div>
+  <div class="orig" id="origBox" hidden></div>
+
+  <div class="tally" id="tally"></div>
+  <div class="pairs" id="pairs"></div>
+  <p class="note" id="note"></p>
+</div>
+
+<script type="application/json" id="fixture">{"base-right-vs-4-3":"<svg viewBox=\"0 0 920 460\" role=\"img\" aria-label=\"BASE RIGHT vs 4-3\" text-anchor=\"middle\" style=\"font:800 10px system-ui\"><rect x=\"0\" y=\"0\" width=\"920\" height=\"460\" fill=\"#fbfcfe\"/><g data-man=\"D:LDE\"><rect x=\"305.4\" y=\"323.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"316.4\" y=\"338.8\" fill=\"#c1121f\">LDE</text></g><g data-man=\"D:LDT\"><rect x=\"405.5\" y=\"323.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"416.5\" y=\"338.8\" fill=\"#c1121f\">LDT</text></g><g data-man=\"D:RDT\"><rect x=\"492.5\" y=\"323.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"503.5\" y=\"338.8\" fill=\"#c1121f\">RDT</text></g><g data-man=\"D:RDE\"><rect x=\"612.2\" y=\"323.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"623.2\" y=\"338.8\" fill=\"#c1121f\">RDE</text></g><g data-man=\"D:WILL\"><rect x=\"318.5\" y=\"397.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"329.5\" y=\"412.8\" fill=\"#c1121f\">WILL</text></g><g data-man=\"D:MIKE\"><rect x=\"449\" y=\"397.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"460\" y=\"412.8\" fill=\"#c1121f\">MIKE</text></g><g data-man=\"D:SAM\"><rect x=\"592.6\" y=\"397.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"603.6\" y=\"412.8\" fill=\"#c1121f\">SAM</text></g><g data-man=\"D:LCB\"><rect x=\"135.7\" y=\"380.4\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"146.7\" y=\"395.4\" fill=\"#c1121f\">LCB</text></g><g data-man=\"D:RCB\"><rect x=\"771\" y=\"380.4\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"782\" y=\"395.4\" fill=\"#c1121f\">RCB</text></g><g data-man=\"D:SS\"><rect x=\"583.9\" y=\"497.8\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"594.9\" y=\"512.8\" fill=\"#c1121f\">SS</text></g><g data-man=\"D:FS\"><rect x=\"375\" y=\"524\" width=\"22\" height=\"22\" rx=\"3\" fill=\"#fff\" stroke=\"#c1121f\" stroke-width=\"2.2\"/><text x=\"386\" y=\"539\" fill=\"#c1121f\">FS</text></g><g data-man=\"X\"><circle cx=\"125\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"125\" y=\"304\" fill=\"#0b2545\">X</text></g><g data-man=\"LT\"><circle cx=\"342.5\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"342.5\" y=\"304\" fill=\"#0b2545\">LT</text></g><g data-man=\"LG\"><circle cx=\"401.3\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"401.3\" y=\"304\" fill=\"#0b2545\">LG</text></g><g data-man=\"C\"><circle cx=\"460\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"460\" y=\"304\" fill=\"#0b2545\">C</text></g><g data-man=\"RG\"><circle cx=\"518.7\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"518.7\" y=\"304\" fill=\"#0b2545\">RG</text></g><g data-man=\"RT\"><circle cx=\"577.5\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"577.5\" y=\"304\" fill=\"#0b2545\">RT</text></g><g data-man=\"Y\"><circle cx=\"636.2\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"636.2\" y=\"304\" fill=\"#0b2545\">Y</text></g><g data-man=\"Z\"><circle cx=\"795\" cy=\"300\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"795\" y=\"304\" fill=\"#0b2545\">Z</text></g><g data-man=\"QB\"><circle cx=\"460\" cy=\"352.2\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"460\" y=\"356.2\" fill=\"#0b2545\">QB</text></g><g data-man=\"F\"><circle cx=\"403.4\" cy=\"408.8\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"403.4\" y=\"412.8\" fill=\"#0b2545\">F</text></g><g data-man=\"H\"><circle cx=\"460\" cy=\"456.6\" r=\"11\" fill=\"#e8edf7\" stroke=\"#0b2545\" stroke-width=\"2.4\"/><text x=\"460\" y=\"460.6\" fill=\"#0b2545\">H</text></g><line x1=\"28\" y1=\"300\" x2=\"892\" y2=\"300\" stroke=\"#0b2545\" stroke-width=\"2.2\"/><text text-anchor=\"start\" x=\"32\" y=\"293\" fill=\"#475569\">LOS</text><path d=\"M316.4,334.8 L307.7,295.6 L303.4,265.2\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:LDE\" data-role=\"route\"/><path d=\"M416.5,334.8 L425.2,295.6 L438.2,269.5\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:LDT\" data-role=\"route\"/><path d=\"M503.5,334.8 L512.2,295.6 L525.3,269.5\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:RDT\" data-role=\"route\"/><path d=\"M623.2,334.8 L631.9,295.6 L636.2,265.2\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:RDE\" data-role=\"route\"/><path d=\"M329.5,408.8 L373,356.6 L412.1,308.7\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:WILL\" data-role=\"route\"/><path d=\"M460,408.8 L481.8,356.6 L516.6,304.4\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:MIKE\" data-role=\"route\"/><path d=\"M603.6,408.8 L612.3,356.6 L625.3,304.4\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:SAM\" data-role=\"route\"/><path d=\"M146.7,391.4 L177.2,339.2 L216.3,295.6\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:LCB\" data-role=\"route\"/><path d=\"M782,391.4 L751.5,339.2 L712.4,295.6\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:RCB\" data-role=\"route\"/><path d=\"M594.9,508.8 L581.8,426.2 L551.4,352.2\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:SS\" data-role=\"route\"/><path d=\"M386,535 L420.8,452.3 L468.7,378.3\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"D:FS\" data-role=\"route\"/><path d=\"M125,300 L142.4,221.7 L164.1,165.1\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"X\" data-role=\"route\"/><path d=\"M342.5,300 L357.8,273.9 L370.8,252.1\" stroke=\"#0b2545\" stroke-width=\"3\" fill=\"none\" data-owner=\"LT\" data-role=\"block\" data-term=\"tee\"/><path d=\"M401.3,300 L420.8,273.9 L438.2,252.1\" stroke=\"#0b2545\" stroke-width=\"3\" fill=\"none\" data-owner=\"LG\" data-role=\"block\" data-term=\"tee\"/><path d=\"M460,300 L481.8,273.9 L501.3,252.1\" stroke=\"#0b2545\" stroke-width=\"3\" fill=\"none\" data-owner=\"C\" data-role=\"block\" data-term=\"tee\"/><path d=\"M518.7,300 L542.7,273.9 L562.2,252.1\" stroke=\"#0b2545\" stroke-width=\"3\" fill=\"none\" data-owner=\"RG\" data-role=\"block\" data-term=\"tee\"/><path d=\"M577.5,300 L601.4,273.9 L621,252.1\" stroke=\"#0b2545\" stroke-width=\"3\" fill=\"none\" data-owner=\"RT\" data-role=\"block\" data-term=\"tee\"/><path d=\"M636.2,300 L660.1,282.6 L681.9,265.2\" stroke=\"#0b2545\" stroke-width=\"3\" fill=\"none\" data-owner=\"Y\" data-role=\"block\" data-term=\"tee\"/><path d=\"M795,300 L777.6,221.7 L755.9,165.1\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"Z\" data-role=\"route\"/><path d=\"M460,352.2 L425.2,369.6 L377.3,391.4\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"QB\" data-role=\"route\"/><path d=\"M403.4,408.8 L460,347.9 L525.3,286.9 L542.7,239.1\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"F\" data-role=\"route\"/><path d=\"M460,456.6 L477.4,400.1 L525.3,326.1 L560.1,256.5 L573.1,186.9\" stroke=\"#0b2545\" stroke-width=\"2.6\" fill=\"none\" marker-end=\"url(#arN)\" data-owner=\"H\" data-role=\"route\"/></svg>"}</script>
+
+<script id="play-engine">
+/* Generated from play-engine.js by scripts/sync-engine.js. Do not edit here —
+   edit play-engine.js and re-run it, or the two copies drift apart again. */
+/* play-engine.js — the shared geometry behind both apps.
+ *
+ * The coach's app and the boys' app were each carrying their own copy of this,
+ * and every fix had to be written twice. Four times in one day the second copy
+ * was the one that went wrong. This is the one source of truth for it.
+ *
+ * Pure functions only: no DOM, no storage, no knowledge of either page's data
+ * shapes. Each page passes plain numbers in and decorates what comes back.
+ *
+ * It is INLINED into index.html and learn.html by scripts/sync-engine.js, the
+ * same way special-teams-plays.json is, because a <script src> cannot be read
+ * when the page is opened as a downloaded file or run inside the artifact
+ * viewer. Edit this file, then run:
+ *
+ *     node scripts/sync-engine.js
+ *     node scripts/sync-engine.js --check     # exit 1 if they have drifted
+ *
+ * No dependencies, no build step. Running the app needs nothing.
+ */
+var PE = (function () {
+  var VBW = 420, VBH = 500;
+
+  /* ---------- curves ----------
+     Nobody runs in straight lines with corners on them. The stored points are
+     the shape of the run; these round them into one continuous path and sample
+     that same path, so a man runs along the line that is drawn rather than
+     cutting its corners. Two points stay a straight line, because that is what
+     a straight line is. */
+  var CURVE = 0.5;
+
+  function smoothD(pts) {
+    if (!pts || pts.length < 2) return '';
+    var d = 'M' + pts[0].x + ',' + pts[0].y;
+    if (pts.length === 2) return d + ' L' + pts[1].x + ',' + pts[1].y;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      d += ' C' + (p1.x + (p2.x - p0.x) / 6 * CURVE) + ',' + (p1.y + (p2.y - p0.y) / 6 * CURVE) +
+           ' ' + (p2.x - (p3.x - p1.x) / 6 * CURVE) + ',' + (p2.y - (p3.y - p1.y) / 6 * CURVE) +
+           ' ' + p2.x + ',' + p2.y;
+    }
+    return d;
+  }
+
+  function smoothPts(pts) {
+    if (!pts || pts.length < 3) return pts || [];
+    var out = [{ x: pts[0].x, y: pts[0].y }], STEP = 6;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      var c1x = p1.x + (p2.x - p0.x) / 6 * CURVE, c1y = p1.y + (p2.y - p0.y) / 6 * CURVE;
+      var c2x = p2.x - (p3.x - p1.x) / 6 * CURVE, c2y = p2.y - (p3.y - p1.y) / 6 * CURVE;
+      for (var k = 1; k <= STEP; k++) {
+        var u = k / STEP, v = 1 - u;
+        out.push({ x: v * v * v * p1.x + 3 * v * v * u * c1x + 3 * v * u * u * c2x + u * u * u * p2.x,
+                   y: v * v * v * p1.y + 3 * v * v * u * c1y + 3 * v * u * u * c2y + u * u * u * p2.y });
+      }
+    }
+    return out;
+  }
+
+  /* Where a man is when the clock reads t, along the whole path. */
+  function walk(pts, t) {
+    if (!pts || !pts.length) return { x: 0, y: 0 };
+    var segs = [], total = 0, i;
+    for (i = 1; i < pts.length; i++) {
+      var L = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      segs.push(L); total += L;
+    }
+    if (total <= 0) return pts[0];
+    var want = total * t, run = 0;
+    for (i = 0; i < segs.length; i++) {
+      if (run + segs[i] >= want) {
+        var f = segs[i] ? (want - run) / segs[i] : 0;
+        return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f,
+                 y: pts[i].y + (pts[i + 1].y - pts[i].y) * f };
+      }
+      run += segs[i];
+    }
+    return pts[pts.length - 1];
+  }
+
+  function rectsOverlap(a, b) {
+    return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
+  }
+
+  /* ---------- the other team ----------
+     A kickoff and a kick return are the two sides of the same snap, so the
+     likely opposing look on one IS the other: his own coached play, reflected
+     across the line of scrimmage and flipped left to right, because their left
+     is our right. Scaled so it fits the depth the host play has to spare.
+
+       host = {los, ours:[{x,y}]}
+       src  = {los, ours:[{id,x,y,...}], routes:[{playerId, points:[{x,y}]}]}
+
+     Returns {men:[{x,y,q,path}], routes:[{from,points}]}, where q is the source
+     player untouched — labels, lanes and jobs come along with him, which is what
+     lets the matchup be named instead of invented. */
+  function mid(list, key) {
+    return list.reduce(function (a, q) { return a + q[key]; }, 0) / (list.length || 1);
+  }
+
+  function mirror(host, src) {
+    var ho = host.ours || [], so = src.ours || [];
+    if (!ho.length || !so.length) return { men: [], routes: [] };
+    var sSgn = Math.sign(mid(so, 'y') - src.los) || 1;
+    var hSgn = -(Math.sign(mid(ho, 'y') - host.los) || 1);
+    var depth = Math.max.apply(null, so.map(function (q) { return Math.abs(q.y - src.los); })) || 1;
+    var room = (hSgn < 0 ? (host.los - 18) : (VBH - 18 - host.los));
+    var k = Math.min(1, Math.max(0.2, room / depth));
+    function M(x, y) { return { x: VBW - x, y: host.los + hSgn * ((y - src.los) * sSgn) * k }; }
+
+    var rt = {};
+    (src.routes || []).forEach(function (r) { rt[r.playerId] = r; });
+    var routes = [];
+    var men = so.map(function (q) {
+      var m = M(q.x, q.y);
+      m.q = q;
+      var r = rt[q.id];
+      m.path = [{ x: m.x, y: m.y }].concat(
+        (r && r.points) ? r.points.map(function (t) { return M(t.x, t.y); }) : []);
+      if (m.path.length > 1) routes.push({ from: m.path[0], points: m.path.slice(1) });
+      return m;
+    });
+    return { men: men, routes: routes };
+  }
+
+  /* ---------- who is across from whom ----------
+     Anything he has assigned by hand is the answer and takes its man off the
+     board first. Nearest-man is a fair guess on a kickoff and a poor one on a
+     return, where a wall man blocks the cover man arriving in his zone rather
+     than the one standing closest at the snap. Best pair first, so two of ours
+     cannot claim the same man while a third goes unmatched.
+
+       ours = [{id, x, y, covers}]        men = from mirror(), or stored X's
+       labelOf(man) -> the label to match `covers` against
+
+     Returns {ourId: {bi, assigned}}. */
+  function matchups(ours, men, labelOf) {
+    var out = {}, usedA = {}, usedB = {};
+    if (!men.length) return out;
+    labelOf = labelOf || function (m) { return (m.q && m.q.label) || m.label || ''; };
+
+    ours.forEach(function (a) {
+      if (!a.covers) return;
+      var bi = -1;
+      men.forEach(function (m, i) { if (bi < 0 && labelOf(m) === a.covers) bi = i; });
+      if (bi < 0 || usedB[bi]) return;   // a label renamed on the other play: fall back to auto
+      usedA[a.id] = 1; usedB[bi] = 1;
+      out[a.id] = { bi: bi, assigned: true };
+    });
+
+    var pairs = [];
+    ours.forEach(function (a) {
+      if (usedA[a.id]) return;
+      men.forEach(function (b, bi) {
+        if (usedB[bi]) return;
+        pairs.push({ a: a, bi: bi, d: Math.hypot(a.x - b.x, a.y - b.y) });
+      });
+    });
+    pairs.sort(function (x, y) { return x.d - y.d; });
+    pairs.forEach(function (pr) {
+      if (usedA[pr.a.id] || usedB[pr.bi]) return;
+      usedA[pr.a.id] = 1; usedB[pr.bi] = 1;
+      out[pr.a.id] = { bi: pr.bi, assigned: false };
+    });
+    return out;
+  }
+
+  /* ---------- where they collide ----------
+     Both men are walked down their own routes on one clock. The collision is the
+     first step where they are within touching distance AND somebody has actually
+     run there — a pair lined up across the ball starts inside touching distance,
+     and without that check the very first sample counts and both men freeze on
+     their own alignment without ever moving. A pair that never quite touches
+     counts at its closest approach, provided that is close enough to be a
+     collision and not two men passing on opposite sides of the field. A pair he
+     assigned himself always gets a mark, however far apart their routes keep
+     them: he has said this man takes that man, so a mark sitting off on its own
+     is the app telling him the route needs redrawing.
+
+       pairs = [{id, bi, assigned, ours:[pts], theirs:[pts]}]
+
+     Returns [{id, bi, assigned, t, a, b, d, x, y}] — a and b are where each man
+     stops, x/y the point between them. */
+  var TOUCH = 22, NEAR = 44, MOVED = 16;
+
+  function meets(pairs) {
+    var out = [];
+    (pairs || []).forEach(function (pr) {
+      var a = pr.ours || [], b = pr.theirs || [];
+      if (a.length < 2 && b.length < 2) return;   // nobody moves; there is no collision
+      var a0 = a[0], b0 = b[0], hit = null, near = null;
+      for (var i = 0; i <= 120; i++) {
+        var t = i / 120, pa = walk(a, t), pb = walk(b, t);
+        var gone = Math.hypot(pa.x - a0.x, pa.y - a0.y) + Math.hypot(pb.x - b0.x, pb.y - b0.y);
+        if (gone < MOVED) continue;
+        var d = Math.hypot(pa.x - pb.x, pa.y - pb.y);
+        if (!near || d < near.d) near = { t: t, a: pa, b: pb, d: d };
+        if (d <= TOUCH) { hit = { t: t, a: pa, b: pb, d: d }; break; }
+      }
+      var c = hit || ((near && (pr.assigned || near.d <= NEAR)) ? near : null);
+      if (!c) return;
+      out.push({ id: pr.id, bi: pr.bi, assigned: !!pr.assigned,
+                 t: c.t, a: c.a, b: c.b, d: c.d,
+                 x: (c.a.x + c.b.x) / 2, y: (c.a.y + c.b.y) / 2 });
+    });
+    return out;
+  }
+
+  return {
+    VBW: VBW, VBH: VBH, CURVE: CURVE,
+    MEET_TOUCH: TOUCH, MEET_NEAR: NEAR, MEET_MOVED: MOVED,
+    smoothD: smoothD, smoothPts: smoothPts, walk: walk, rectsOverlap: rectsOverlap,
+    mirror: mirror, matchups: matchups, meets: meets
+  };
+})();
+</script>
+
+<script>
+/* ── reading the planner's artwork ─────────────────────────────────────────────
+   Their own playScene.ts does this properly, with byte-identical round-tripping.
+   This is the small version, enough to prove the pipeline outside their repo. */
+var NUM=/-?\d*\.?\d+/g;
+function segsFromD(d){
+  var cmds=d.match(/[MLQC][^MLQCZ]*/g);
+  if(!cmds||cmds[0][0]!=='M')return null;
+  var f=cmds[0].match(NUM); if(!f||f.length<2)return null;
+  var pts=[{x:+f[0],y:+f[1]}];
+  for(var i=1;i<cmds.length;i++){
+    var n=(cmds[i].match(NUM)||[]).map(Number), k=cmds[i][0];
+    if(k==='L'&&n.length>=2)pts.push({x:n[0],y:n[1]});
+    else if(k==='Q'&&n.length>=4)pts.push({x:n[2],y:n[3]});
+    else if(k==='C'&&n.length>=6)pts.push({x:n[4],y:n[5]});
+    else return null;                 // an unexpected command stays read-only
+  }
+  return pts;
+}
+function readScene(svg){
+  var men=[],lines=[],seen={},m;
+  var G=/<g data-man="([^"]+)">([\s\S]*?)<\/g>/g;
+  while((m=G.exec(svg))){
+    var base=m[1],inner=m[2],at=null;
+    var c=inner.match(/<circle cx="([-\d.]+)" cy="([-\d.]+)"/);
+    var r=inner.match(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([-\d.]+)" height="([-\d.]+)"/);
+    if(c)at={x:+c[1],y:+c[2]};
+    else if(r)at={x:+r[1]+ +r[3]/2, y:+r[2]+ +r[4]/2};
+    if(!at)continue;
+    var n=seen[base]||0; seen[base]=n+1;
+    men.push({id:base+'#'+n, label:base.replace(/^D:/,''), x:at.x, y:at.y,
+              side:base.indexOf('D:')===0?'defense':'offense'});
+  }
+  var E=/<(path|line)\s([^>]*)\/>/g;
+  while((m=E.exec(svg))){
+    var a=m[2], owner=(a.match(/data-owner="([^"]+)"/)||[])[1];
+    if(!owner)continue;
+    var term=(a.match(/data-term="([^"]+)"/)||[])[1]
+             ||(a.indexOf('marker-end')>=0?'arrow':'none');
+    var pts=null;
+    if(m[1]==='line'){
+      var g=function(k){return +(a.match(new RegExp(k+'="([-\\d.]+)"'))||[])[1];};
+      var x1=g('x1'),y1=g('y1'),x2=g('x2'),y2=g('y2');
+      if([x1,y1,x2,y2].some(isNaN))continue;
+      pts=[{x:x1,y:y1},{x:x2,y:y2}];
+    }else{
+      var d=(a.match(/(?:^|\s)d="([^"]+)"/)||[])[1];
+      pts=d?segsFromD(d):null;
+    }
+    if(!pts)continue;
+    lines.push({owner:owner, role:(a.match(/data-role="([^"]+)"/)||[])[1]||'', term:term, pts:pts});
+  }
+  return {men:men,lines:lines};
+}
+
+/* ── the bridge ──────────────────────────────────────────────────────────────
+   A tee ends ON the man being blocked, so that assignment is read off the
+   drawing. Everyone else pairs by distance. */
+var BLOCK_REACH=26;
+function sceneToPlay(sc){
+  var defs=sc.men.filter(function(m){return m.side==='defense';});
+  var covers={};
+  sc.lines.forEach(function(l){
+    if(l.term!=='tee'||!l.owner||!defs.length)return;
+    var end=l.pts[l.pts.length-1], best=null;
+    defs.forEach(function(d){
+      var dist=Math.hypot(end.x-d.x,end.y-d.y);
+      if(!best||dist<best.d)best={id:d.id,d:dist};
+    });
+    if(best&&best.d<=BLOCK_REACH)covers[l.owner]=best.id;
+  });
+  var byOwner={};
+  sc.lines.forEach(function(l){
+    if(!l.owner||l.term==='none')return;
+    if(!byOwner[l.owner]||l.term==='arrow')byOwner[l.owner]=l;
+  });
+  function build(m){
+    var base=m.id.split('#')[0];
+    var line=byOwner[m.id]||byOwner[base];
+    var raw=line?[{x:m.x,y:m.y}].concat(line.pts.slice(1)):[{x:m.x,y:m.y}];
+    return {id:m.id,label:m.label,side:m.side,x:m.x,y:m.y,
+            covers:covers[m.id]||covers[base]||'', path:PE.smoothPts(raw), raw:raw};
+  }
+  return {offense:sc.men.filter(function(m){return m.side==='offense';}).map(build),
+          defense:sc.men.filter(function(m){return m.side==='defense';}).map(build)};
+}
+function assignments(play){
+  var pairs=PE.matchups(play.offense,play.defense,function(d){return d.id;});
+  var list=[];
+  Object.keys(pairs).forEach(function(id){
+    var o=play.offense.filter(function(m){return m.id===id;})[0];
+    var d=play.defense[pairs[id].bi];
+    list.push({id:id,bi:pairs[id].bi,assigned:pairs[id].assigned,ours:o.path,theirs:d.path});
+  });
+  return {pairs:pairs, contacts:PE.meets(list)};
+}
+
+/* ── drawing ─────────────────────────────────────────────────────────────── */
+var NS='http://www.w3.org/2000/svg';
+function E(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+var svg=document.getElementById('field');
+var BOOK={}, curKey='', scene=null, play=null, work=null, T=0, playing=false, speed=1, raf=null;
+var showMarks=true, showOrig=false;
+
+function los(){ // the planner draws its line of scrimmage as a long horizontal rule
+  var m=(BOOK[curKey]||'').match(/<line x1="28" y1="([-\d.]+)"/);
+  return m?+m[1]:300;
+}
+function viewBox(){
+  var m=(BOOK[curKey]||'').match(/viewBox="([^"]+)"/);
+  return m?m[1]:'0 0 920 460';
+}
+function posOf(m){
+  var c=work&&work.byId[m.id];
+  if(c&&T>=c.t)return c.side==='offense'?c.a:c.b;
+  return PE.walk(m.path,T);
+}
+function draw(){
+  if(!play)return;
+  svg.innerHTML='';
+  svg.setAttribute('viewBox',viewBox());
+  var vb=viewBox().split(' ').map(Number);
+
+  // field
+  svg.appendChild(E('rect',{x:vb[0],y:vb[1],width:vb[2],height:vb[3],fill:'#1D3A31'}));
+  for(var y=vb[1];y<vb[1]+vb[3];y+=32)
+    svg.appendChild(E('line',{x1:vb[0],x2:vb[0]+vb[2],y1:y,y2:y,
+      stroke:'#EDEBE0','stroke-opacity':.07}));
+  var L=los();
+  svg.appendChild(E('line',{x1:vb[0],x2:vb[0]+vb[2],y1:L,y2:L,
+    stroke:'#E3B547','stroke-width':2,'stroke-dasharray':'8 5','stroke-opacity':.75}));
+
+  // routes, as curves
+  [].concat(play.offense,play.defense).forEach(function(m){
+    if(m.raw.length<2)return;
+    var them=m.side==='defense';
+    svg.appendChild(E('path',{d:PE.smoothD(m.raw),fill:'none',
+      stroke:them?'#EDEBE0':'#E3B547','stroke-opacity':them?.22:.5,
+      'stroke-width':them?2:2.4,'stroke-linecap':'round','stroke-linejoin':'round',
+      'stroke-dasharray':them?'6 5':''}));
+  });
+
+  // where they meet
+  if(showMarks&&work)work.contacts.forEach(function(c){
+    var here=T>=c.t;
+    svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:here?13:11,
+      fill:here?'rgba(229,138,107,.22)':'none',stroke:'#E58A6B',
+      'stroke-opacity':here?.95:.42,'stroke-width':here?2.4:1.4,
+      'stroke-dasharray':here?'':'4 3'}));
+    if(here)svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:3,fill:'#E58A6B'}));
+  });
+
+  // the men
+  play.defense.forEach(function(m){
+    var p=posOf(m);
+    svg.appendChild(E('rect',{x:p.x-11,y:p.y-11,width:22,height:22,rx:3,
+      fill:'rgba(19,37,31,.5)',stroke:'#EDEBE0','stroke-opacity':.55,'stroke-width':2}));
+    var t=E('text',{x:p.x,y:p.y+4,'text-anchor':'middle',fill:'#EDEBE0','fill-opacity':.75,
+      'font-family':'ui-monospace,Menlo,monospace','font-size':9.5});
+    t.textContent=m.label; svg.appendChild(t);
+  });
+  play.offense.forEach(function(m){
+    var p=posOf(m);
+    svg.appendChild(E('circle',{cx:p.x,cy:p.y,r:12,fill:'rgba(19,37,31,.6)',
+      stroke:'#E3B547','stroke-width':2.2}));
+    var t=E('text',{x:p.x,y:p.y+3.6,'text-anchor':'middle',fill:'#E3B547',
+      'font-family':'ui-monospace,Menlo,monospace','font-size':9.5});
+    t.textContent=m.label; svg.appendChild(t);
+  });
+}
+
+function build(){
+  scene=readScene(BOOK[curKey]||'');
+  play=sceneToPlay(scene);
+  var a=assignments(play);
+  var byId={};
+  a.contacts.forEach(function(c){
+    byId[play.offense.filter(function(m){return m.id===c.id;})[0].id]={t:c.t,a:c.a,b:c.b,side:'offense'};
+    byId[play.defense[c.bi].id]={t:c.t,a:c.a,b:c.b,side:'defense'};
+  });
+  work={pairs:a.pairs, contacts:a.contacts, byId:byId};
+
+  var movers=[].concat(play.offense,play.defense)
+    .filter(function(m){return m.raw.length>1;}).length;
+  var drawn=play.offense.filter(function(m){return m.covers;}).length;
+  document.getElementById('tally').innerHTML=
+    '<span><b>'+play.offense.length+'</b> v <b>'+play.defense.length+'</b> on the field</span>'+
+    '<span><b>'+movers+'</b> with a route</span>'+
+    '<span><b>'+Object.keys(a.pairs).length+'</b> matched up</span>'+
+    '<span><b>'+a.contacts.length+'</b> collisions</span>'+
+    (drawn?'<span><b>'+drawn+'</b> read off the block tees</span>':'');
+
+  document.getElementById('pairs').innerHTML=a.contacts.slice(0,8).map(function(c){
+    var o=play.offense.filter(function(m){return m.id===c.id;})[0], d=play.defense[c.bi];
+    return '<code>'+o.label+' &rarr; '+d.label+'</code> '+
+           (c.assigned?'drawn':'nearest')+', meets at '+Math.round(c.t*100)+'%';
+  }).join('<br>');
+
+  document.getElementById('origBox').innerHTML=BOOK[curKey]||'';
+  T=0; playing=false; setScrub(); paint(); draw();
+}
+
+function setScrub(){ document.getElementById('scrub').value=Math.round(T*1000); }
+function paint(){
+  document.getElementById('play').innerHTML=playing?'&#10073;&#10073; Pause':'&#9654; Run it';
+  document.getElementById('slow').textContent=speed<1?'Normal':'Slow';
+  document.getElementById('marks').setAttribute('aria-pressed',showMarks);
+  document.getElementById('orig').setAttribute('aria-pressed',showOrig);
+  document.getElementById('box').hidden=showOrig;
+  document.getElementById('origBox').hidden=!showOrig;
+}
+var last=null;
+function tick(ts){
+  if(!playing)return;
+  if(last===null)last=ts;
+  T+=(ts-last)/1000/(2.6/speed); last=ts;
+  if(T>=1){T=1;playing=false;}
+  setScrub(); paint(); draw();
+  if(playing)raf=requestAnimationFrame(tick);
+}
+
+document.getElementById('play').onclick=function(){
+  if(T>=1)T=0;
+  playing=!playing; last=null;
+  if(playing)raf=requestAnimationFrame(tick); else if(raf)cancelAnimationFrame(raf);
+  paint(); draw();
+};
+document.getElementById('slow').onclick=function(){ speed=speed<1?1:0.4; last=null; paint(); };
+document.getElementById('again').onclick=function(){
+  T=0; playing=true; last=null; raf=requestAnimationFrame(tick); paint(); draw();
+};
+document.getElementById('marks').onclick=function(){ showMarks=!showMarks; paint(); draw(); };
+document.getElementById('orig').onclick=function(){ showOrig=!showOrig; paint(); };
+document.getElementById('scrub').oninput=function(e){
+  playing=false; if(raf)cancelAnimationFrame(raf);
+  T=(+e.target.value)/1000; paint(); draw();
+};
+document.getElementById('pick').onchange=function(e){ curKey=e.target.value; build(); };
+
+/* Open his real book, locally. Read in the browser, never uploaded. */
+document.getElementById('file').onchange=function(e){
+  var f=e.target.files&&e.target.files[0]; if(!f)return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    var src=String(fr.result), found=null;
+    try{
+      var i=src.indexOf('{',src.indexOf('DIAGRAM_SVG'));
+      if(i>0){
+        var depth=0,j=i;
+        for(;j<src.length;j++){ if(src[j]==='{')depth++; else if(src[j]==='}'&&--depth===0){j++;break;} }
+        found=JSON.parse(src.slice(i,j));
+      }else found=JSON.parse(src);
+    }catch(err){ found=null; }
+    if(!found||!Object.keys(found).length){
+      document.getElementById('note').innerHTML=
+        '<span class="warn">That file did not contain any diagrams.</span> '+
+        'Pick <span class="mono">src/lib/diagramArt.ts</span> from the planner, or a JSON file of '+
+        '<span class="mono">{ id: svg }</span>.';
+      return;
+    }
+    var keys=Object.keys(found).filter(function(k){return /data-man="D:/.test(found[k]);});
+    if(!keys.length)keys=Object.keys(found);
+    BOOK={}; keys.forEach(function(k){BOOK[k]=found[k];});
+    fillPicker(); curKey=keys[0]; document.getElementById('pick').value=curKey; build();
+    document.getElementById('note').innerHTML=
+      '<b>'+Object.keys(found).length+' diagrams loaded, '+keys.length+' with both sides.</b> '+
+      'Read in this browser only \u2014 nothing was uploaded.';
+  };
+  fr.readAsText(f);
+};
+
+function fillPicker(){
+  var s=document.getElementById('pick'); s.innerHTML='';
+  Object.keys(BOOK).forEach(function(k){
+    var o=document.createElement('option'); o.value=k;
+    var t=(BOOK[k].match(/aria-label="([^"]+)"/)||[])[1];
+    o.textContent=t||k; s.appendChild(o);
+  });
+}
+
+BOOK=JSON.parse(document.getElementById('fixture').textContent||'{}');
+curKey=Object.keys(BOOK)[0]||'';
+fillPicker(); build();
+document.getElementById('note').innerHTML=
+  'This is <b>our</b> Offense &mdash; Base against Defense &mdash; Purple, written out in the '+
+  'planner\u2019s SVG format &mdash; his artwork is password-protected, so none of it ships here. '+
+  'To watch <b>his</b> plays run, tap <b>Open a diagram file</b> and pick '+
+  '<span class="mono">src/lib/diagramArt.ts</span> off your own machine.';
+</script>

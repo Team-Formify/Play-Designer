@@ -18,7 +18,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const SRC = path.join(root, 'play-engine.js');
-const PAGES = ['index.html', 'learn.html'];
+const PAGES = ['index.html', 'learn.html', 'bridge/demo.html'];
 const OPEN = '<script id="play-engine">';
 const CLOSE = '</script>';
 
