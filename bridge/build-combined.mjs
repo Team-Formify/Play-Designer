@@ -18,10 +18,22 @@ import { join } from "node:path";
 import { createRequire } from "node:module";
 const PE = createRequire(import.meta.url)("../play-engine.js");
 
-const root = process.argv[2];
-if (!root) {
-  console.error("Point me at a checkout of the planner:\n" +
-                "  node bridge/build-combined.mjs ../8th-grade-practice-planner");
+/* Two builds out of one generator.
+
+   With a path to his checkout: the real thing — his book and ours in his app,
+   written to bridge/combined.html, which is gitignored because it carries his
+   artwork and this repo is public.
+
+   With --ours-only: the same app with only our special teams in it, written to
+   preview.html at the root so it deploys with the rest of the site. Nothing of
+   his is in that file, which is the point — it is what can be shown in public
+   and what Steve can be shown before being asked for anything. */
+const OURS_ONLY = process.argv.includes("--ours-only");
+const root = OURS_ONLY ? null : process.argv[2];
+if (!root && !OURS_ONLY) {
+  console.error("Point me at a checkout of the planner, or build the public one:\n" +
+                "  node bridge/build-combined.mjs ../8th-grade-practice-planner\n" +
+                "  node bridge/build-combined.mjs --ours-only");
   process.exit(1);
 }
 const HOW_MANY = Number(process.argv[3] || 90);
@@ -38,8 +50,8 @@ function objectAfter(src, marker) {
   return JSON.parse(src.slice(a, j));
 }
 
-const art = objectAfter(readFileSync(join(root, "src/lib/diagramArt.ts"), "utf8"), "DIAGRAM_SVG");
-const meta = objectAfter(readFileSync(join(root, "src/lib/diagrams.ts"), "utf8"), "DIAGRAMS");
+const art = OURS_ONLY ? {} : objectAfter(readFileSync(join(root, "src/lib/diagramArt.ts"), "utf8"), "DIAGRAM_SVG");
+const meta = OURS_ONLY ? {} : objectAfter(readFileSync(join(root, "src/lib/diagrams.ts"), "utf8"), "DIAGRAMS");
 
 /* title and caption live in the metadata, keyed by diagram id inside groups.
    The group name is his baseKey, which is what CORE_EIGHT matches on. */
@@ -51,11 +63,14 @@ for (const [group, arr] of Object.entries(meta)) {
 /* His arrowhead markers. Every diagram references them by url(#arN); without
    them the untouched artwork draws its routes with no points on the end. Taken
    from his file rather than redrawn, same as everything else of his. */
-const defsSrc = readFileSync(join(root, "src/lib/diagrams.ts"), "utf8");
-const defs = JSON.parse(
-  defsSrc.slice(defsSrc.indexOf('"', defsSrc.indexOf("DIAGRAM_DEFS")),
-                defsSrc.indexOf(";", defsSrc.indexOf("DIAGRAM_DEFS"))).trim(),
-);
+let defs = "";
+if (!OURS_ONLY) {
+  const defsSrc = readFileSync(join(root, "src/lib/diagrams.ts"), "utf8");
+  defs = JSON.parse(
+    defsSrc.slice(defsSrc.indexOf('"', defsSrc.indexOf("DIAGRAM_DEFS")),
+                  defsSrc.indexOf(";", defsSrc.indexOf("DIAGRAM_DEFS"))).trim(),
+  );
+}
 
 /* THE CORE, straight out of src/lib/playbook.ts. Matched on baseKey + side +
    formation, never on the call string — same rule his own code follows. */
@@ -160,7 +175,15 @@ function toSvg(play, look) {
   const y0 = Math.round(Math.min(0, Math.min(...ys) - PAD));
   const y1 = Math.round(Math.max(460, Math.max(...ys) + PAD));
   const h = y1 - y0;
-  return `<svg viewBox="0 ${y0} 920 ${h}" role="img" aria-label="${play.name}" text-anchor="middle" style="font:800 10px system-ui">` +
+  /* Our own arrowheads, so a play of ours is a complete picture on its own and
+     does not borrow a marker out of his file. Same ids his artwork uses, so the
+     two sit in one page without either needing the other. */
+  const DEFS = `<defs>` +
+    `<marker id="arN" markerWidth="9" markerHeight="9" refX="6.4" refY="3" orient="auto">` +
+    `<path d="M0,0 L7,3 L0,6 Z" fill="#0b2545"/></marker>` +
+    `<marker id="arR" markerWidth="9" markerHeight="9" refX="6.4" refY="3" orient="auto">` +
+    `<path d="M0,0 L7,3 L0,6 Z" fill="#c1121f"/></marker></defs>`;
+  return `<svg viewBox="0 ${y0} 920 ${h}" role="img" aria-label="${play.name}" text-anchor="middle" style="font:800 10px system-ui">` + DEFS +
     `<rect x="0" y="${y0}" width="920" height="${h}" fill="#fbfcfe"/>` + men.join("") +
     `<line x1="28" y1="${L}" x2="892" y2="${L}" stroke="#0b2545" stroke-width="2.2"/>` +
     lines.join("") + `</svg>`;
@@ -190,7 +213,7 @@ for (const play of book.plays) {
 
 /* ── write it ─────────────────────────────────────────────────────────────── */
 
-const data = JSON.stringify({ defs, plays: [...his, ...ours] });
+const data = JSON.stringify({ defs, hisBook: !OURS_ONLY, plays: [...his, ...ours] });
 if (data.includes("</script")) {
   console.error('The play data contains "</script" and would break out of the tag. Refusing.');
   process.exit(1);
@@ -201,8 +224,11 @@ const out = shell.replace(
   '<script type="application/json" id="playbook"></script>',
   '<script type="application/json" id="playbook">' + data + "</script>",
 );
-writeFileSync("bridge/combined.html", out);
+const target = OURS_ONLY ? "preview.html" : "bridge/combined.html";
+writeFileSync(target, out);
 
-console.log(`combined.html — ${his.length} of his (${core.length} core), ${ours.length} of ours, ` +
+console.log(`${target} — ${his.length} of his (${core.length} core), ${ours.length} of ours, ` +
             `${Math.round(out.length / 1024)} KB`);
-console.log("NOT committed: it carries his artwork and this repo is public.");
+console.log(OURS_ONLY
+  ? "Safe to commit: nothing of his is in it."
+  : "NOT committed: it carries his artwork and this repo is public.");

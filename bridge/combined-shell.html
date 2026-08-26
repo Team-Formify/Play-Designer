@@ -81,6 +81,8 @@ button{font:inherit;cursor:pointer;}
   border-radius:var(--r);padding:.22rem .5rem;font-size:.75rem;font-weight:700;
   text-decoration:none;white-space:nowrap;}
 .barnav a[aria-current="page"]{background:rgba(255,255,255,.18);border-color:#fff;}
+.barnav a[aria-disabled="true"]{opacity:.45;border-style:dashed;cursor:default;}
+.barnav a[hidden]{display:none;}
 @media (max-width:26rem){
   .bar{padding:.5rem .6rem;gap:.4rem;}
   .bar h1{font-size:.82rem;} .syncdot{display:none;} .barnav{gap:.3rem;}
@@ -92,6 +94,12 @@ button{font:inherit;cursor:pointer;}
 .phead h2{margin:0;font-size:1.15rem;font-weight:900;color:var(--navy);letter-spacing:.01em;}
 .phead .count{font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.05em;}
 .lede{margin:.15rem 0 .9rem;font-size:.86rem;color:var(--ink-3);}
+.lede[hidden]{display:none;}
+#previewNote{background:var(--yellow-bg);border:1px solid var(--yellow);
+  color:var(--ink-2);border-radius:.4rem;padding:.55rem .7rem;}
+/* Same reason both the coach's app and the boys' page print theirs: "is it
+   actually updating" has to be a question he can answer by reading the screen. */
+.buildtag{margin:1.6rem 0 0;font-size:.66rem;color:var(--ink-3);letter-spacing:.05em;}
 
 /* ── his call sheet ────────────────────────────────────────────────────────── */
 .sheet{display:flex;flex-direction:column;gap:.4rem;}
@@ -179,18 +187,26 @@ button{font:inherit;cursor:pointer;}
 }
 </style>
 
+<!--
+  His nav, shown because the layout IS the point. In the preview build the four
+  pages it names live in his app and not on this site, so they are marked dead
+  rather than left as links that go nowhere — and a real way back to the
+  designer is added, because on Dom's site this page would otherwise be a
+  dead end.
+-->
 <header class="bar">
-  <a class="brand" href="#" aria-label="Lehi Football">
+  <a class="brand" href="/" aria-label="Lehi Football">
     <span class="mark">LF</span>
     <h1>Lehi Football</h1>
   </a>
   <span class="syncdot">saved here</span>
-  <nav class="barnav">
-    <a href="#">Game Day</a>
-    <a href="#">Packages</a>
-    <a href="#">Depth</a>
+  <nav class="barnav" id="nav">
+    <a href="#" data-his>Game Day</a>
+    <a href="#" data-his>Packages</a>
+    <a href="#" data-his>Depth</a>
     <a href="#" aria-current="page">Plays</a>
-    <a href="#">Library</a>
+    <a href="#" data-his>Library</a>
+    <a href="/" id="backDesigner" hidden>← Designer</a>
     <button type="button" class="signout">Staff · out</button>
   </nav>
 </header>
@@ -200,6 +216,7 @@ button{font:inherit;cursor:pointer;}
     <h2>The Playbook</h2>
     <span class="count" id="count"></span>
   </div>
+  <p class="lede" id="previewNote" hidden></p>
   <p class="lede">
     Tap a call to see the play. Every one of them runs now — <b>Run it</b> walks
     all twenty-two down their own routes, <b>Matchups</b> shows who takes whom and
@@ -207,6 +224,7 @@ button{font:inherit;cursor:pointer;}
     The artwork is untouched; <b>Original</b> shows exactly what the generator drew.
   </p>
   <div class="sheet" id="sheet"></div>
+  <p class="buildtag" id="buildtag"></p>
 </div>
 
 <section class="viewer" id="viewer" hidden aria-modal="true" role="dialog">
@@ -573,6 +591,7 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
+var BUILD_TAG='p1 \u00b7 26 Aug';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
 var ALL=DATA.plays||[], ORDERED=[];
 var openIdx=null, scene=null, play=null, work=null;
@@ -877,6 +896,30 @@ document.addEventListener('keydown',function(ev){
   if(ev.key==='ArrowLeft')document.getElementById('prev').click();
   if(ev.key==='ArrowRight')document.getElementById('next').click();
 });
+
+/* This page ships in two builds. With his book in it, it is the combined app
+   and it stays off the public repo. Without, it is the same app carrying only
+   the special teams — which is what can be deployed and shown. Say which one
+   is on screen rather than letting him work it out. */
+if(!DATA.hisBook){
+  /* These four are pages in his app, not on this site. Dimmed and inert rather
+     than links that quietly do nothing, and the way back to the designer is
+     put where a way back belongs. */
+  [].forEach.call(document.querySelectorAll('#nav a[data-his]'),function(a){
+    a.setAttribute('aria-disabled','true');
+    a.title='A page in the practice planner — not in this preview.';
+    a.addEventListener('click',function(ev){ev.preventDefault();});
+  });
+  document.getElementById('backDesigner').hidden=false;
+  var n=document.getElementById('previewNote');
+  n.innerHTML='<b>Preview \u2014 special teams only.</b> This is the practice planner\u2019s '+
+    'own layout with the field code added to it. Steve\u2019s offense and defense are not in '+
+    'this build: his artwork is password-protected and this site is public. The full '+
+    'version, both books in one list, runs the same page with his diagrams loaded.';
+  n.hidden=false;
+}
+document.getElementById('buildtag').textContent=
+  'Preview build '+BUILD_TAG+'. If this is not the newest one, the page is cached \u2014 pull down to refresh.';
 
 paintList();
 bindDrag();
