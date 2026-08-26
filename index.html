@@ -279,6 +279,14 @@
   #saveDot.ok{color:#8FD19E;border-color:rgba(143,209,158,.45)}
   #saveDot.bad{color:var(--warm);border-color:rgba(229,138,107,.5)}
   @media print{#saveDot{display:none!important}}
+  /* The build, WHERE HE CAN SEE IT. It has always printed under the export
+     buttons, which means answering "is this the new one" required scrolling
+     past the whole lineup — so in practice it never got answered. It is a
+     chip in the bar now. The one under the exports stays; this is the one
+     that gets read. */
+  #buildChip{font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+    color:var(--soft);opacity:.65;padding:4px 6px;white-space:nowrap}
+  @media print{#buildChip{display:none!important}}
   #ioBox{width:100%;height:104px;margin-top:8px;font-family:var(--mono);font-size:11px;
     background:var(--deep);color:var(--chalk);border:1px solid rgba(237,235,224,.25);
     border-radius:4px;padding:8px;resize:vertical}
@@ -306,9 +314,15 @@
   <h1>Play <span>Designer</span></h1>
   <select id="playSel" aria-label="Choose play"></select>
   <span id="saveDot" title="save status">saved</span>
+  <span id="buildChip" title="Which build this page is running"></span>
   <button class="btn" id="newPlay">+ New</button>
   <button class="btn gold" id="gdOn">Game day</button>
   <a class="btn" href="learn" id="learnLink">For the boys &#8599;</a>
+  <!-- The merged app. It sits HERE, in the bar, beside the other two places you
+       can go — not in a paragraph under the export buttons, which is where it
+       was first put and where he never saw it. A destination lives in the bar.
+       Relative href, so it survives the domain changing. -->
+  <a class="btn gold" href="/preview" id="mergedLink">Merged app &#8599;</a>
   <a class="btn" id="schedLink" target="_blank" rel="noopener noreferrer" hidden>Schedule &#8599;</a>
 </header>
 
@@ -490,12 +504,6 @@
     <p class="count" id="srcNote"></p>
     <p class="count" id="repoNote"></p>
     <p class="count" id="buildNote"></p>
-    <!-- The merged app: the head coach's own layout with this app's field code
-         in it. Linked from here because the address was written down nowhere,
-         and a page he cannot navigate to may as well not be deployed. Relative,
-         so it works on whatever domain this is served from. -->
-    <p class="count"><a href="/preview">The merged app &rarr;</a> &mdash; the practice
-      planner&rsquo;s layout with these plays in it, running.</p>
 
     <div id="setupBox" hidden>
       <p class="setup-h">Turn on Save to repo &mdash; about four minutes, once</p>
@@ -1389,7 +1397,7 @@ var BUILD=18;
 /* Bumped by hand whenever something ships. It is printed under the export buttons
    so "is it actually updating" can be answered by reading a number off the screen
    instead of guessing — which cost this project most of a session. */
-var BUILD_TAG='19 \u00b7 26 Aug';
+var BUILD_TAG='20 \u00b7 26 Aug';
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){
@@ -2598,6 +2606,8 @@ document.getElementById('animScrub').oninput=function(e){
 (function(){
   var el=document.getElementById('buildNote');
   if(el)el.textContent='App build '+BUILD_TAG+'. If this is not the newest one, the page is cached — pull down to refresh.';
+  var chip=document.getElementById('buildChip');
+  if(chip)chip.textContent='b'+BUILD_TAG;
 })();
 document.getElementById('doDownload').onclick=downloadBackup;
 document.getElementById('doSource').onclick=function(){exportSource(true);};
