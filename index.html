@@ -490,6 +490,12 @@
     <p class="count" id="srcNote"></p>
     <p class="count" id="repoNote"></p>
     <p class="count" id="buildNote"></p>
+    <!-- The merged app: the head coach's own layout with this app's field code
+         in it. Linked from here because the address was written down nowhere,
+         and a page he cannot navigate to may as well not be deployed. Relative,
+         so it works on whatever domain this is served from. -->
+    <p class="count"><a href="/preview">The merged app &rarr;</a> &mdash; the practice
+      planner&rsquo;s layout with these plays in it, running.</p>
 
     <div id="setupBox" hidden>
       <p class="setup-h">Turn on Save to repo &mdash; about four minutes, once</p>
@@ -1383,7 +1389,7 @@ var BUILD=18;
 /* Bumped by hand whenever something ships. It is printed under the export buttons
    so "is it actually updating" can be answered by reading a number off the screen
    instead of guessing — which cost this project most of a session. */
-var BUILD_TAG='18 \u00b7 24 Aug';
+var BUILD_TAG='19 \u00b7 26 Aug';
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){
