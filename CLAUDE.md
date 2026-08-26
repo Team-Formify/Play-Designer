@@ -40,7 +40,13 @@ it was broken once and cost him hours of re-entry. Treat them as hard constraint
    edits never trigger it — names the plays the file has moved on, and offers one tap.
    Answering it, either way, records what he saw so it never nags again until the file
    actually changes. Buried in a section further down, the button may as well not exist;
-   that is where it was for a whole message and he never found it.
+   that is where it was for a whole message and he never found it. **This has now happened
+   twice.** The second time it was the link to the merged app, put in a paragraph under the
+   export buttons, below the entire lineup list. He opened the app, saw no change, and
+   reasonably concluded nothing had shipped. The rule, stated so it is a rule and not a
+   story: if it is somewhere for him to **go**, it goes in the header beside `For the boys`
+   and `UYFC Schedule`; if it is something for him to **know**, it goes in the bar. Under
+   the export buttons is not delivered.
    **Update this play from the playbook** is the same escape hatch, by hand. It is a button press and
    nothing else, never automatic and never on load: it replaces the alignment, routes,
    looks, target, lanes and jobs with the file's, keeps the play's name and carries his
@@ -486,14 +492,21 @@ Edits live in `localStorage` until they are pushed. Two things close that gap:
 
 ## Deploy
 
+**The site's own address is written down nowhere** — not in the repo, not in a comment, not
+in a commit. Finding that out cost a round trip. It is in the Vercel dashboard under the
+Play-Designer project; ask him for it and record it here. Until then every in-app link
+stays **relative** (`/preview`, `learn`) so it works whatever the domain turns out to be.
+
 Static. Vercel serves `index.html` at the root; `vercel.json` disables aggressive caching
 so a redeploy shows up immediately. **The no-cache header must be on `/(.*)`, not on
 `/index.html`** — `cleanUrls` is on, so he loads `/`, and a rule scoped to `/index.html`
 never matches it. That one line meant his phone was free to hold a stale page for a whole
 session while every push landed correctly. `/learn` had no rule at all.
 
-**Both pages print their build number** — under the export buttons in the coach's app, next
-to the back link on the boys' page. `BUILD_TAG` is bumped by hand when something ships.
+**Both pages print their build number** — a `b<build>` chip in the header next to the save
+badge, plus the longer note under the export buttons; on the boys' page, next to the back
+link. The chip exists because the note alone cost a scroll past the whole lineup, so the
+first question this file tells you to ask never actually got asked. `BUILD_TAG` is bumped by hand when something ships.
 "Is it actually updating" is then a question he can answer by reading the screen, instead
 of me guessing; check it first, before anything else. Plays live in `localStorage` keyed to the deployed
 origin, so **replacing index.html does not touch the user's data** — that is the entire
