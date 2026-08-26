@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/preview", "destination": "/playbook", "permanent": false }
+  ],
   "headers": [
     {
       "source": "/(.*)",

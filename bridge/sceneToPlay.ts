@@ -21,7 +21,7 @@
  *     the `covers` the engine honours before it starts pairing by distance.
  */
 
-import { matchups, meets, smoothPts, type EngineMan, type Meet, type Pt } from "./playEngine.ts";
+import { matchups, meets, smoothPts, type EngineMan, type Meet, type Pt } from "./playEngine";
 
 /* The parts of the planner's own types this depends on. Kept structural so the
    bridge does not have to import from playScene.ts and cannot drift with it. */
@@ -48,7 +48,14 @@ export interface PlayMan extends EngineMan {
   side: "offense" | "defense";
   /** The route he runs, already sampled along its curve. */
   path: Pt[];
+  /** The stored points, untouched — what a curve is DRAWN from. Kept apart from
+      `path` because sampling is for walking a man, not for drawing his line. */
+  raw: Pt[];
 }
+
+/** A nudge a coach has made, per man. The artwork is never rewritten; a move is
+    a delta held by the caller — the same shape playScene.ts keeps its edits. */
+export type Moves = Record<string, { dx: number; dy: number }>;
 
 export interface Play {
   offense: PlayMan[];
@@ -95,7 +102,7 @@ export function coversFromBlocks(scene: SceneLike): Record<string, string> {
  * A man with no line of his own simply stands still, which is correct — a
  * blocker who is not drawn moving is not moving.
  */
-export function sceneToPlay(scene: SceneLike): Play {
+export function sceneToPlay(scene: SceneLike, moves?: Moves): Play {
   const covers = coversFromBlocks(scene);
   const byOwner = new Map<string, SceneLineLike>();
   for (const l of scene.lines) {
@@ -105,9 +112,13 @@ export function sceneToPlay(scene: SceneLike): Play {
   }
 
   const build = (m: SceneManLike): PlayMan => {
-    const here = pt(m.at);
+    const nudge = moves?.[m.id] ?? { dx: 0, dy: 0 };
+    const shift = (p: Pt): Pt => ({ x: p.x + nudge.dx, y: p.y + nudge.dy });
+    const here = shift(pt(m.at));
     const line = byOwner.get(m.id) ?? byOwner.get(m.id.split("#")[0]);
-    const raw = line ? [here, ...linePoints(line).slice(1)] : [here];
+    /* The nudge moves his whole line with him, not just his circle — a man
+       dragged two yards wider still runs the route he was given. */
+    const raw = line ? [here, ...linePoints(line).slice(1).map(shift)] : [here];
     return {
       id: m.id,
       label: m.id.replace(/^D:/, "").split("#")[0],
@@ -115,6 +126,7 @@ export function sceneToPlay(scene: SceneLike): Play {
       x: here.x, y: here.y,
       covers: covers[m.id] ?? covers[m.id.split("#")[0]],
       path: smoothPts(raw),
+      raw,
     };
   };
 

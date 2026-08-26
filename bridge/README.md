@@ -1,7 +1,14 @@
-# bridge — making the planner's diagrams move
+# bridge — the merged build
 
-Built to drop into `sdalley32/8th-grade-practice-planner`. It stages here first so
-it can be tested against a real book before anything is touched over there.
+**This is the real build, not an experiment.** The decision, his: the practice
+planner's app becomes the one everybody uses, and this app's field code is what
+makes its plays run. It is developed and proved here first, then moved to
+`sdalley32/8th-grade-practice-planner` when it is ready.
+
+What that means for this repo: `playbook.html` at the root is that app, deployed
+and live. It carries the special teams only — his half of the book is
+password-protected and this site is public — but it is the same page, the same
+engine and the same code path that goes across. Nothing about it is a mock-up.
 
 The planner's plays are generated SVG. That makes beautiful, consistent cards and
 it is why they cannot be played: a picture has no model underneath it, so there is
@@ -17,6 +24,9 @@ and nowhere to put a collision. This adds the model without changing a drawing.
 | `prove.ts` | Runs the whole pipeline end to end and reports. Not shipped — it exists to answer "does this work on real diagrams" from outside their repo. |
 | `build-combined.mjs` | Builds `combined.html`. Reads his `diagramArt.ts` and `diagrams.ts` off a local checkout, converts our plays into his SVG format, and fills in the shell. |
 | `combined-shell.html` | **His app**, reproduced from his own `globals.css` and `PlaybookGrid` — navy bar, call-sheet rows, three-tap viewer — with Run it, Matchups and Edit added to it. Ships empty; the playbook is injected at build. |
+| `react/PlayRunner.tsx` | The drop-in for his repo: a client component that runs a diagram, marks the matchups and lets a man be dragged. Uses **his** `sceneFromSvg`, so there is no second parser. Typechecks clean under his exact strict tsconfig. |
+| `react/PlayRunner.module.css` | Its styles, in his tokens and his button sizing. |
+| `ts-loader.mjs`, `register-ts.mjs` | Imports here are extensionless because that is what his bundler wants and these files are meant to land unchanged. His repo solves this the same way; this is the same loader so `prove.ts` still runs. |
 | `fixtures/` | One diagram in the planner's exact SVG format, generated from **our** Offense — Base and Defense — Purple. See the note on artwork below. |
 
 ## Why it is small
@@ -80,16 +90,25 @@ this repo is public.
 ## Running it
 
 ```bash
-node --experimental-strip-types bridge/prove.ts
+node --experimental-strip-types --import ./bridge/register-ts.mjs bridge/prove.ts
 ```
 
 Against the planner's real book, locally, with a path to their file:
 
 ```bash
-node --experimental-strip-types bridge/prove.ts ../8th-grade-practice-planner/src/lib/diagramArt.ts
+node --experimental-strip-types --import ./bridge/register-ts.mjs \
+  bridge/prove.ts ../8th-grade-practice-planner/src/lib/diagramArt.ts
 ```
 
 It only reads. Nothing is written either side.
+
+### Typechecking the component
+
+`PlayRunner.tsx` is written to compile in his repo, not here — this repo has no
+TypeScript and is not getting any. To check it, copy `playEngine.ts`,
+`sceneToPlay.ts` and `react/PlayRunner.*` into a checkout of his beside his
+`playScene.ts` and run his `tsc --noEmit`. Last run: **no errors in these files**
+under his exact `strict` config.
 
 ## A note on their artwork
 
@@ -98,8 +117,21 @@ in `public/`. **This repo is public**, so none of it is committed here — not a
 fixture, not as a test file. The fixture is our own play written out in their
 format, which exercises the same code paths.
 
-## What it does not do yet
+## Moving it across
 
-No React. `combined-shell.html` proves the whole thing works on his real book, but
-it is vanilla — the next piece is the same behaviour as a component in his tokens,
-and that should be written in his repo rather than guessed at from a zip.
+What goes into his repo, and where:
+
+| From here | To there |
+|---|---|
+| `playEngine.ts` | `src/lib/playEngine.ts` |
+| `sceneToPlay.ts` | `src/lib/sceneToPlay.ts` |
+| `react/PlayRunner.tsx` | `src/components/PlayRunner.tsx` |
+| `react/PlayRunner.module.css` | `src/components/PlayRunner.module.css` |
+
+Then one change in `PlaybookGrid.tsx`: inside `Viewer`, where the `.vpic` div
+renders `dangerouslySetInnerHTML`, render `<PlayRunner svg={dia.svg} />` instead.
+Everything else — the rows, the sections, the `‹ ›` nav, the print sheet — is
+untouched, and `Original` inside the runner puts his exact artwork back.
+
+The special teams arrive the same way they do here: written into his SVG format
+by `build-combined.mjs` and added to the tile list as their own section.

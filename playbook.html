@@ -591,7 +591,7 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-var BUILD_TAG='p1 \u00b7 26 Aug';
+var BUILD_TAG='1 \u00b7 26 Aug';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
 var ALL=DATA.plays||[], ORDERED=[];
 var openIdx=null, scene=null, play=null, work=null;
@@ -912,14 +912,15 @@ if(!DATA.hisBook){
   });
   document.getElementById('backDesigner').hidden=false;
   var n=document.getElementById('previewNote');
-  n.innerHTML='<b>Preview \u2014 special teams only.</b> This is the practice planner\u2019s '+
-    'own layout with the field code added to it. Steve\u2019s offense and defense are not in '+
-    'this build: his artwork is password-protected and this site is public. The full '+
-    'version, both books in one list, runs the same page with his diagrams loaded.';
+  n.innerHTML='<b>This build carries the special teams only.</b> It is the real app, not a '+
+    'mock-up of one \u2014 same page, same engine, same code that will run in the practice '+
+    'planner. Steve\u2019s offense and defense are the one thing missing, because his artwork '+
+    'is password-protected and this site is public. They appear the moment this moves across '+
+    'to his repo; nothing else about it changes.';
   n.hidden=false;
 }
 document.getElementById('buildtag').textContent=
-  'Preview build '+BUILD_TAG+'. If this is not the newest one, the page is cached \u2014 pull down to refresh.';
+  'Playbook build '+BUILD_TAG+'. If this is not the newest one, the page is cached \u2014 pull down to refresh.';
 
 paintList();
 bindDrag();

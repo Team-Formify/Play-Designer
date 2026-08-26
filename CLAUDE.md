@@ -191,6 +191,37 @@ five men on top of each other. The vertical scale is already not to scale for th
 reason. An offensive interior is still busier than a kicking unit — that is honest, not a
 bug, but this app was built for men spread across a field.
 
+## The merged build — the head coach's app, on this engine
+
+**Settled, by him: his app wins the front end, this app wins the field code.** The
+practice planner (`sdalley32/8th-grade-practice-planner`, Next.js 15 / React 19 /
+Supabase) becomes the app everybody opens; what this repo contributes is the
+engine that makes its plays *run* — the clock, the matchups, the contact points,
+and dragging a man with the pairings following him.
+
+His plays are generated SVG, which is exactly why they could never be played: a
+picture has no model under it. `bridge/` adds the model without changing a
+drawing. `sceneToPlay.ts` turns his own parsed scene into what `playEngine.ts`
+needs; `react/PlayRunner.tsx` is the drop-in component, written against **his**
+`sceneFromSvg` so there is no second parser, and it typechecks clean under his
+strict tsconfig. `Original` puts his untouched artwork back on screen. **His
+artwork is read, never redrawn, and never committed here** — that file says the
+offense is password-protected, and this repo is public.
+
+`playbook.html` (`/playbook`, linked from the header) is that app, live. It
+carries the special teams only, because his half cannot be published on a public
+site; it is otherwise the same page and the same code that moves across. Build it
+with `node bridge/build-combined.mjs --ours-only`. The full version — both books,
+one list — is `node bridge/build-combined.mjs <path-to-his-checkout>`, which
+writes `bridge/combined.html`; that one is **gitignored and must stay that way**.
+
+Two things that were got wrong and cost him a lot of patience, recorded so they
+are not repeated. **Do not call it "merged" in the UI when it is not.** A button
+labelled `Merged app` sent him to a page in someone else's design carrying only
+his own plays — no combination, no gain, and it read as a different product. And
+the direction is *his app into Steve's*, not the reverse: the version he opens
+daily to edit special teams stays `index.html`, which is his.
+
 ## Architecture
 
 Vanilla JS, SVG, no dependencies, no build.

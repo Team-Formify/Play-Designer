@@ -1,0 +1,53 @@
+/*
+ * The runner wears the diagram's own colours — #0b2545 navy, #c1121f red,
+ * #b07a00 gold — so a play being run and a play sitting still are the same
+ * picture. Buttons follow the playbook viewer: 2px navy border, .4rem radius,
+ * 44px floor on anything a thumb has to hit.
+ */
+.wrap { display: flex; flex-direction: column; }
+
+.pic { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.pic svg { width: 100%; height: auto; max-height: 100%; display: block; }
+
+.field { fill: #fbfcfe; }
+.los { stroke: #0b2545; stroke-width: 2.2; }
+
+.routeUs { fill: none; stroke: #0b2545; stroke-width: 2.6; stroke-opacity: .85;
+  stroke-linecap: round; stroke-linejoin: round; }
+.routeThem { fill: none; stroke: #c1121f; stroke-width: 2.2; stroke-opacity: .7;
+  stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 6 5; }
+
+/* Ringed from the first frame, dashed until they get there and filled once they
+   do — a boy sees where his collision is meant to happen before it happens. */
+.meet circle { fill: none; stroke: #b07a00; stroke-opacity: .45; stroke-width: 1.4;
+  stroke-dasharray: 4 3; }
+.meetOn circle { fill: #b07a00; fill-opacity: .2; stroke: #b07a00; stroke-opacity: .95;
+  stroke-width: 2.4; }
+.meetOn .meetDot { fill: #b07a00; fill-opacity: 1; stroke: none; }
+
+.us { fill: #e8edf7; stroke: #0b2545; stroke-width: 2.4; }
+.them { fill: #fbfcfe; stroke: #c1121f; stroke-width: 2.2; }
+.usLabel, .themLabel { font: 800 10px system-ui, sans-serif; text-anchor: middle;
+  pointer-events: none; }
+.usLabel { fill: #0b2545; }
+.themLabel { fill: #c1121f; }
+.grab { cursor: grab; touch-action: none; }
+
+.tools { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; padding: .5rem .4rem .2rem; }
+.btn, .go {
+  min-height: 44px; padding: .35rem .75rem; font-size: .85rem; font-weight: 800;
+  border-radius: .4rem; border: 2px solid var(--navy); background: var(--card, #fff);
+  color: var(--navy);
+}
+.btn[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.go { background: #b07a00; border-color: #b07a00; color: #fff; }
+
+.scrub { width: 100%; margin: .35rem .2rem 0; accent-color: var(--navy); }
+
+.pairs { list-style: none; margin: .5rem .3rem; padding: 0; }
+.pairs li { display: flex; gap: .45rem; align-items: baseline; padding: .3rem .6rem;
+  font-size: .8rem; border-bottom: 1px solid var(--line, #C9CBE4); }
+.pairs b { font-weight: 900; color: var(--navy); }
+.pairs em { font-style: normal; font-weight: 900; color: #c1121f; }
+.pairs span { margin-left: auto; font-size: .66rem; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3, #6E6E85); }

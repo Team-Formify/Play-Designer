@@ -14,9 +14,9 @@
  */
 
 import { readFileSync } from "node:fs";
-import { walk } from "./playEngine.ts";
+import { walk } from "./playEngine";
 import { sceneToPlay, assignments, type SceneLike, type SceneLineLike, type SceneManLike }
-  from "./sceneToPlay.ts";
+  from "./sceneToPlay";
 
 const NUM = /-?\d*\.?\d+/g;
 

@@ -318,15 +318,14 @@
   <button class="btn" id="newPlay">+ New</button>
   <button class="btn gold" id="gdOn">Game day</button>
   <a class="btn" href="learn" id="learnLink">For the boys &#8599;</a>
-  <!-- NOT a merged app, and it must not be labelled as one. This page is the
-       head coach's own layout carrying THIS app's plays, built to show him what
-       the field code does to a playbook. For Dom it is his own plays wearing
-       somebody else's design, which is why calling it "Merged app" sent him to
-       a page that looked like a different product and read as nothing having
-       shipped. It is a demo to send Steve. Say so on the button.
-       Relative href, so it survives the domain changing. -->
-  <a class="btn" href="/preview" id="mergedLink"
-     title="A demo built in the head coach's layout, to show him what running plays looks like. Your plays, his design.">For Steve &#8599;</a>
+  <!-- The merged build: the practice planner's app with this app's field code
+       in it. It is the real thing, not a demo — the same page that goes to the
+       head coach's repo, minus his half of the book, which cannot be published
+       on a public site. Named for what it is; it was briefly called "Merged
+       app", which promised one combined product and delivered a second app in
+       somebody else's design. Relative href, so it survives the domain. -->
+  <a class="btn" href="/playbook" id="playbookLink"
+     title="The merged build — the practice planner's app running on this app's engine.">Playbook &#8599;</a>
   <a class="btn" id="schedLink" target="_blank" rel="noopener noreferrer" hidden>Schedule &#8599;</a>
 </header>
 
@@ -1401,7 +1400,7 @@ var BUILD=18;
 /* Bumped by hand whenever something ships. It is printed under the export buttons
    so "is it actually updating" can be answered by reading a number off the screen
    instead of guessing — which cost this project most of a session. */
-var BUILD_TAG='21 \u00b7 26 Aug';
+var BUILD_TAG='22 \u00b7 26 Aug';
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){
