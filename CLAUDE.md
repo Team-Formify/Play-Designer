@@ -523,10 +523,23 @@ Edits live in `localStorage` until they are pushed. Two things close that gap:
 
 ## Deploy
 
-**The site's own address is written down nowhere** — not in the repo, not in a comment, not
-in a commit. Finding that out cost a round trip. It is in the Vercel dashboard under the
-Play-Designer project; ask him for it and record it here. Until then every in-app link
-stays **relative** (`/preview`, `learn`) so it works whatever the domain turns out to be.
+**The site is `https://play-designer-nine.vercel.app`.** Recorded here because not having it
+written down cost a round trip, and because "is it deployed" was unanswerable without it —
+it was live and correct the whole time the complaint was that nothing had shipped.
+
+| | |
+|---|---|
+| `/` | the coach's app (`index.html`) |
+| `/playbook` | the merged build (`playbook.html`); `/preview` redirects here |
+| `/learn` | the boys' page |
+
+The Vercel project is `play-designer` on Dom's team; the same deploy also answers on
+`play-designer-doms-team-projects.vercel.app`. In-app links stay **relative** anyway, so
+nothing breaks if he puts a real domain on it.
+
+**Checking a deploy:** `curl -s <site>/ | grep -o "BUILD_TAG='[^']*'"` says which build is
+actually being served. Do that before believing either of us about whether something
+shipped.
 
 Static. Vercel serves `index.html` at the root; `vercel.json` disables aggressive caching
 so a redeploy shows up immediately. **The no-cache header must be on `/(.*)`, not on
