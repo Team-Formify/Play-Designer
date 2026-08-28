@@ -76,6 +76,12 @@ button{font:inherit;cursor:pointer;}
   width:22px;height:22px;color:var(--navy);font-size:11px;font-weight:900;
   text-align:center;line-height:22px;}
 .syncdot{font-size:.6rem;font-weight:800;letter-spacing:.06em;opacity:.9;flex:0 0 auto;}
+/* The build, where he can see it without scrolling. This page shipped once
+   with the number only at the foot of the list and he had no way to tell it had
+   changed — the same mistake the designer had already been fixed for. */
+.buildchip{font-size:.6rem;font-weight:800;letter-spacing:.06em;opacity:.65;
+  flex:0 0 auto;white-space:nowrap;}
+@media (max-width:26rem){ .syncdot{display:none;} }
 .barnav{display:flex;align-items:center;gap:.4rem;flex:1 1 auto;flex-wrap:wrap;justify-content:flex-end;}
 .bar a,.bar button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;
   border-radius:var(--r);padding:.22rem .5rem;font-size:.75rem;font-weight:700;
@@ -209,7 +215,8 @@ button{font:inherit;cursor:pointer;}
     <span class="mark">LF</span>
     <h1>Lehi Football</h1>
   </a>
-  <span class="syncdot">saved here</span>
+  <span class="syncdot" id="syncdot">saved here</span>
+  <span class="buildchip" id="buildchip" title="Which build this page is running"></span>
   <nav class="barnav" id="nav">
     <a href="#" data-his>Game Day</a>
     <a href="#" data-his>Packages</a>
@@ -226,6 +233,7 @@ button{font:inherit;cursor:pointer;}
   <div class="phead">
     <h2>The Playbook</h2>
     <span class="count" id="count"></span>
+    <span class="count" id="loaded"></span>
   </div>
   <p class="lede" id="previewNote" hidden></p>
   <p class="lede">
@@ -615,7 +623,7 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-var BUILD_TAG='3 \u00b7 26 Aug';
+var BUILD_TAG='4 \u00b7 26 Aug';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
 var ALL=DATA.plays||[], ORDERED=[], CARDS=DATA.cards||null;
 var openIdx=null, scene=null, play=null, work=null;
@@ -651,6 +659,11 @@ function paintList(){
   });
   sheet.innerHTML=html;
   document.getElementById('count').textContent=ORDERED.length+' CALLS';
+  var mine=ALL.filter(function(p){return p.side==='ours';}).length;
+  var his=ALL.length-mine;
+  document.getElementById('loaded').textContent=
+    his? (mine+' SPECIAL TEAMS \u00b7 '+his+' OFFENSE & DEFENSE')
+       : (mine+' SPECIAL TEAMS \u00b7 HIS BOOK NOT LOADED');
   sheet.addEventListener('click',function(ev){
     var b=ev.target.closest('.row'); if(b)openAt(+b.dataset.i);
   });
@@ -941,6 +954,7 @@ if(!DATA.hisBook){
     'here is finished: this is the app, on the engine, and it is what goes to his repo.';
   n.hidden=false;
 }
+document.getElementById('buildchip').textContent='b'+BUILD_TAG;
 document.getElementById('buildtag').textContent=
   'Playbook build '+BUILD_TAG+'. If this is not the newest one, the page is cached \u2014 pull down to refresh.';
 
@@ -980,10 +994,28 @@ function idbDo(mode,fn){
 var STORED=null;
 function loadStoredBook(){ return STORED; }
 function readBook(){
-  if(!window.indexedDB)return Promise.resolve(null);
+  if(!window.indexedDB)return Promise.resolve(oldLocalBook());
   return idbDo('readonly',function(st){return st.get(BOOK_KEY);})
-    .then(function(b){ return (b&&b.plays&&b.plays.length)?b:null; })
-    .catch(function(){ return null; });
+    .then(function(b){
+      if(b&&b.plays&&b.plays.length)return b;
+      /* Anything loaded before the move to IndexedDB is still sitting in
+         localStorage. Carry it forward rather than showing him an empty list
+         and letting him conclude nothing shipped. */
+      var old=oldLocalBook();
+      if(!old)return null;
+      return writeBook(old).then(function(){
+        try{ localStorage.removeItem('pp-book'); }catch(e){}
+        return old;
+      }).catch(function(){ return old; });
+    })
+    .catch(function(){ return oldLocalBook(); });
+}
+function oldLocalBook(){
+  try{
+    var raw=localStorage.getItem('pp-book'); if(!raw)return null;
+    var b=JSON.parse(raw);
+    return (b&&b.plays&&b.plays.length)?b:null;
+  }catch(e){ return null; }
 }
 function writeBook(b){ return idbDo('readwrite',function(st){return st.put(b,BOOK_KEY);}); }
 function dropBook(){ return idbDo('readwrite',function(st){return st.delete(BOOK_KEY);}); }
