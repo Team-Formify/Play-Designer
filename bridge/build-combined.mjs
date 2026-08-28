@@ -228,6 +228,17 @@ const out = shell.replace(
 const target = OURS_ONLY ? "playbook.html" : "bridge/combined.html";
 writeFileSync(target, out);
 
+/* His half on its own, for loading into the deployed site by hand.
+   The deployed page cannot carry his artwork — public repo, password-protected
+   book — but he can still have it: this file is picked in the browser and kept
+   in localStorage against the origin. Never committed, for the same reason
+   combined.html never is. */
+if (!OURS_ONLY) {
+  const bookFile = "bridge/steve-plays.json";
+  writeFileSync(bookFile, JSON.stringify({ defs, plays: his }));
+  console.log(`${bookFile} — his ${his.length} plays, to load into the live site by hand.`);
+}
+
 console.log(`${target} — ${his.length} of his (${core.length} core), ${ours.length} of ours, ` +
             `${Math.round(out.length / 1024)} KB`);
 console.log(OURS_ONLY
