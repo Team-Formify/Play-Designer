@@ -13,7 +13,7 @@
  * generator is safe to commit because it contains none of his content — it only
  * knows where to look for it.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 const PE = createRequire(import.meta.url)("../play-engine.js");
@@ -37,7 +37,12 @@ if (!root && !OURS_ONLY) {
                 "  node bridge/build-combined.mjs --ours-only     # writes index.html");
   process.exit(1);
 }
-const HOW_MANY = Number(process.argv[3] || 90);
+/* How many of his the built PAGE carries. The page is a file he opens, so it
+   stays a sample; the whole book goes in the device bundle instead, where size
+   is not a problem. --all overrides it. */
+const ALL_OF_THEM = process.argv.includes("--all");
+const HOW_MANY = ALL_OF_THEM ? Infinity
+  : Number(process.argv.find((a) => /^\d+$/.test(a)) || 90);
 
 /* ── his side ─────────────────────────────────────────────────────────────── */
 
@@ -229,14 +234,51 @@ const target = OURS_ONLY ? "index.html" : "bridge/combined.html";
 writeFileSync(target, out);
 
 /* His half on its own, for loading into the deployed site by hand.
-   The deployed page cannot carry his artwork — public repo, password-protected
-   book — but he can still have it: this file is picked in the browser and kept
-   in localStorage against the origin. Never committed, for the same reason
-   combined.html never is. */
+
+   THE WHOLE BOOK, not the page's sample: every diagram that carries both sides
+   is runnable, so every one of them comes. It is read in the browser and kept
+   in IndexedDB against the origin — 8 MB, which is why it is not localStorage.
+
+   The five-slot field cards come too. They are the third level of his own
+   viewer — the thing a boy actually reads — and carrying the plays without
+   them leaves the app a picture short of what he already has.
+
+   Never committed, for the same reason combined.html never is. */
 if (!OURS_ONLY) {
-  const bookFile = "bridge/steve-plays.json";
-  writeFileSync(bookFile, JSON.stringify({ defs, plays: his }));
-  console.log(`${bookFile} — his ${his.length} plays, to load into the live site by hand.`);
+  const runnable = withBoth.map((k) => {
+    const d = byId[k] || {};
+    return {
+      id: k, side: "his", section: isCore(d) ? "core" : "rest",
+      call: d.title || k,
+      meta: KIND[d.kind] || (d.kind || "").toUpperCase(),
+      caption: d.caption || "",
+      svg: art[k],
+    };
+  });
+
+  /* His five-slot cards, keyed by the diagram they picture, so the viewer can
+     find the card for the play that is open. */
+  let cards = null;
+  try {
+    const cc = JSON.parse(readFileSync(join(root, "src/data/call-cards.json"), "utf8"));
+    cards = {};
+    for (const c of Object.values(cc.cards ?? {})) {
+      const at = c?.picture?.diagramId;
+      if (!at) continue;
+      (cards[at] ??= []).push({
+        id: c.id, role: c.picture.role ?? "",
+        call: c.band?.call ?? "", who: c.band?.who ?? "",
+        rows: c.rows ?? c.slots ?? null,
+      });
+    }
+  } catch { cards = null; }
+
+  const bookFile = "bridge/steve-book.json";
+  writeFileSync(bookFile, JSON.stringify({ defs, plays: runnable, cards }));
+  const mb = (statSync(bookFile).size / 1048576).toFixed(1);
+  console.log(`${bookFile} — his ${runnable.length} runnable plays` +
+              (cards ? `, ${Object.keys(cards).length} field cards` : "") +
+              `, ${mb} MB. Load it into the site by hand; never committed.`);
 }
 
 console.log(`${target} — ${his.length} of his (${core.length} core), ${ours.length} of ours, ` +

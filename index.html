@@ -615,9 +615,9 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-var BUILD_TAG='2 \u00b7 26 Aug';
+var BUILD_TAG='3 \u00b7 26 Aug';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
-var ALL=DATA.plays||[], ORDERED=[];
+var ALL=DATA.plays||[], ORDERED=[], CARDS=DATA.cards||null;
 var openIdx=null, scene=null, play=null, work=null;
 var T=0, playing=false, speed=1, raf=null;
 var showMarks=true, showOrig=false, editing=false;
@@ -925,7 +925,7 @@ document.addEventListener('keydown',function(ev){
    and it stays off the public repo. Without, it is the same app carrying only
    the special teams — which is what can be deployed and shown. Say which one
    is on screen rather than letting him work it out. */
-if(!DATA.hisBook && !loadStoredBook()){
+if(!DATA.hisBook){
   /* These four are pages in his app, not on this site. Dimmed and inert rather
      than links that quietly do nothing, and the way back to the designer is
      put where a way back belongs. */
@@ -949,23 +949,54 @@ document.getElementById('buildtag').textContent=
    public — but that is a rule about publishing, not about him being able to use
    it. So the file is read here, kept in localStorage against this origin, and
    merged into the list. Nothing is uploaded and nothing is committed. */
-var BOOK_KEY='pp-book';
-function loadStoredBook(){
-  try{
-    var raw=localStorage.getItem(BOOK_KEY); if(!raw)return null;
-    var b=JSON.parse(raw);
-    return (b&&b.plays&&b.plays.length)?b:null;
-  }catch(e){ return null; }
+/* His half of the book, held on this device.
+
+   IndexedDB, not localStorage. His artwork is 8 MB across 1,422 runnable
+   diagrams and localStorage tops out around 5 — which is why the first pass
+   carried 90 of them and looked like the whole book was missing. IndexedDB
+   takes the lot.
+
+   It cannot go in the repo — the artwork is password-protected and this site is
+   public — but that is a rule about publishing, not about him using it.
+   Nothing is uploaded and nothing is committed. */
+var DB_NAME='pp', DB_STORE='book', BOOK_KEY='book';
+function idb(){
+  return new Promise(function(res,rej){
+    var r=indexedDB.open(DB_NAME,1);
+    r.onupgradeneeded=function(){ r.result.createObjectStore(DB_STORE); };
+    r.onsuccess=function(){ res(r.result); };
+    r.onerror=function(){ rej(r.error); };
+  });
 }
+function idbDo(mode,fn){
+  return idb().then(function(db){
+    return new Promise(function(res,rej){
+      var tx=db.transaction(DB_STORE,mode), q=fn(tx.objectStore(DB_STORE));
+      q.onsuccess=function(){ res(q.result); };
+      q.onerror=function(){ rej(q.error); };
+    });
+  });
+}
+var STORED=null;
+function loadStoredBook(){ return STORED; }
+function readBook(){
+  if(!window.indexedDB)return Promise.resolve(null);
+  return idbDo('readonly',function(st){return st.get(BOOK_KEY);})
+    .then(function(b){ return (b&&b.plays&&b.plays.length)?b:null; })
+    .catch(function(){ return null; });
+}
+function writeBook(b){ return idbDo('readwrite',function(st){return st.put(b,BOOK_KEY);}); }
+function dropBook(){ return idbDo('readwrite',function(st){return st.delete(BOOK_KEY);}); }
+
 function mergeBook(b){
   if(!b)return;
   var have={}; ALL.forEach(function(p){have[p.id]=1;});
-  var add=b.plays.filter(function(p){return !have[p.id];});
-  ALL=ALL.concat(add);
+  ALL=ALL.concat(b.plays.filter(function(p){return !have[p.id];}));
   if(b.defs&&!DATA.defs)DATA.defs=b.defs;
+  if(b.cards)CARDS=b.cards;
 }
-/* Accepts the playbook JSON, or the built page itself — he already has that
-   file, and asking him to convert it would be one more thing to get wrong. */
+/* Accepts the book JSON, or the built page itself — he already has that file,
+   and asking him to convert it would be one more thing to get wrong. */
 function bookFromText(txt){
   var t=txt.trim();
   if(t.charAt(0)!=='{'){
@@ -977,41 +1008,47 @@ function bookFromText(txt){
   if(!b.plays||!b.plays.length)throw new Error('That file has no plays in it.');
   var his=b.plays.filter(function(p){return p.side==='his';});
   if(!his.length)throw new Error('That file has none of his plays in it \u2014 it is the special teams build.');
-  return {plays:his, defs:b.defs||''};
+  return {plays:his, defs:b.defs||'', cards:b.cards||null};
 }
 function paintBookBox(){
-  var stored=loadStoredBook();
-  document.getElementById('loadBook').hidden=!!stored||DATA.hisBook;
-  document.getElementById('haveBook').hidden=!stored;
-  if(stored)document.getElementById('haveCount').textContent=stored.plays.length;
+  document.getElementById('loadBook').hidden=!!STORED||DATA.hisBook;
+  document.getElementById('haveBook').hidden=!STORED;
+  if(STORED)document.getElementById('haveCount').textContent=STORED.plays.length;
 }
 document.getElementById('bookFile').addEventListener('change',function(ev){
   var f=ev.target.files&&ev.target.files[0]; if(!f)return;
   var msg=document.getElementById('bookMsg');
-  msg.className=''; msg.textContent='Reading \u2026';
+  msg.className=''; msg.textContent='Reading \u2014 this one is big, give it a moment \u2026';
   var r=new FileReader();
   r.onload=function(){
-    try{
-      var b=bookFromText(String(r.result));
-      localStorage.setItem(BOOK_KEY,JSON.stringify(b));
-      msg.textContent=b.plays.length+' plays added.';
+    var b;
+    try{ b=bookFromText(String(r.result)); }
+    catch(e){ msg.className='bad'; msg.textContent=(e&&e.message)||'That file could not be read.'; return; }
+    writeBook(b).then(function(){
+      STORED=b;
+      msg.textContent=b.plays.length+' plays added'+(b.cards?', with the field cards':'')+'.';
       mergeBook(b); paintList(); paintBookBox();
       document.getElementById('previewNote').hidden=true;
-    }catch(e){
+    }).catch(function(e){
       msg.className='bad';
-      msg.textContent=(e&&e.message)||'That file could not be read.';
-    }
+      msg.textContent='Could not store it on this device: '+((e&&e.message)||'unknown error');
+    });
   };
   r.onerror=function(){ msg.className='bad'; msg.textContent='That file could not be read.'; };
   r.readAsText(f);
 });
 document.getElementById('dropBook').onclick=function(){
-  try{ localStorage.removeItem(BOOK_KEY); }catch(e){}
-  location.reload();
+  dropBook().then(function(){ location.reload(); });
 };
 
-mergeBook(loadStoredBook());
-paintList();
-paintBookBox();
-bindDrag();
+/* The list waits for the book, because painting 19 and then jumping to 1,441
+   reads as the page changing its mind. */
+readBook().then(function(b){
+  STORED=b;
+  mergeBook(b);
+  if(b)document.getElementById('previewNote').hidden=true;
+  paintList();
+  paintBookBox();
+  bindDrag();
+});
 </script>
