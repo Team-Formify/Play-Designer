@@ -1,7 +1,8 @@
 {
   "cleanUrls": true,
   "redirects": [
-    { "source": "/preview", "destination": "/playbook", "permanent": false }
+    { "source": "/preview", "destination": "/", "permanent": false },
+    { "source": "/playbook", "destination": "/", "permanent": false }
   ],
   "headers": [
     {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Rewrites the <script id="play-engine"> block in index.html and learn.html
+/* Rewrites the <script id="play-engine"> block in designer.html and learn.html
    from play-engine.js.
 
    play-engine.js is the source of truth. The embedded copies exist because a
@@ -18,7 +18,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const SRC = path.join(root, 'play-engine.js');
-const PAGES = ['index.html', 'learn.html', 'bridge/demo.html', 'bridge/combined-shell.html'];
+const PAGES = ['designer.html', 'learn.html', 'bridge/demo.html', 'bridge/combined-shell.html'];
 const OPEN = '<script id="play-engine">';
 const CLOSE = '</script>';
 

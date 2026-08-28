@@ -25,7 +25,7 @@ const PE = createRequire(import.meta.url)("../play-engine.js");
    artwork and this repo is public.
 
    With --ours-only: the same app carrying only our special teams, written to
-   playbook.html at the root so it deploys with the rest of the site. This is
+   index.html — the front door of the site. This is
    the REAL BUILD, not a mock-up of one — same shell, same engine, same code
    path; the only thing absent is his half of the book, which cannot be
    published here. When this moves to his repo that half is simply present. */
@@ -34,7 +34,7 @@ const root = OURS_ONLY ? null : process.argv[2];
 if (!root && !OURS_ONLY) {
   console.error("Point me at a checkout of the planner, or build the public one:\n" +
                 "  node bridge/build-combined.mjs ../8th-grade-practice-planner\n" +
-                "  node bridge/build-combined.mjs --ours-only     # writes playbook.html");
+                "  node bridge/build-combined.mjs --ours-only     # writes index.html");
   process.exit(1);
 }
 const HOW_MANY = Number(process.argv[3] || 90);
@@ -225,7 +225,7 @@ const out = shell.replace(
   '<script type="application/json" id="playbook"></script>',
   '<script type="application/json" id="playbook">' + data + "</script>",
 );
-const target = OURS_ONLY ? "playbook.html" : "bridge/combined.html";
+const target = OURS_ONLY ? "index.html" : "bridge/combined.html";
 writeFileSync(target, out);
 
 /* His half on its own, for loading into the deployed site by hand.

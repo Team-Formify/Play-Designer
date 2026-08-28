@@ -6,7 +6,7 @@
  * to do anything.
  *
  * Writes special-teams-plays.json AND the embedded fallback block inside
- * index.html in one commit, via the git trees API, so the two can never drift
+ * designer.html in one commit, via the git trees API, so the two can never drift
  * apart. That drift is the whole reason scripts/sync-play-data.js exists.
  *
  * Needs, in Vercel → Settings → Environment Variables:
@@ -18,7 +18,7 @@
 const REPO   = process.env.GITHUB_REPO   || 'Team-Formify/Play-Designer';
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
 const JSON_PATH = 'special-teams-plays.json';
-const HTML_PATH = 'index.html';
+const HTML_PATH = 'designer.html';
 const OPEN = '<script type="application/json" id="play-data">';
 const CLOSE = '</script>';
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -100,12 +100,12 @@ module.exports = async function handler(req, res) {
     const headSha = ref.object.sha;
     const headCommit = await gh(`/repos/${REPO}/git/commits/${headSha}`, token);
 
-    // Patch the embedded copy inside index.html so it cannot drift from the JSON.
+    // Patch the embedded copy inside designer.html so it cannot drift from the JSON.
     const htmlMeta = await gh(
       `/repos/${REPO}/contents/${HTML_PATH}?ref=${BRANCH}`, token);
     const html = Buffer.from(htmlMeta.content, 'base64').toString('utf8');
     const start = html.indexOf(OPEN);
-    if (start === -1) return res.status(500).json({ error: 'No play-data block in index.html.' });
+    if (start === -1) return res.status(500).json({ error: 'No play-data block in designer.html.' });
     const from = start + OPEN.length;
     const end = html.indexOf(CLOSE, from);
     if (end === -1) return res.status(500).json({ error: 'play-data block is not closed.' });
@@ -143,7 +143,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         message: `Playbook update from the app — ${plays} plays, ${spots} spots\n\n` +
                  `Saved from the Play Designer. Both special-teams-plays.json and the ` +
-                 `embedded copy in index.html are written together so they cannot drift.`,
+                 `embedded copy in designer.html are written together so they cannot drift.`,
         tree: tree.sha,
         parents: [headSha]
       })

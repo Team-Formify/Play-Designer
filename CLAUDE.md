@@ -4,8 +4,10 @@ Interactive play designer for a **Lehi Youth Football 8th grade** special teams 
 Dom is the assistant coach running special teams. This tool designs, stores, and prints
 the four kicking units plus variants.
 
-Current state: `index.html` (the coach's tool), `learn.html` (the boys' version) and
-`special-teams-plays.json`, which both read. No build step, no dependencies, deploys as
+Current state: **the repo IS the merged app.** `index.html` is the practice planner's
+app running on this engine and is the front door; `designer.html` (`/designer`) is the
+coach's special teams editor, unchanged and still where he edits; `learn.html` is the
+boys' version. All three read `special-teams-plays.json`. No build step, no dependencies, deploys as
 a static site.
 
 ---
@@ -220,7 +222,7 @@ are not repeated. **Do not call it "merged" in the UI when it is not.** A button
 labelled `Merged app` sent him to a page in someone else's design carrying only
 his own plays — no combination, no gain, and it read as a different product. And
 the direction is *his app into Steve's*, not the reverse: the version he opens
-daily to edit special teams stays `index.html`, which is his.
+daily to edit special teams is `designer.html` at `/designer`, which is his and stays his.
 
 ## Architecture
 
@@ -529,9 +531,15 @@ it was live and correct the whole time the complaint was that nothing had shippe
 
 | | |
 |---|---|
-| `/` | the coach's app (`index.html`) |
-| `/playbook` | the merged build (`playbook.html`); `/preview` redirects here |
+| `/` | the merged app (`index.html`) — the planner's design on this engine |
+| `/designer` | the coach's special teams editor (`designer.html`) |
 | `/learn` | the boys' page |
+
+`/playbook` and `/preview` redirect to `/`. **`localStorage` is keyed to the ORIGIN, not
+the path**, so moving the editor from `/` to `/designer` did not touch a single saved
+play — but `scripts/sync-play-data.js`, `scripts/sync-engine.js` and
+`api/save-playbook.js` all write into `designer.html` now, and getting one of those
+wrong is how the embedded copy silently drifts from the JSON.
 
 The Vercel project is `play-designer` on Dom's team; the same deploy also answers on
 `play-designer-doms-team-projects.vercel.app`. In-app links stay **relative** anyway, so

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /* Rewrites the <script type="application/json" id="play-data"> fallback block in
-   index.html from special-teams-plays.json.
+   designer.html from special-teams-plays.json.
 
    The .json file is the source of truth. The embedded block exists only because
-   fetch() cannot reach a sibling file when index.html is opened as a downloaded
+   fetch() cannot reach a sibling file when designer.html is opened as a downloaded
    local file or run inside the artifact viewer. Run this after editing the JSON:
 
        node scripts/sync-play-data.js
@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const HTML = path.join(root, 'index.html');
+const HTML = path.join(root, 'designer.html');
 const JSON_FILE = path.join(root, 'special-teams-plays.json');
 const OPEN = '<script type="application/json" id="play-data">';
 const CLOSE = '</script>';
@@ -49,13 +49,13 @@ if (compact.includes('</script')) {
 const html = fs.readFileSync(HTML, 'utf8');
 const start = html.indexOf(OPEN);
 if (start === -1) {
-  console.error('No play-data block found in index.html.');
+  console.error('No play-data block found in designer.html.');
   process.exit(1);
 }
 const from = start + OPEN.length;
 const end = html.indexOf(CLOSE, from);
 if (end === -1) {
-  console.error('play-data block is not closed in index.html.');
+  console.error('play-data block is not closed in designer.html.');
   process.exit(1);
 }
 

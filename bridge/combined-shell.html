@@ -205,7 +205,7 @@ button{font:inherit;cursor:pointer;}
   dead end.
 -->
 <header class="bar">
-  <a class="brand" href="/" aria-label="Lehi Football">
+  <a class="brand" href="/" aria-label="Lehi Football — the playbook">
     <span class="mark">LF</span>
     <h1>Lehi Football</h1>
   </a>
@@ -216,7 +216,8 @@ button{font:inherit;cursor:pointer;}
     <a href="#" data-his>Depth</a>
     <a href="#" aria-current="page">Plays</a>
     <a href="#" data-his>Library</a>
-    <a href="/" id="backDesigner" hidden>← Designer</a>
+    <a href="/designer" id="toDesigner">Special teams</a>
+    <a href="/learn" id="toLearn">For the boys</a>
     <button type="button" class="signout">Staff · out</button>
   </nav>
 </header>
@@ -933,13 +934,11 @@ if(!DATA.hisBook && !loadStoredBook()){
     a.title='A page in the practice planner — not in this preview.';
     a.addEventListener('click',function(ev){ev.preventDefault();});
   });
-  document.getElementById('backDesigner').hidden=false;
   var n=document.getElementById('previewNote');
-  n.innerHTML='<b>This build carries the special teams only.</b> It is the real app, not a '+
-    'mock-up of one \u2014 same page, same engine, same code that will run in the practice '+
-    'planner. Steve\u2019s offense and defense are the one thing missing, because his artwork '+
-    'is password-protected and this site is public. They appear the moment this moves across '+
-    'to his repo; nothing else about it changes.';
+  n.innerHTML='<b>The offense and defense are not loaded yet.</b> They cannot be published '+
+    'on this site \u2014 the artwork is password-protected and this repo is public \u2014 but '+
+    'they can sit on this device. Load them below and the list is complete. Everything else '+
+    'here is finished: this is the app, on the engine, and it is what goes to his repo.';
   n.hidden=false;
 }
 document.getElementById('buildtag').textContent=
