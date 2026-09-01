@@ -142,6 +142,12 @@ function opponentOf(play) {
   );
 }
 
+/* The runtime port escapes these; this must too, or the two paths agree only
+   until a play name or a label contains one of them — and then it is the BUILD
+   that emits broken SVG. */
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
 function toSvg(play, look) {
   const los = play.lineOfScrimmage;
   const routes = look ? look.routes : play.routes || [];
@@ -157,10 +163,10 @@ function toSvg(play, look) {
   for (const m of opponentOf(play).men) {
     const id = `D:${m.q.label || "X"}`;
     const cx = X(m.x), cy = seen(Y(m.y, los));
-    men.push(`<g data-man="${id}"><rect x="${cx - 11}" y="${cy - 11}" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="${cx}" y="${cy + 4}" fill="#c1121f">${m.q.label || ""}</text></g>`);
+    men.push(`<g data-man="${esc(id)}"><rect x="${cx - 11}" y="${cy - 11}" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="${cx}" y="${cy + 4}" fill="#c1121f">${esc(m.q.label || "")}</text></g>`);
     if (!m.path || m.path.length < 2) continue;
     const d = `M${cx},${cy} ` + m.path.slice(1).map((t) => `L${X(t.x)},${seen(Y(t.y, los))}`).join(" ");
-    lines.push(`<path d="${d}" stroke="#c1121f" stroke-width="2.2" fill="none" marker-end="url(#arR)" data-owner="${id}" data-role="route"/>`);
+    lines.push(`<path d="${d}" stroke="#c1121f" stroke-width="2.2" fill="none" marker-end="url(#arR)" data-owner="${esc(id)}" data-role="route"/>`);
   }
 
   for (const p of play.players) {
@@ -168,12 +174,12 @@ function toSvg(play, look) {
     const id = them ? `D:${p.label || "X"}` : (p.label || "?");
     const cx = X(p.x), cy = seen(Y(p.y, los));
     men.push(them
-      ? `<g data-man="${id}"><rect x="${cx - 11}" y="${cy - 11}" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="${cx}" y="${cy + 4}" fill="#c1121f">${p.label || ""}</text></g>`
-      : `<g data-man="${id}"><circle cx="${cx}" cy="${cy}" r="11" fill="#e8edf7" stroke="#0b2545" stroke-width="2.4"/><text x="${cx}" y="${cy + 4}" fill="#0b2545">${p.label || ""}</text></g>`);
+      ? `<g data-man="${esc(id)}"><rect x="${cx - 11}" y="${cy - 11}" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="${cx}" y="${cy + 4}" fill="#c1121f">${esc(p.label || "")}</text></g>`
+      : `<g data-man="${esc(id)}"><circle cx="${cx}" cy="${cy}" r="11" fill="#e8edf7" stroke="#0b2545" stroke-width="2.4"/><text x="${cx}" y="${cy + 4}" fill="#0b2545">${esc(p.label || "")}</text></g>`);
     const r = routes.find((z) => z.playerId === p.id);
     if (!r || !r.points.length) continue;
     const d = `M${cx},${cy} ` + r.points.map((t) => `L${X(t.x)},${seen(Y(t.y, los))}`).join(" ");
-    lines.push(`<path d="${d}" stroke="#0b2545" stroke-width="2.6" fill="none" marker-end="url(#arN)" data-owner="${id}" data-role="route"/>`);
+    lines.push(`<path d="${d}" stroke="#0b2545" stroke-width="2.6" fill="none" marker-end="url(#arN)" data-owner="${esc(id)}" data-role="route"/>`);
   }
   const L = Y(los, los);
   ys.push(L);
@@ -189,7 +195,7 @@ function toSvg(play, look) {
     `<path d="M0,0 L7,3 L0,6 Z" fill="#0b2545"/></marker>` +
     `<marker id="arR" markerWidth="9" markerHeight="9" refX="6.4" refY="3" orient="auto">` +
     `<path d="M0,0 L7,3 L0,6 Z" fill="#c1121f"/></marker></defs>`;
-  return `<svg viewBox="0 ${y0} 920 ${h}" role="img" aria-label="${play.name}" text-anchor="middle" style="font:800 10px system-ui">` + DEFS +
+  return `<svg viewBox="0 ${y0} 920 ${h}" role="img" aria-label="${esc(play.name)}" text-anchor="middle" style="font:800 10px system-ui">` + DEFS +
     `<rect x="0" y="${y0}" width="920" height="${h}" fill="#fbfcfe"/>` + men.join("") +
     `<line x1="28" y1="${L}" x2="892" y2="${L}" stroke="#0b2545" stroke-width="2.2"/>` +
     lines.join("") + `</svg>`;
