@@ -623,9 +623,113 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-var BUILD_TAG='4 \u00b7 26 Aug';
+var BUILD_TAG='5 \u00b7 26 Aug';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
-var ALL=DATA.plays||[], ORDERED=[], CARDS=DATA.cards||null;
+var BAKED_OURS=(DATA.plays||[]).filter(function(p){return p.side==='ours';});
+var HIS=(DATA.plays||[]).filter(function(p){return p.side==='his';});
+var OURS=BAKED_OURS.slice();
+var ALL=OURS.concat(HIS), ORDERED=[], SRC_NOTE='the published playbook', CARDS=DATA.cards||null;
+
+/* ── the special teams, drawn from the playbook rather than baked in ─────────
+   The editor at /designer is where he works, and this page has to show what is
+   actually in it — otherwise "keep my editor, feed his app" is a slogan and the
+   app is a snapshot of whenever it was last built.
+
+   So the same conversion the build does is done here, at load, off whichever
+   source is live: his own device's copy first, then the published JSON, then
+   the baked copy as the floor. That last one is what makes this still work as a
+   downloaded file, where fetch() cannot reach a sibling. */
+var K=16/(392/53.3);
+function X(x){ return Math.round((460+(x-210)*K)*10)/10; }
+function Y(y,los){ return Math.round((300+(y-los)*K)*10)/10; }
+function esc2(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+function oursFromBook(book){
+  if(!book||!book.plays||!book.plays.length)return null;
+  var bySlug={}; book.plays.forEach(function(p){ bySlug[p.slug]=p; });
+  function firstLook(p){ return (p.looks&&p.looks.length)?p.looks[0]:{routes:p.routes||[]}; }
+  function opponentOf(play){
+    var src=bySlug[play.mirrorOf||'']; if(!src)return {men:[]};
+    var ours=play.players.filter(function(q){return q.team!=='them';});
+    var theirs=src.players.filter(function(q){return q.team!=='them';});
+    if(!ours.length||!theirs.length)return {men:[]};
+    return PE.mirror({los:play.lineOfScrimmage,ours:ours},
+      {los:src.lineOfScrimmage,ours:theirs,routes:firstLook(src).routes});
+  }
+  function toSvg(play,look){
+    var los=play.lineOfScrimmage, routes=look?look.routes:(play.routes||[]);
+    var men=[],lines=[],ys=[];
+    function seen(cy){ ys.push(cy); return cy; }
+    opponentOf(play).men.forEach(function(m){
+      var id='D:'+(m.q.label||'X'), cx=X(m.x), cy=seen(Y(m.y,los));
+      men.push('<g data-man="'+esc2(id)+'"><rect x="'+(cx-11)+'" y="'+(cy-11)+'" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="'+cx+'" y="'+(cy+4)+'" fill="#c1121f">'+esc2(m.q.label||'')+'</text></g>');
+      if(!m.path||m.path.length<2)return;
+      var d='M'+cx+','+cy+' '+m.path.slice(1).map(function(t){return 'L'+X(t.x)+','+seen(Y(t.y,los));}).join(' ');
+      lines.push('<path d="'+d+'" stroke="#c1121f" stroke-width="2.2" fill="none" marker-end="url(#arR)" data-owner="'+esc2(id)+'" data-role="route"/>');
+    });
+    play.players.forEach(function(q){
+      var them=q.team==='them', id=them?('D:'+(q.label||'X')):(q.label||'?');
+      var cx=X(q.x), cy=seen(Y(q.y,los));
+      men.push(them
+        ? '<g data-man="'+esc2(id)+'"><rect x="'+(cx-11)+'" y="'+(cy-11)+'" width="22" height="22" rx="3" fill="#fff" stroke="#c1121f" stroke-width="2.2"/><text x="'+cx+'" y="'+(cy+4)+'" fill="#c1121f">'+esc2(q.label||'')+'</text></g>'
+        : '<g data-man="'+esc2(id)+'"><circle cx="'+cx+'" cy="'+cy+'" r="11" fill="#e8edf7" stroke="#0b2545" stroke-width="2.4"/><text x="'+cx+'" y="'+(cy+4)+'" fill="#0b2545">'+esc2(q.label||'')+'</text></g>');
+      var r=null;
+      for(var i=0;i<routes.length;i++) if(routes[i].playerId===q.id){ r=routes[i]; break; }
+      if(!r||!r.points.length)return;
+      var d='M'+cx+','+cy+' '+r.points.map(function(t){return 'L'+X(t.x)+','+seen(Y(t.y,los));}).join(' ');
+      lines.push('<path d="'+d+'" stroke="#0b2545" stroke-width="2.6" fill="none" marker-end="url(#arN)" data-owner="'+esc2(id)+'" data-role="route"/>');
+    });
+    var L=Y(los,los); ys.push(L);
+    var y0=Math.round(Math.min(0,Math.min.apply(null,ys)-26));
+    var y1=Math.round(Math.max(460,Math.max.apply(null,ys)+26));
+    var h=y1-y0;
+    var DEFS='<defs><marker id="arN" markerWidth="9" markerHeight="9" refX="6.4" refY="3" orient="auto">'+
+      '<path d="M0,0 L7,3 L0,6 Z" fill="#0b2545"/></marker>'+
+      '<marker id="arR" markerWidth="9" markerHeight="9" refX="6.4" refY="3" orient="auto">'+
+      '<path d="M0,0 L7,3 L0,6 Z" fill="#c1121f"/></marker></defs>';
+    return '<svg viewBox="0 '+y0+' 920 '+h+'" role="img" aria-label="'+esc2(play.name)+'" text-anchor="middle" style="font:800 10px system-ui">'+DEFS+
+      '<rect x="0" y="'+y0+'" width="920" height="'+h+'" fill="#fbfcfe"/>'+men.join('')+
+      '<line x1="28" y1="'+L+'" x2="892" y2="'+L+'" stroke="#0b2545" stroke-width="2.2"/>'+
+      lines.join('')+'</svg>';
+  }
+  var out=[];
+  book.plays.forEach(function(play){
+    var looks=(play.looks&&play.looks.length)?play.looks:[null];
+    looks.forEach(function(look){
+      var jobs={};
+      play.players.forEach(function(q){
+        if(q.team!=='them'&&q.label)jobs[q.label]={role:q.role||'',job:q.job||''};
+      });
+      out.push({
+        id:play.slug+(look?':'+look.id:''), side:'ours', section:'special',
+        call:(play.name+(look?' \u2014 '+look.name:'')).toUpperCase(),
+        meta:(play.phase==='special'||!play.phase)?'SPECIAL':String(play.phase).toUpperCase(),
+        caption:[play.howItWorks,look&&look.how,look&&look.aim&&look.aim.label]
+          .filter(Boolean).join(' '),
+        svg:toSvg(play,look), jobs:jobs,
+      });
+    });
+  });
+  return out.length?out:null;
+}
+
+/* His device first, then what is published, then the baked copy. Same order the
+   boys' page uses, and for the same reason: on his phone he must see what he
+   just edited, and on anyone else's the published book is correct. */
+function liveBook(){
+  var local=null;
+  try{
+    var raw=localStorage.getItem('pd-source');
+    if(raw){ var d=JSON.parse(raw); if(d&&d.plays&&d.plays.length)local=d; }
+  }catch(e){}
+  if(local)return Promise.resolve({book:local,from:'this device'});
+  if(location.protocol==='file:')return Promise.resolve(null);
+  return fetch('special-teams-plays.json',{cache:'no-store'})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(d){ return (d&&d.plays&&d.plays.length)?{book:d,from:'the playbook'}:null; })
+    .catch(function(){ return null; });
+}
 var openIdx=null, scene=null, play=null, work=null;
 var T=0, playing=false, speed=1, raf=null;
 var showMarks=true, showOrig=false, editing=false;
@@ -662,8 +766,9 @@ function paintList(){
   var mine=ALL.filter(function(p){return p.side==='ours';}).length;
   var his=ALL.length-mine;
   document.getElementById('loaded').textContent=
-    his? (mine+' SPECIAL TEAMS \u00b7 '+his+' OFFENSE & DEFENSE')
-       : (mine+' SPECIAL TEAMS \u00b7 HIS BOOK NOT LOADED');
+    (his? (mine+' SPECIAL TEAMS \u00b7 '+his+' OFFENSE & DEFENSE')
+        : (mine+' SPECIAL TEAMS \u00b7 HIS BOOK NOT LOADED'))
+    +' \u00b7 FROM '+SRC_NOTE.toUpperCase();
   sheet.addEventListener('click',function(ev){
     var b=ev.target.closest('.row'); if(b)openAt(+b.dataset.i);
   });
@@ -1022,11 +1127,13 @@ function dropBook(){ return idbDo('readwrite',function(st){return st.delete(BOOK
 
 function mergeBook(b){
   if(!b)return;
-  var have={}; ALL.forEach(function(p){have[p.id]=1;});
-  ALL=ALL.concat(b.plays.filter(function(p){return !have[p.id];}));
+  var have={}; HIS.forEach(function(p){have[p.id]=1;});
+  HIS=HIS.concat(b.plays.filter(function(p){return !have[p.id];}));
   if(b.defs&&!DATA.defs)DATA.defs=b.defs;
   if(b.cards)CARDS=b.cards;
+  recombine();
 }
+function recombine(){ ALL=OURS.concat(HIS); }
 /* Accepts the book JSON, or the built page itself — he already has that file,
    and asking him to convert it would be one more thing to get wrong. */
 function bookFromText(txt){
@@ -1075,12 +1182,30 @@ document.getElementById('dropBook').onclick=function(){
 
 /* The list waits for the book, because painting 19 and then jumping to 1,441
    reads as the page changing its mind. */
-readBook().then(function(b){
+Promise.all([readBook(), liveBook()]).then(function(r){
+  var b=r[0], live=r[1];
+  if(live){
+    var fresh=oursFromBook(live.book);
+    if(fresh){ OURS=fresh; SRC_NOTE=live.from; }
+  }
+  recombine();
   STORED=b;
   mergeBook(b);
   if(b)document.getElementById('previewNote').hidden=true;
   paintList();
   paintBookBox();
   bindDrag();
+});
+
+/* An open tab updates the moment he saves in the editor — same origin, same
+   key the boys' page listens on. */
+window.addEventListener('storage',function(e){
+  if(e.key!=='pd-source')return;
+  liveBook().then(function(live){
+    if(!live)return;
+    var fresh=oursFromBook(live.book);
+    if(!fresh)return;
+    OURS=fresh; SRC_NOTE=live.from; recombine(); paintList();
+  });
 });
 </script>
