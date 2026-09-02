@@ -117,9 +117,45 @@ in `public/`. **This repo is public**, so none of it is committed here — not a
 fixture, not as a test file. The fixture is our own play written out in their
 format, which exercises the same code paths.
 
+## Proved in his real app
+
+Not a reimplementation of his UI — **his actual codebase, built and running,
+with this engine in it.** Done in a scratch copy of his repo; nothing of his was
+committed here.
+
+```
+npm install                → ok
+tsc --noEmit               → 0 errors, his strict config, whole app
+next build                 → ok: every route, the middleware, the players site
+next start + Playwright    → his playbook, his viewer, our engine
+```
+
+What the browser showed at 390px, on his `/players` playbook:
+
+- his list renders — **THE CORE / EVERYTHING ELSE, 28 rows**
+- opening `12 Power` gives his navy viewer, his gold **THE FIELD CARD** button
+  and his `‹ RUN · HB carries ›` nav
+- inside it: **Run it / Slow / Again / Matchups / Original** and a scrub bar
+- pressing Run it moves his men — 4 of 23, correct for a Power where only the
+  line pulls
+- **`T-R takes T — ASSIGNED`**, read straight off his own block tee
+- **Original** puts his untouched artwork back
+
+Two things had to be faked locally to see it, neither of which ships: his
+Supabase is unreachable from here so the taught-plays list came back empty and
+was stubbed, and his gate passwords come from env so local ones were set. His
+own data and passwords were never needed.
+
 ## Moving it across
 
-What goes into his repo, and where:
+`react/PlaybookGrid.patch` is the entire change to his codebase — **7 lines
+added, 2 removed**, verified to apply clean to a fresh copy of his `src/`:
+
+```bash
+patch -p1 < PlaybookGrid.patch      # one import, one swapped line
+```
+
+Plus four new files:
 
 | From here | To there |
 |---|---|
@@ -128,10 +164,13 @@ What goes into his repo, and where:
 | `react/PlayRunner.tsx` | `src/components/PlayRunner.tsx` |
 | `react/PlayRunner.module.css` | `src/components/PlayRunner.module.css` |
 
-Then one change in `PlaybookGrid.tsx`: inside `Viewer`, where the `.vpic` div
-renders `dangerouslySetInnerHTML`, render `<PlayRunner svg={dia.svg} />` instead.
-Everything else — the rows, the sections, the `‹ ›` nav, the print sheet — is
-untouched, and `Original` inside the runner puts his exact artwork back.
+Nothing else of his is touched — the rows, the sections, the `‹ ›` nav, the
+print sheet and the field cards are all his and all unchanged.
+
+**One cosmetic thing to fix before this is proposed:** his `.vpics` is a flex
+column sized for a picture, and the runner adds controls and a matchup list
+under it, so on a tall phone there is a stretch of empty white between the
+matchup list and the rotate hint. It belongs in his stylesheet, not ours.
 
 The special teams arrive the same way they do here: written into his SVG format
 by `build-combined.mjs` and added to the tile list as their own section.

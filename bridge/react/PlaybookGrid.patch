@@ -1,0 +1,23 @@
+--- a/src/components/PlaybookGrid.tsx	2026-08-25 13:50:42.000000000 +0000
++++ b/src/components/PlaybookGrid.tsx	2026-09-02 01:23:01.754892514 +0000
+@@ -28,6 +28,11 @@
+   conflictFor, lookLabel, orderForCallSheet, pictureFormationFor, TYPE_LABEL, type PlaybookTile,
+ } from "@/lib/playbook";
+ import CallCard from "./CallCard";
++/* The play, played. Reads the diagram with this repo's own sceneFromSvg and
++   walks all twenty-two down their routes on one clock, marks who takes whom
++   and rings where they meet. The artwork is not redrawn — "Original" inside it
++   puts the exact generated SVG back on screen. */
++import PlayRunner from "./PlayRunner";
+ import s from "./PlaybookGrid.module.css";
+ 
+ interface PlaybookGridProps {
+@@ -194,7 +199,7 @@
+                     </div>
+                   )}
+                   <div className={s.vpic}>
+-                    <div dangerouslySetInnerHTML={{ __html: d.svg }} />
++                    <PlayRunner svg={d.svg} />
+                   </div>
+                 </div>
+               ))
