@@ -67,9 +67,9 @@ export default function PlayRunner({ svg, moves, onMove, editable = false }: Pla
 
   /* The model. Rebuilt when the artwork changes or a man is nudged — never
      stored, so editing the diagram moves the matchups with it. */
-  const { play, contacts, frozen } = useMemo(() => {
+  const { play, contacts, frozen, pairs } = useMemo(() => {
     const p = sceneToPlay(sceneFromSvg(svg), moves);
-    const { contacts } = assignments(p);
+    const { contacts, pairs } = assignments(p);
     const frozen: Record<string, Freeze> = {};
     for (const c of contacts) {
       const ours = p.offense.find((m) => m.id === c.id);
@@ -77,8 +77,27 @@ export default function PlayRunner({ svg, moves, onMove, editable = false }: Pla
       if (ours) frozen[ours.id] = { t: c.t, at: c.a };
       if (theirs) frozen[theirs.id] = { t: c.t, at: c.b };
     }
-    return { play: p, contacts, frozen };
+    return { play: p, contacts, frozen, pairs };
   }, [svg, moves]);
+
+  /* EVERY matchup, not only the ones that collide.
+     Listing collisions alone gave one row on a Power — the line pulls and
+     nobody else closes — which left most of the panel empty and answered a
+     narrower question than the one a coach asks. He wants to know who has whom
+     on all eleven; whether they physically meet is a property of the routes as
+     drawn, so it is a mark on the row rather than the price of appearing. */
+  const board = useMemo(() => {
+    const met = new Map(contacts.map((c) => [c.id, c]));
+    return play.offense
+      .filter((o) => pairs[o.id] !== undefined)
+      .map((o) => ({
+        id: o.id, label: o.label,
+        them: play.defense[pairs[o.id]]?.label ?? "?",
+        drawn: Boolean(o.covers),
+        meets: met.get(o.id),
+      }))
+      .sort((a, b) => Number(Boolean(b.meets)) - Number(Boolean(a.meets)));
+  }, [play, pairs, contacts]);
 
   /* The clock only changes where a man is DRAWN. Nothing mutates his position,
      so a re-render mid-run can never write the halfway picture back. */
@@ -193,20 +212,21 @@ export default function PlayRunner({ svg, moves, onMove, editable = false }: Pla
       <Controls {...{ playing, slow, marks, original, setSlow, setMarks, setOriginal, again }}
         onRun={() => setPlaying((p) => !p)} t={t} onScrub={(v) => { stop(); setT(v); }} />
 
-      {marks && contacts.length > 0 && (
-        <ul className={s.pairs}>
-          {contacts.map((c, i) => {
-            const o = play.offense.find((m) => m.id === c.id);
-            const d = c.bi === undefined ? undefined : play.defense[c.bi];
-            if (!o || !d) return null;
-            return (
-              <li key={i}>
-                <b>{o.label}</b> takes <em>{d.label}</em>
-                <span>{c.assigned ? "assigned" : "nearest"}</span>
+      {marks && board.length > 0 && (
+        <>
+          <div className={s.boardHead}>
+            WHO TAKES WHO
+            <span>{contacts.length} of {board.length} come together</span>
+          </div>
+          <ul className={s.pairs}>
+            {board.map((r) => (
+              <li key={r.id} className={r.meets ? s.meets : undefined}>
+                <b>{r.label}</b> takes <em>{r.them}</em>
+                <span>{r.drawn ? "blocked" : r.meets ? "meets" : "nearest"}</span>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );

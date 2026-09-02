@@ -4,7 +4,11 @@
  * picture. Buttons follow the playbook viewer: 2px navy border, .4rem radius,
  * 44px floor on anything a thumb has to hit.
  */
-.wrap { display: flex; flex-direction: column; }
+/* Fill the viewer's picture column. His `.vpics` is `flex: 1 1 auto`, so a
+   component shorter than the phone leaves a hole between the last row and his
+   rotate hint. Filling it puts the gap where padding belongs — under the list,
+   not in the middle of the panel. */
+.wrap { display: flex; flex-direction: column; min-height: 100%; }
 
 .pic { display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .pic svg { width: 100%; height: auto; max-height: 100%; display: block; }
@@ -44,10 +48,21 @@
 
 .scrub { width: 100%; margin: .35rem .2rem 0; accent-color: var(--navy); }
 
-.pairs { list-style: none; margin: .5rem .3rem; padding: 0; }
+.boardHead {
+  display: flex; align-items: baseline; justify-content: space-between; gap: .5rem;
+  margin: .7rem .3rem .25rem; font-size: .74rem; font-weight: 800;
+  letter-spacing: .07em; color: var(--ink-3, #6E6E85);
+}
+.boardHead span { font-weight: 700; letter-spacing: .02em; text-transform: none; }
+
+.pairs { list-style: none; margin: 0 .3rem .5rem; padding: 0; }
 .pairs li { display: flex; gap: .45rem; align-items: baseline; padding: .3rem .6rem;
   font-size: .8rem; border-bottom: 1px solid var(--line, #C9CBE4); }
 .pairs b { font-weight: 900; color: var(--navy); }
 .pairs em { font-style: normal; font-weight: 900; color: #c1121f; }
 .pairs span { margin-left: auto; font-size: .66rem; font-weight: 800;
   letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3, #6E6E85); }
+/* A pair that actually closes is the one he is looking for, so it carries the
+   gold the contact ring is drawn in. */
+.meets { background: #fdf7e6; }
+.meets span { color: #b07a00; }
