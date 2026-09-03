@@ -25,68 +25,65 @@
   build time from his diagramArt.ts and our special-teams-plays.json.
 -->
 <style>
-/* ── his tokens, verbatim from src/app/globals.css ─────────────────────────── */
+/* ── the coach's own palette, straight out of designer.html ────────────────
+   His call, having seen both: the app wears HIS design, not the practice
+   planner's. The field is the dark board he already reads on a sideline, the
+   men are gold, the labels are mono — the same picture his own editor draws,
+   so a play he built and a play of the head coach's look like one playbook.
+
+   What still wears the planner's colours is `react/PlayRunner.module.css`, the
+   component that goes into HIS repo — over there it has to look like his app.
+   Same engine, two skins, and that is deliberate. */
 :root{
-  --navy:#2C2E6B; --purple:#4B4E9E; --accent:#4B4E9E;
-  --ground:#F7F7FB; --card:#FFFFFF; --light:#EDEEF7; --line:#C9CBE4;
-  --ink:#1A1A25; --ink-2:#4A4A5E; --ink-3:#6E6E85;
-  --green:#2E9E4F; --green-bg:#EDF8F0;
-  --yellow:#B98700; --yellow-bg:#FDF7E6;
-  --red:#CC3322; --red-bg:#FCEEEC;
-  --r:4px;
-  /* the diagram's own palette, taken off his generated artwork so a play we
-     draw and a play he drew are the same picture */
-  --dia-bg:#fbfcfe; --dia-navy:#0b2545; --dia-red:#c1121f; --dia-gold:#b07a00;
-  --dia-fill:#e8edf7; --dia-grid:#e8edf7;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --navy:#B9BCEA; --purple:#9FA3E0; --accent:#9FA3E0;
-    --ground:#111118; --card:#1A1A23; --light:#22222E; --line:#34344A;
-    --ink:#EDEDF4; --ink-2:#B4B4C4; --ink-3:#87879B;
-    --green:#6FCB8E; --green-bg:#16281C;
-    --yellow:#E8B44A; --yellow-bg:#2A2211;
-    --red:#F0938A; --red-bg:#2C1613;
-  }
-}
-:root[data-theme="dark"]{
-  --navy:#B9BCEA; --purple:#9FA3E0; --accent:#9FA3E0;
-  --ground:#111118; --card:#1A1A23; --light:#22222E; --line:#34344A;
-  --ink:#EDEDF4; --ink-2:#B4B4C4; --ink-3:#87879B;
-  --green:#6FCB8E; --green-bg:#16281C; --yellow:#E8B44A; --yellow-bg:#2A2211;
-  --red:#F0938A; --red-bg:#2C1613;
+  color-scheme:dark;
+  --page:#13251F; --board:#1D3A31; --deep:#0D1B16;
+  --chalk:#EDEBE0; --soft:#9AA69C; --gold:#E3B547; --warm:#E58A6B;
+  --line:rgba(237,235,224,.16);
+  --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  /* names kept so the rest of the sheet did not have to be rewritten */
+  --navy:#E3B547; --ground:#13251F; --card:#1D3A31; --ink:#EDEBE0;
+  --ink-2:#EDEBE0; --ink-3:#9AA69C; --r:10px;
+  --green:#8FD19E; --green-bg:rgba(143,209,158,.12);
+  --yellow:#E3B547; --yellow-bg:rgba(227,181,71,.10);
+  --red:#E58A6B; --red-bg:rgba(229,138,107,.12);
+  --dia-bg:#1D3A31; --dia-navy:#E3B547; --dia-red:#EDEBE0; --dia-gold:#E58A6B;
+  --dia-fill:rgba(19,37,31,.6); --dia-grid:#EDEBE0;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;max-width:100%;overflow-x:clip;}
-body{background:var(--ground);color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+body{background:var(--page);color:var(--chalk);font-family:var(--body);
   font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;}
 button{font:inherit;cursor:pointer;}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .wrap{max-width:46rem;margin:0 auto;padding:0 .85rem 4rem;}
 
 /* ── his top bar. It wraps; that was a real bug he hit on a phone. ───────── */
-.bar{position:sticky;top:0;z-index:40;background:var(--navy);color:#fff;
+.bar{position:sticky;top:0;z-index:40;background:var(--deep);color:var(--chalk);
+  border-bottom:1px solid var(--line);
   padding:.5rem .85rem;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;}
-.bar h1{font-size:.95rem;font-weight:800;letter-spacing:.03em;margin:0;min-width:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar h1{font-size:.95rem;font-weight:800;letter-spacing:.06em;margin:0;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;}
+.bar h1 em{font-style:normal;color:var(--gold);}
 .bar .brand{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;
   border:0;padding:0;color:#fff;text-decoration:none;}
-.bar .mark{flex:0 0 auto;border-radius:50%;background:#fff;display:block;
-  width:22px;height:22px;color:var(--navy);font-size:11px;font-weight:900;
-  text-align:center;line-height:22px;}
-.syncdot{font-size:.6rem;font-weight:800;letter-spacing:.06em;opacity:.9;flex:0 0 auto;}
+.bar .mark{flex:0 0 auto;border-radius:50%;background:var(--gold);display:block;
+  width:22px;height:22px;color:var(--deep);font-size:10px;font-weight:900;
+  text-align:center;line-height:22px;font-family:var(--mono);}
+.syncdot{font-size:.6rem;font-weight:800;letter-spacing:.08em;flex:0 0 auto;
+  font-family:var(--mono);color:var(--soft);text-transform:uppercase;}
 /* The build, where he can see it without scrolling. This page shipped once
    with the number only at the foot of the list and he had no way to tell it had
    changed — the same mistake the designer had already been fixed for. */
-.buildchip{font-size:.6rem;font-weight:800;letter-spacing:.06em;opacity:.65;
-  flex:0 0 auto;white-space:nowrap;}
+.buildchip{font-size:.6rem;font-weight:800;letter-spacing:.06em;opacity:.7;
+  flex:0 0 auto;white-space:nowrap;font-family:var(--mono);color:var(--soft);}
 @media (max-width:26rem){ .syncdot{display:none;} }
 .barnav{display:flex;align-items:center;gap:.4rem;flex:1 1 auto;flex-wrap:wrap;justify-content:flex-end;}
-.bar a,.bar button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;
-  border-radius:var(--r);padding:.22rem .5rem;font-size:.75rem;font-weight:700;
+.bar a,.bar button{background:transparent;border:1px solid var(--line);color:var(--chalk);
+  border-radius:var(--r);padding:.24rem .55rem;font-size:.75rem;font-weight:700;
   text-decoration:none;white-space:nowrap;}
-.barnav a[aria-current="page"]{background:rgba(255,255,255,.18);border-color:#fff;}
+.bar a:hover{border-color:var(--gold);}
+.barnav a[aria-current="page"]{background:rgba(227,181,71,.16);border-color:var(--gold);color:var(--gold);}
 .barnav a[aria-disabled="true"]{opacity:.45;border-style:dashed;cursor:default;}
 .barnav a[hidden]{display:none;}
 @media (max-width:26rem){
@@ -97,21 +94,24 @@ button{font:inherit;cursor:pointer;}
 
 /* ── his page head ─────────────────────────────────────────────────────────── */
 .phead{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 .2rem;}
-.phead h2{margin:0;font-size:1.15rem;font-weight:900;color:var(--navy);letter-spacing:.01em;}
-.phead .count{font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.05em;}
-.lede{margin:.15rem 0 .9rem;font-size:.86rem;color:var(--ink-3);}
+.phead h2{margin:0;font-size:1.2rem;font-weight:900;color:var(--chalk);
+  letter-spacing:.06em;text-transform:uppercase;}
+.phead .count{font-size:.66rem;font-weight:800;color:var(--soft);letter-spacing:.09em;
+  font-family:var(--mono);}
+.lede{margin:.2rem 0 .9rem;font-size:.86rem;color:var(--soft);}
 .lede[hidden]{display:none;}
 #previewNote{background:var(--yellow-bg);border:1px solid var(--yellow);
-  color:var(--ink-2);border-radius:.4rem;padding:.55rem .7rem;}
+  color:var(--chalk);border-radius:var(--r);padding:.6rem .75rem;}
 /* Same reason both the coach's app and the boys' page print theirs: "is it
    actually updating" has to be a question he can answer by reading the screen. */
-.buildtag{margin:1.6rem 0 0;font-size:.66rem;color:var(--ink-3);letter-spacing:.05em;}
+.buildtag{margin:1.6rem 0 0;font-size:.62rem;color:var(--soft);letter-spacing:.06em;
+  font-family:var(--mono);}
 /* Loading his half. It is on THIS page, under the list it changes, because that
    is where a man looks when the list is short. */
-.loadbook{margin:1.2rem 0 0;padding:.7rem .8rem;border:1px solid var(--line);
-  border-radius:.4rem;background:var(--card);}
+.loadbook{margin:1.2rem 0 0;padding:.8rem .85rem;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--board);}
 .loadbook[hidden]{display:none;}
-.loadbook p{margin:0 0 .6rem;font-size:.84rem;color:var(--ink-2);}
+.loadbook p{margin:0 0 .6rem;font-size:.84rem;color:var(--chalk);}
 .loadbook.ok{background:var(--green-bg);border-color:var(--green);}
 .pick{display:inline-block;cursor:pointer;}
 #bookMsg{display:block;margin-top:.5rem;font-size:.78rem;font-weight:700;color:var(--ink-3);}
@@ -119,78 +119,83 @@ button{font:inherit;cursor:pointer;}
 
 /* ── his call sheet ────────────────────────────────────────────────────────── */
 .sheet{display:flex;flex-direction:column;gap:.4rem;}
-.sectionLabel{margin:1.1rem 0 .3rem;font-size:.78rem;font-weight:800;
-  letter-spacing:.08em;color:var(--ink-3);}
+.sectionLabel{margin:1.2rem 0 .4rem;font-size:.66rem;font-weight:800;
+  letter-spacing:.14em;color:var(--gold);font-family:var(--mono);}
 .sectionLabel:first-child{margin-top:0;}
 .row{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
-  min-height:52px;padding:.55rem .85rem;text-align:left;width:100%;
-  background:var(--card);border:2px solid var(--navy);border-radius:.4rem;}
-.rowCall{font-size:1.08rem;font-weight:900;letter-spacing:.01em;color:var(--navy);
+  min-height:52px;padding:.6rem .85rem;text-align:left;width:100%;
+  background:var(--board);border:1px solid var(--line);border-radius:var(--r);
+  color:var(--chalk);}
+.row:hover{border-color:var(--gold);}
+.rowCall{font-size:1rem;font-weight:800;letter-spacing:.02em;color:var(--chalk);
   overflow-wrap:anywhere;}
-.rowMeta{flex:none;display:flex;align-items:center;gap:.4rem;font-size:.72rem;
-  font-weight:800;letter-spacing:.05em;color:var(--ink-3);}
+.rowMeta{flex:none;display:flex;align-items:center;gap:.4rem;font-size:.6rem;
+  font-weight:800;letter-spacing:.1em;color:var(--soft);font-family:var(--mono);}
 
 /* ── his full-bleed viewer ─────────────────────────────────────────────────── */
-.viewer{position:fixed;inset:0;z-index:80;background:var(--dia-bg);
+.viewer{position:fixed;inset:0;z-index:80;background:var(--page);
   display:flex;flex-direction:column;}
 .viewer[hidden]{display:none;}
 .vbar{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;
-  background:var(--navy);color:#fff;}
-.vcall{font-size:1.05rem;font-weight:900;flex:1 1 auto;min-width:0;overflow-wrap:anywhere;}
-.vclose{min-height:40px;min-width:40px;font-size:1.1rem;font-weight:900;color:#fff;
-  background:transparent;border:2px solid #fff;border-radius:.35rem;}
+  background:var(--deep);color:var(--chalk);border-bottom:1px solid var(--line);}
+.vcall{font-size:1rem;font-weight:900;flex:1 1 auto;min-width:0;overflow-wrap:anywhere;
+  letter-spacing:.04em;text-transform:uppercase;}
+.vclose{min-height:40px;min-width:40px;font-size:1.1rem;font-weight:900;color:var(--chalk);
+  background:transparent;border:1px solid var(--line);border-radius:var(--r);}
 .vscroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:0 .4rem;}
 .vpic{display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;}
 .vpic svg{width:100%;height:auto;display:block;}
+.origFrame{width:100%;background:#fbfcfe;border-radius:var(--r);padding:.3rem 0;}
 
 /* ── what the field code adds. His buttons, his navy, one extra row. ───────── */
 .vtools{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;
   padding:.5rem .4rem .2rem;}
-.tbtn{min-height:40px;padding:.35rem .75rem;font-size:.85rem;font-weight:800;
-  color:var(--navy);background:var(--card);border:2px solid var(--navy);border-radius:.4rem;}
-.tbtn[aria-pressed="true"]{background:var(--navy);color:#fff;}
+.tbtn{min-height:40px;padding:.4rem .8rem;font-size:.82rem;font-weight:800;
+  color:var(--chalk);background:var(--board);border:1px solid var(--line);
+  border-radius:var(--r);}
+.tbtn[aria-pressed="true"]{background:rgba(227,181,71,.16);border-color:var(--gold);color:var(--gold);}
 .tbtn[hidden]{display:none;}
-.tbtn.go{background:var(--dia-gold);border-color:var(--dia-gold);color:#fff;}
-.scrub{width:100%;margin:.35rem .2rem 0;accent-color:var(--navy);}
-.addedby{font-size:.58rem;font-weight:800;letter-spacing:.09em;color:var(--ink-3);
-  padding:.15rem .4rem;border:1px dashed var(--line);border-radius:2px;}
+.tbtn.go{background:var(--gold);border-color:var(--gold);color:var(--deep);}
+.scrub{width:100%;margin:.45rem .2rem 0;accent-color:var(--gold);}
+.addedby{font-size:.55rem;font-weight:800;letter-spacing:.12em;color:var(--soft);
+  padding:.2rem .45rem;border:1px dashed var(--line);border-radius:4px;font-family:var(--mono);}
 
 /* His gold card is a short cue you read at a glance — the aiming point, the
    landing spot. A whole coaching paragraph in it shouts and stops being read,
    so the prose goes in a quiet card underneath. */
-.vfieldcard{flex:none;min-height:46px;margin:.6rem .3rem;padding:.5rem .8rem;
-  font-size:.92rem;font-weight:800;color:#fff;background:var(--dia-gold);
-  border:2px solid var(--dia-gold);border-radius:.4rem;}
+.vfieldcard{flex:none;min-height:46px;margin:.6rem .3rem;padding:.55rem .8rem;
+  font-size:.92rem;font-weight:800;color:var(--deep);background:var(--gold);
+  border:1px solid var(--gold);border-radius:var(--r);}
 .vfieldcard[hidden]{display:none;}
-.vprose{margin:.5rem .3rem;padding:.6rem .8rem;background:var(--card);
-  border:1px solid var(--line);border-radius:.4rem;font-size:.88rem;color:var(--ink-2);}
+.vprose{margin:.5rem .3rem;padding:.7rem .85rem;background:var(--board);
+  border:1px solid var(--line);border-radius:var(--r);font-size:.88rem;color:var(--chalk);}
 .vnote{padding:.5rem .8rem;font-size:.85rem;color:var(--ink-3);}
 .cardGroup{margin:0 .3rem .5rem;}
-.cardGroupLabel{margin:.6rem 0 .35rem;font-size:.8rem;font-weight:800;
-  letter-spacing:.06em;color:var(--ink-3);}
-.jobrow{display:flex;gap:.5rem;padding:.4rem .6rem;background:var(--card);
+.cardGroupLabel{margin:.8rem 0 .4rem;font-size:.62rem;font-weight:800;
+  letter-spacing:.14em;color:var(--gold);font-family:var(--mono);}
+.jobrow{display:flex;gap:.5rem;padding:.45rem .65rem;background:var(--board);
   border:1px solid var(--line);border-radius:var(--r);margin-bottom:.3rem;font-size:.84rem;}
-.jobrow b{color:var(--navy);flex:0 0 3.2rem;font-weight:900;}
-.jobrow .rl{color:var(--dia-gold);font-weight:800;font-size:.66rem;letter-spacing:.06em;
-  flex:0 0 4.6rem;text-transform:uppercase;}
-.tally{display:flex;gap:.5rem;flex-wrap:wrap;margin:.3rem .3rem .5rem;
-  font-size:.72rem;color:var(--ink-3);font-weight:700;}
-.tally b{color:var(--navy);font-weight:900;}
-.pairrow{display:flex;gap:.45rem;align-items:baseline;padding:.3rem .6rem;
+.jobrow b{color:var(--gold);flex:0 0 3.2rem;font-weight:900;font-family:var(--mono);font-size:.78rem;}
+.jobrow .rl{color:var(--warm);font-weight:800;font-size:.62rem;letter-spacing:.1em;
+  flex:0 0 4.6rem;text-transform:uppercase;font-family:var(--mono);}
+.tally{display:flex;gap:.6rem;flex-wrap:wrap;margin:.4rem .3rem .5rem;
+  font-size:.66rem;color:var(--soft);font-weight:700;font-family:var(--mono);}
+.tally b{color:var(--gold);font-weight:900;}
+.pairrow{display:flex;gap:.45rem;align-items:baseline;padding:.35rem .6rem;
   font-size:.8rem;border-bottom:1px solid var(--line);}
 .pairrow .vs{color:var(--ink-3);font-size:.7rem;}
-.pairrow .who{font-weight:900;color:var(--navy);}
-.pairrow .him{font-weight:900;color:var(--dia-red);}
+.pairrow .who{font-weight:900;color:var(--gold);}
+.pairrow .him{font-weight:900;color:var(--chalk);}
 .pairrow .at{margin-left:auto;font-size:.66rem;color:var(--ink-3);font-weight:800;}
 
 .vnav{margin-top:auto;display:flex;align-items:center;justify-content:space-between;
   gap:.5rem;padding:.6rem .7rem calc(.6rem + env(safe-area-inset-bottom,0px));
-  background:var(--card);border-top:2px solid var(--line);}
+  background:var(--deep);border-top:1px solid var(--line);}
 .vnavBtn{min-height:46px;padding:.5rem 1.1rem;font-size:1.3rem;font-weight:900;
-  color:var(--navy);background:var(--card);border:2px solid var(--navy);border-radius:.4rem;}
+  color:var(--chalk);background:var(--board);border:1px solid var(--line);border-radius:var(--r);}
 .vnavBtn:disabled{opacity:.3;}
-.vpos{font-size:.8rem;font-weight:800;color:var(--ink-3);}
+.vpos{font-size:.7rem;font-weight:800;color:var(--soft);font-family:var(--mono);letter-spacing:.08em;}
 /* His own note: the field is 2:1, so upright on a phone the play can never be
    taller than about 188px. Say it once, and only while he is holding it that way. */
 .rotateHint{display:none;}
@@ -213,7 +218,7 @@ button{font:inherit;cursor:pointer;}
 <header class="bar">
   <a class="brand" href="/" aria-label="Lehi Football — the playbook">
     <span class="mark">LF</span>
-    <h1>Lehi Football</h1>
+    <h1>Play <em>Book</em></h1>
   </a>
   <span class="syncdot" id="syncdot">saved here</span>
   <span class="buildchip" id="buildchip" title="Which build this page is running"></span>
@@ -623,7 +628,7 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-var BUILD_TAG='6 \u00b7 26 Aug';
+var BUILD_TAG='7 \u00b7 26 Aug';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
 var BAKED_OURS=(DATA.plays||[]).filter(function(p){return p.side==='ours';});
 var HIS=(DATA.plays||[]).filter(function(p){return p.side==='his';});
@@ -820,52 +825,61 @@ function draw(){
   var vb=vbOf();
   svg.innerHTML='';
   svg.setAttribute('viewBox',vb.join(' '));
-  var C=getComputedStyle(document.documentElement);
-  var BG=C.getPropertyValue('--dia-bg').trim()||'#fbfcfe';
-  var NAVY=C.getPropertyValue('--dia-navy').trim()||'#0b2545';
-  var RED=C.getPropertyValue('--dia-red').trim()||'#c1121f';
-  var GOLD=C.getPropertyValue('--dia-gold').trim()||'#b07a00';
-  var FILL=C.getPropertyValue('--dia-fill').trim()||'#e8edf7';
 
-  svg.appendChild(E('rect',{x:vb[0],y:vb[1],width:vb[2],height:vb[3],fill:BG}));
+  /* HIS palette, on every play — his own and the head coach's alike.
+     The head coach's diagrams are read into the same model as ours, so once
+     they are a model there is nothing to stop them being drawn on the board he
+     already reads on a sideline. That is the whole point of parsing rather than
+     embedding a picture: one playbook, one look. `Original` still puts the
+     head coach's untouched artwork back, on its own white ground, because that
+     file IS the light drawing and recolouring it would be a lie. */
+  var BOARD='#1D3A31', CHALK='#EDEBE0', GOLD='#E3B547', DEEP='#13251F', WARM='#E58A6B';
+
+  svg.appendChild(E('rect',{x:vb[0],y:vb[1],width:vb[2],height:vb[3],fill:BOARD}));
+  /* Yard lines every five, hashes every one — the grid his own field draws. */
   for(var y=vb[1];y<vb[1]+vb[3];y+=16)
-    svg.appendChild(E('line',{x1:vb[0],x2:vb[0]+vb[2],y1:y,y2:y,stroke:NAVY,'stroke-opacity':.06}));
+    svg.appendChild(E('line',{x1:vb[0],x2:vb[0]+vb[2],y1:y,y2:y,
+      stroke:CHALK,'stroke-opacity':.09}));
   var L=losOf();
-  svg.appendChild(E('line',{x1:vb[0]+28,x2:vb[0]+vb[2]-28,y1:L,y2:L,stroke:NAVY,'stroke-width':2.2}));
+  svg.appendChild(E('line',{x1:vb[0]+18,x2:vb[0]+vb[2]-18,y1:L,y2:L,
+    stroke:GOLD,'stroke-width':2,'stroke-dasharray':'9 6','stroke-opacity':.75}));
 
+  /* Routes: ours gold and solid, theirs bone and dashed — the read his eye
+     already has from the designer. */
   [].concat(play.offense,play.defense).forEach(function(m){
     if(m.raw.length<2)return;
     var them=m.side==='defense';
     svg.appendChild(E('path',{d:PE.smoothD(m.raw),fill:'none',
-      stroke:them?RED:NAVY,'stroke-opacity':them?.7:.85,
-      'stroke-width':them?2.2:2.6,'stroke-linecap':'round','stroke-linejoin':'round',
-      'stroke-dasharray':them?'6 5':''}));
+      stroke:them?CHALK:GOLD,'stroke-opacity':them?.42:.9,
+      'stroke-width':them?2:2.6,'stroke-linecap':'round','stroke-linejoin':'round',
+      'stroke-dasharray':them?'7 6':''}));
   });
 
   if(showMarks&&work)work.contacts.forEach(function(c){
     var here=T>=c.t;
     svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:here?13:11,
-      fill:here?GOLD:'none','fill-opacity':here?.2:0,stroke:GOLD,
-      'stroke-opacity':here?.95:.45,'stroke-width':here?2.4:1.4,
+      fill:here?WARM:'none','fill-opacity':here?.22:0,stroke:WARM,
+      'stroke-opacity':here?.95:.42,'stroke-width':here?2.4:1.4,
       'stroke-dasharray':here?'':'4 3'}));
-    if(here)svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:3,fill:GOLD}));
+    if(here)svg.appendChild(E('circle',{cx:c.x,cy:c.y,r:3,fill:WARM}));
   });
 
   play.defense.forEach(function(m){
     var q=posOf(m);
     var g=E('g',{'data-hit':m.id});
-    g.appendChild(E('rect',{x:q.x-11,y:q.y-11,width:22,height:22,rx:3,
-      fill:BG,stroke:RED,'stroke-width':2.2}));
-    var t=E('text',{x:q.x,y:q.y+4,'text-anchor':'middle',fill:RED,
-      'font-family':'system-ui,sans-serif','font-size':10,'font-weight':800});
+    g.appendChild(E('rect',{x:q.x-10.5,y:q.y-10.5,width:21,height:21,rx:3,
+      fill:'rgba(19,37,31,.55)',stroke:CHALK,'stroke-opacity':.5,'stroke-width':1.8}));
+    var t=E('text',{x:q.x,y:q.y+3.6,'text-anchor':'middle',fill:CHALK,'fill-opacity':.72,
+      'font-family':'ui-monospace,Menlo,monospace','font-size':9});
     t.textContent=m.label; g.appendChild(t); svg.appendChild(g);
   });
   play.offense.forEach(function(m){
     var q=posOf(m);
     var g=E('g',{'data-hit':m.id});
-    g.appendChild(E('circle',{cx:q.x,cy:q.y,r:11,fill:FILL,stroke:NAVY,'stroke-width':2.4}));
-    var t=E('text',{x:q.x,y:q.y+4,'text-anchor':'middle',fill:NAVY,
-      'font-family':'system-ui,sans-serif','font-size':10,'font-weight':800});
+    g.appendChild(E('circle',{cx:q.x,cy:q.y,r:11.5,fill:'rgba(19,37,31,.55)',
+      stroke:GOLD,'stroke-width':2}));
+    var t=E('text',{x:q.x,y:q.y+3.4,'text-anchor':'middle',fill:GOLD,
+      'font-family':'ui-monospace,Menlo,monospace','font-size':9});
     t.textContent=m.label; g.appendChild(t); svg.appendChild(g);
   });
 }
@@ -970,7 +984,9 @@ function setOrig(on){
   var box=document.querySelector('.vpic');
   if(on){
     stop();
-    box.innerHTML=(DATA.defs||'')+(cur().svg||'');
+    /* His file is a light drawing. Framed on white rather than recoloured —
+       "Original" has to mean the artwork exactly as generated. */
+    box.innerHTML='<div class="origFrame">'+(DATA.defs||'')+(cur().svg||'')+'</div>';
   }else{
     box.innerHTML='<svg id="field" viewBox="0 0 920 460" role="img"></svg>';
     svg=document.getElementById('field');
