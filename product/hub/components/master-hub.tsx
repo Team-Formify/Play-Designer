@@ -68,7 +68,7 @@ function Cascade({ label, down }: { label: string; down?: boolean }) {
       aria-hidden
       className={cn(
         "flex items-center justify-center gap-2 py-1 text-muted-foreground",
-        !down && "lg:w-36 lg:flex-col lg:py-0",
+        !down && "lg:w-28 lg:flex-col lg:justify-start lg:py-0 lg:pt-28",
       )}
     >
       <ArrowDown className={cn("h-4 w-4 shrink-0", !down && "lg:hidden")} />
@@ -78,6 +78,56 @@ function Cascade({ label, down }: { label: string; down?: boolean }) {
       <span className="text-center text-[11px] font-medium uppercase leading-tight tracking-wide">
         {label}
       </span>
+    </div>
+  );
+}
+
+function BuildStatus({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-xl border bg-muted/40 p-4 sm:p-5", className)}>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        What is actually built
+      </p>
+      <p className="mt-2 text-sm leading-relaxed">
+        <span className="font-semibold tabular-nums">
+          {TOTAL - PENDING} of {TOTAL}
+        </span>{" "}
+        capabilities are backed by a database function that already exists. The
+        other {PENDING} are drawn, named and marked unbuilt.
+      </p>
+      <ul className="mt-4 space-y-3">
+        {ORDER.map((t) => {
+          const acts = TIERS[t].actions;
+          const built = acts.filter((a) => !a.needsSchema).length;
+          const Icon = TIER_META[t].icon;
+          return (
+            <li key={t}>
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="flex min-w-0 items-center gap-1.5 font-medium">
+                  <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">{TIERS[t].name}</span>
+                </span>
+                <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
+                  {built}/{acts.length}
+                </span>
+              </div>
+              <div className="mt-1.5 flex gap-1" aria-hidden>
+                {acts.map((a, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "h-2 flex-1 rounded-full",
+                      a.needsSchema
+                        ? "border border-dashed border-amber-500/60 bg-amber-500/15"
+                        : "bg-emerald-500/70",
+                    )}
+                  />
+                ))}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -195,7 +245,8 @@ export function MasterHub() {
             colorTo="#9c40ff"
           />
 
-          <div className="p-5 sm:p-10">
+          <div className="p-5 sm:p-10 lg:grid lg:grid-cols-[1.5fr_minmax(250px,1fr)] lg:items-start lg:gap-10">
+           <div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="plain" icon={Globe2}>
                 Platform
@@ -259,6 +310,9 @@ export function MasterHub() {
                 button.
               </span>
             </p>
+           </div>
+
+            <BuildStatus className="mt-8 lg:mt-1" />
           </div>
         </Card>
 
@@ -298,9 +352,9 @@ export function MasterHub() {
           {/* the end of the cascade: not a tier, no account */}
           <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-2">
             <div className="hidden lg:block" />
-            <div className="hidden lg:block lg:w-36" />
+            <div className="hidden lg:block lg:w-28" />
             <div className="hidden lg:block" />
-            <div className="hidden lg:block lg:w-36" />
+            <div className="hidden lg:block lg:w-28" />
             <div className="flex flex-col">
               <Cascade label={TIER_META.team.grants} down />
               <div className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/30 p-4">
