@@ -51,6 +51,9 @@
     border-radius:8px;padding:11px 4px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;
     text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .tab[aria-pressed="true"]{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:700}
+  .tab[disabled]{opacity:.34;cursor:default}
+  .hint{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--soft);line-height:1.55;margin:9px 0 0}
   .fieldbox{background:var(--board);border-radius:8px;margin-top:10px;overflow:hidden;
     border:1px solid rgba(237,235,224,.14)}
   svg{display:block;width:100%;height:auto;touch-action:manipulation}
@@ -98,7 +101,7 @@
   <h1>Learn <span>the Plays</span></h1>
   <select id="playSel" aria-label="Pick a play"></select>
   <a class="back" href="/designer" id="backLink">&#8592; Designer</a>
-  <span class="bld" id="buildNote">b18</span>
+  <span class="bld" id="buildNote">b19</span>
 </header>
 
 <div id="lookBar" role="group" aria-label="Which kick" hidden></div>
@@ -109,6 +112,13 @@
     <button class="tab" data-m="lineup" aria-pressed="false">Line me up</button>
     <button class="tab" data-m="quiz" aria-pressed="false">My job</button>
   </div>
+
+  <!-- Only ever shown on one of the head coach's plays. His diagrams carry a
+       caption for the whole play and nothing written per man, so My job has
+       nothing it could score — it says so and switches itself off rather than
+       asking a question it cannot mark. -->
+  <p class="hint hide" id="noJobs">My job is off on the offense and defense
+    &mdash; those plays do not carry a written job for each man yet.</p>
 
   <div class="fieldbox"><svg id="field" viewBox="0 0 420 500" role="img" aria-label="Play"></svg></div>
   <p class="load" id="loading">Loading the playbook…</p>
@@ -396,6 +406,11 @@ function look(p){
    because their left is our right. Derived, never stored. */
 var themCache=null, themKey='';
 function themOf(p){
+  /* One of the head coach's plays already has its other eleven — his artwork
+     draws both sides, so they are read off the picture rather than mirrored out
+     of a paired play of ours. Same shape either way, so nothing downstream
+     knows the difference. */
+  if(p&&p._them)return p._them;
   var key=(p&&p.slug)+'|'+lookIx;
   if(themKey===key&&themCache)return themCache;
   themKey=key; themCache=buildThem(p);
@@ -422,7 +437,11 @@ function buildThem(p){
 function matchups(p){
   var th=themOf(p), out={};
   if(!th.men.length)return out;
-  var pairs=PE.matchups(ours(p),th.men,function(m){return m.label||'';});
+  /* `covers` names the man taken. On our plays that is his label; on the head
+     coach's it is the man's id off the drawing, because two of his defenders
+     can both be labelled T and only the block tee says which one is blocked.
+     Ours carry no `key`, so they fall through to the label exactly as before. */
+  var pairs=PE.matchups(ours(p),th.men,function(m){return m.key||m.label||'';});
   Object.keys(pairs).forEach(function(id){
     var m=th.men[pairs[id].bi];
     m.bi=pairs[id].bi; m.assigned=pairs[id].assigned;
@@ -662,7 +681,8 @@ function drawField(opts){
       var mc=MT.them[bi];
       var at=(mc&&tt>=mc.t)?mc.b:PE.walk(m.path,tt);
       var on=opts.beat&&opts.beat===m;
-      [[-7,-7,7,7],[-7,7,7,-7]].forEach(function(dd){
+      var xa=p.his?6:7;     /* his men sit closer together; see the note below */
+      [[-xa,-xa,xa,xa],[-xa,xa,xa,-xa]].forEach(function(dd){
         svg.appendChild(E('line',{x1:at.x+dd[0],y1:at.y+dd[1],x2:at.x+dd[2],y2:at.y+dd[3],
           stroke:on?'#E58A6B':'#EDEBE0','stroke-opacity':on?1:.4,
           'stroke-width':on?3:2.2,'stroke-linecap':'round'}));
@@ -689,6 +709,14 @@ function drawField(opts){
       lay=placeLabels(people);
     }
   }
+  /* A man is 24 units across and the coach's own offensive line is drawn with
+     splits wider than they really are, or five of them would sit on top of each
+     other. The head coach's diagrams are at true scale — his guards are 2.9
+     yards apart, which is 21 units — so at our size his interior overlaps.
+     Rather than move his men, which is the one thing this page must not do to
+     his drawing, his are drawn a size down: 19 units across, still bigger
+     relative to the field than the circles on his own sheet. */
+  var R=p.his?9.5:12, FS=p.his?8:9;
   people.forEach(function(m){
     var q=m.q, hot=opts.hot===q.id, ghost=m.ghost;
     if(q.team==='them'){
@@ -698,13 +726,16 @@ function drawField(opts){
       });
       return;
     }
-    svg.appendChild(E('circle',{cx:m.x,cy:m.y,r:12,
+    svg.appendChild(E('circle',{cx:m.x,cy:m.y,r:R,
       fill:hot?'rgba(229,138,107,.3)':'rgba(19,37,31,.55)',
       stroke:hot?'#E58A6B':'#E3B547','stroke-width':hot?2.8:2,
       'stroke-opacity':ghost?.35:1,'stroke-dasharray':ghost?'3 3':''}));
     if(q.label&&!ghost){
-      var t=E('text',{x:m.x,y:m.y+3.4,'text-anchor':'middle',fill:'#E3B547',
-        'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace','font-size':9});
+      /* T-L is three characters in a smaller circle; drop it a point so it sits
+         inside the ring rather than across it. */
+      var fs=(p.his&&q.label.length>2)?FS-1:FS;
+      var t=E('text',{x:m.x,y:m.y+(p.his?3.1:3.4),'text-anchor':'middle',fill:'#E3B547',
+        'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace','font-size':fs});
       t.textContent=q.label; svg.appendChild(t);
     }
     if(opts.names&&q.player&&!ghost&&lay[q.id]){
@@ -751,6 +782,13 @@ function paintSrc(){
       el.appendChild(b2);
     }
   }
+  /* His half is on the device, not in the playbook, so say so — otherwise a
+     list that suddenly has 1,422 more calls in it has no explanation. */
+  if(HIS.length){
+    var s=document.createElement('span');
+    s.innerHTML='· plus <b>'+HIS.length.toLocaleString()+'</b> offense &amp; defense from this device';
+    el.appendChild(s);
+  }
 }
 function indexData(d){
   DATA=d; BY_SLUG={}; ROSTER={};
@@ -758,12 +796,9 @@ function indexData(d){
   (d.roster||[]).forEach(function(r){ROSTER[r.last]=r;});
   (d.plays||[]).forEach(function(q){BY_SLUG[q.slug]=q;});
   var sel=document.getElementById('playSel');
-  sel.innerHTML='';
-  d.plays.slice().sort(function(a,b){return (a.order||99)-(b.order||99);}).forEach(function(q){
-    var o=document.createElement('option'); o.value=q.slug; o.textContent=q.name; sel.appendChild(o);
-  });
   play=d.plays[0];
-  sel.onchange=function(){ play=BY_SLUG[sel.value]; lookIx=0; startMode(); };
+  paintPicker();
+  sel.onchange=function(){ pickPlay(sel.value); };
   document.getElementById('loading').classList.add('hide');
   paintSrc();
   startMode();
@@ -772,9 +807,12 @@ function indexData(d){
 window.addEventListener('storage',function(e){
   if(e.key!=='pd-source'||SRC!=='local')return;
   var d=localSource(); if(!d)return;
-  var keep=play&&play.slug;
+  var keep=play&&play.slug, his=(play&&play.his)?play:null;
   indexData(d);
-  if(keep&&BY_SLUG[keep]){ play=BY_SLUG[keep];
+  /* A save in the coach's app is about the special teams. If a boy is watching
+     one of the head coach's plays, it is not about him — put him back on it. */
+  if(his){ play=his; document.getElementById('playSel').value=keep; startMode(); }
+  else if(keep&&BY_SLUG[keep]){ play=BY_SLUG[keep];
     document.getElementById('playSel').value=keep; startMode(); }
 });
 fetch('special-teams-plays.json',{cache:'no-store'})
@@ -791,6 +829,245 @@ fetch('special-teams-plays.json',{cache:'no-store'})
     document.getElementById('loading').textContent=
       'Could not load the playbook. Check you are online and reload.';
   });
+
+/* ---------- the head coach's plays ------------------------------------------
+   His 1,422 diagrams live on this device in IndexedDB (db `pp`, store `book`),
+   written by the merged app at `/`. They are never in this repo — his artwork is
+   password-protected and this site is public — so if a boy's phone has no book,
+   NOTHING here runs and the page is the special teams only, exactly as it was.
+
+   His plays are generated SVG, which is why they could never be played: a
+   picture has no model under it. The parse below is the same one the merged app
+   proved in `bridge/combined-shell.html` — copied rather than shared because
+   that file is generated into index.html and this page cannot reach it. If it
+   ever changes there, change it here too.
+
+   His artwork itself is never shown on this page. It is read into men and
+   routes, scaled into this page's own coordinates (his drawings are 16px to the
+   yard, which his own captions confirm — a back drawn 7 yards deep sits 112px
+   behind the line) and drawn on the same dark board as everything else. */
+var NUM=/-?\d*\.?\d+/g;
+function segsFromD(d){
+  var cmds=d.match(/[MLQC][^MLQCZ]*/g);
+  if(!cmds||cmds[0][0]!=='M')return null;
+  var f=cmds[0].match(NUM); if(!f||f.length<2)return null;
+  var pts=[{x:+f[0],y:+f[1]}];
+  for(var i=1;i<cmds.length;i++){
+    var n=(cmds[i].match(NUM)||[]).map(Number), k=cmds[i][0];
+    if(k==='L'&&n.length>=2)pts.push({x:n[0],y:n[1]});
+    else if(k==='Q'&&n.length>=4)pts.push({x:n[2],y:n[3]});
+    else if(k==='C'&&n.length>=6)pts.push({x:n[4],y:n[5]});
+    else return null;                 /* an unexpected command stays read-only */
+  }
+  return pts;
+}
+function readScene(svg){
+  var men=[],lines=[],seen={},m;
+  var G=/<g data-man="([^"]+)">([\s\S]*?)<\/g>/g;
+  while((m=G.exec(svg))){
+    var base=m[1],inner=m[2],at=null;
+    var c=inner.match(/<circle cx="([-\d.]+)" cy="([-\d.]+)"/);
+    var r=inner.match(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([-\d.]+)" height="([-\d.]+)"/);
+    if(c)at={x:+c[1],y:+c[2]};
+    else if(r)at={x:+r[1]+ +r[3]/2, y:+r[2]+ +r[4]/2};
+    if(!at)continue;
+    var n=seen[base]||0; seen[base]=n+1;
+    men.push({id:base+'#'+n, label:base.replace(/^D:/,''), x:at.x, y:at.y,
+              side:base.indexOf('D:')===0?'defense':'offense'});
+  }
+  var E2=/<(path|line)\s([^>]*)\/>/g;
+  while((m=E2.exec(svg))){
+    var a=m[2], owner=(a.match(/data-owner="([^"]+)"/)||[])[1];
+    if(!owner)continue;
+    var term=(a.match(/data-term="([^"]+)"/)||[])[1]
+             ||(a.indexOf('marker-end')>=0?'arrow':'none');
+    var pts=null;
+    if(m[1]==='line'){
+      var g=function(k){return +(a.match(new RegExp(k+'="([-\\d.]+)"'))||[])[1];};
+      var x1=g('x1'),y1=g('y1'),x2=g('x2'),y2=g('y2');
+      if([x1,y1,x2,y2].some(isNaN))continue;
+      pts=[{x:x1,y:y1},{x:x2,y:y2}];
+    }else{
+      var d=(a.match(/(?:^|\s)d="([^"]+)"/)||[])[1];
+      pts=d?segsFromD(d):null;
+    }
+    if(!pts)continue;
+    lines.push({owner:owner, role:(a.match(/data-role="([^"]+)"/)||[])[1]||'', term:term, pts:pts});
+  }
+  return {men:men,lines:lines};
+}
+/* A block tee ends ON the man being blocked, so that pairing is read straight
+   off his drawing rather than guessed at. Everyone else pairs by distance. */
+var BLOCK_REACH=26;
+function sceneToPlay(sc){
+  var defs=sc.men.filter(function(m){return m.side==='defense';});
+  var covers={};
+  sc.lines.forEach(function(l){
+    if(l.term!=='tee'||!l.owner||!defs.length)return;
+    var end=l.pts[l.pts.length-1], best=null;
+    defs.forEach(function(d){
+      var dist=Math.hypot(end.x-d.x,end.y-d.y);
+      if(!best||dist<best.d)best={id:d.id,d:dist};
+    });
+    if(best&&best.d<=BLOCK_REACH)covers[l.owner]=best.id;
+  });
+  var byOwner={};
+  sc.lines.forEach(function(l){
+    if(!l.owner||l.term==='none')return;
+    if(!byOwner[l.owner]||l.term==='arrow')byOwner[l.owner]=l;
+  });
+  function build(m){
+    var base=m.id.split('#')[0];
+    var line=byOwner[m.id]||byOwner[base];
+    var raw=line?[{x:m.x,y:m.y}].concat(line.pts.slice(1)):[{x:m.x,y:m.y}];
+    return {id:m.id,label:m.label,side:m.side,x:m.x,y:m.y,
+            covers:covers[m.id]||covers[base]||'', raw:raw};
+  }
+  return {offense:sc.men.filter(function(m){return m.side==='offense';}).map(build),
+          defense:defs.map(build)};
+}
+
+/* His book, as it sits on the device. Held raw: converting 1,422 diagrams up
+   front is work nobody asked for, so a play is turned into a model the first
+   time it is picked and kept after that. */
+var HIS=[], HIS_BY_ID={}, HIS_CACHE={};
+var HIS_K=16/(392/53.3), HIS_LOS=250;   /* his 16px per yard -> ours 7.35 */
+function hisPlayFor(e){
+  if(HIS_CACHE[e.id])return HIS_CACHE[e.id];
+  var sp=sceneToPlay(readScene(e.svg||''));
+  if(!sp.offense.length)return null;
+  var lm=(e.svg||'').match(/<line x1="28" y1="([-\d.]+)"/), los=lm?+lm[1]:300;
+  function X(x){return Math.round((210+(x-460)/HIS_K)*100)/100;}
+  function Y(y){return Math.round((HIS_LOS+(y-los)/HIS_K)*100)/100;}
+  function T(pts){return pts.map(function(t){return {x:X(t.x),y:Y(t.y)};});}
+  var players=[], routes=[];
+  sp.offense.forEach(function(o){
+    players.push({id:o.id,label:o.label,x:X(o.x),y:Y(o.y),team:'us',
+                  role:'',job:'',player:'',covers:o.covers||''});
+    if(o.raw.length>1)routes.push({playerId:o.id,points:T(o.raw.slice(1))});
+  });
+  /* Their eleven in the same shape mirror() hands back for our plays: a `raw`
+     for drawing, a sampled `path` for walking, and the id under `key` so a
+     block tee can name which of two men called T is the one being blocked. */
+  var men=sp.defense.map(function(d){
+    var raw=T(d.raw);
+    return {key:d.id,label:d.label,role:'',job:'',x:raw[0].x,y:raw[0].y,
+            raw:raw,path:PE.smoothPts(raw),q:{label:d.label}};
+  });
+  var p={slug:'his:'+e.id, name:e.call||e.id, his:true, section:e.section||'rest',
+         lineOfScrimmage:HIS_LOS, players:players, routes:routes, aim:null,
+         howItWorks:e.caption||'',
+         _them:{men:men,routes:men.filter(function(m){return m.path.length>1;}),name:'The defense'}};
+  HIS_CACHE[e.id]=p;
+  return p;
+}
+
+/* IndexedDB, read only. The merged app owns this store; this page never writes
+   to it. Anything that goes wrong reading it leaves HIS empty, which is the
+   same as a phone that never had the book. */
+var BOOK_DB='pp', BOOK_STORE='book', BOOK_KEY='book';
+function oldLocalBook(){
+  try{
+    var raw=localStorage.getItem('pp-book'); if(!raw)return null;
+    var b=JSON.parse(raw);
+    return (b&&b.plays&&b.plays.length)?b:null;
+  }catch(e){ return null; }
+}
+function openBook(){
+  return new Promise(function(res){
+    var r;
+    try{ r=indexedDB.open(BOOK_DB,1); }catch(e){ return res(oldLocalBook()); }
+    r.onupgradeneeded=function(){
+      try{ r.result.createObjectStore(BOOK_STORE); }catch(e){}
+    };
+    r.onerror=function(){ res(oldLocalBook()); };
+    r.onsuccess=function(){
+      try{
+        var st=r.result.transaction(BOOK_STORE,'readonly').objectStore(BOOK_STORE);
+        var q=st.get(BOOK_KEY);
+        q.onsuccess=function(){
+          var b=q.result;
+          res((b&&b.plays&&b.plays.length)?b:oldLocalBook());
+        };
+        q.onerror=function(){ res(oldLocalBook()); };
+      }catch(e){ res(oldLocalBook()); }
+    };
+  });
+}
+/* A player's phone has no book and never will, so it should not end up with an
+   empty database it did not ask for: where the browser can list them, a `pp`
+   that is not there is answered without opening anything. */
+function readBook(){
+  if(!window.indexedDB)return Promise.resolve(oldLocalBook());
+  if(!indexedDB.databases)return openBook();
+  return indexedDB.databases().then(function(list){
+    var has=(list||[]).some(function(d){return d&&d.name===BOOK_DB;});
+    return has?openBook():oldLocalBook();
+  }).catch(function(){ return openBook(); });
+}
+readBook().then(function(b){
+  if(!b||!Array.isArray(b.plays))return;
+  /* One entry per id: two copies of a diagram would be two identical rows in
+     the picker, and the second could never be reached. */
+  HIS=b.plays.filter(function(p){
+    if(!p||!p.svg||p.side==='ours'||HIS_BY_ID[p.id])return false;
+    HIS_BY_ID[p.id]=p; return true;
+  });
+  if(!HIS.length)return;
+  if(DATA){ paintPicker(); paintSrc(); }   /* the playbook may still be in flight */
+}).catch(function(){ /* no book, no change */ });
+
+/* ---------- the picker ----------
+   With no book this is the plain list of the special teams it has always been.
+   With one, it groups, so which half a call belongs to is never a guess. */
+var HIS_GROUPS=[['core','Offense & defense \u2014 the core'],
+                ['rest','Offense & defense \u2014 everything else']];
+function paintPicker(){
+  var sel=document.getElementById('playSel');
+  var want=sel.value||(play?play.slug:'');
+  sel.innerHTML='';
+  var mine=(DATA&&DATA.plays?DATA.plays:[]).slice()
+    .sort(function(a,b){return (a.order||99)-(b.order||99);});
+  function opt(parent,value,text){
+    var o=document.createElement('option'); o.value=value; o.textContent=text;
+    parent.appendChild(o);
+  }
+  if(!HIS.length){
+    mine.forEach(function(q){ opt(sel,q.slug,q.name); });
+  }else{
+    var g=document.createElement('optgroup'); g.label='Special teams';
+    mine.forEach(function(q){ opt(g,q.slug,q.name); });
+    sel.appendChild(g);
+    HIS_GROUPS.forEach(function(sec){
+      var rows=HIS.filter(function(p){return (p.section||'rest')===sec[0];});
+      if(!rows.length)return;
+      var gg=document.createElement('optgroup'); gg.label=sec[1];
+      rows.forEach(function(p){ opt(gg,'his:'+p.id,p.call||p.id); });
+      sel.appendChild(gg);
+    });
+  }
+  if(want)sel.value=want;
+  if(!sel.value&&sel.options.length)sel.selectedIndex=0;
+}
+/* His plays are read the moment one is picked, and a diagram that cannot be
+   read says so and leaves the boy on the play he was already watching, rather
+   than blanking the field. */
+function pickPlay(v){
+  var next=null;
+  if(v&&v.indexOf('his:')===0){
+    var e=HIS_BY_ID[v.slice(4)];
+    try{ next=e?hisPlayFor(e):null; }catch(err){ next=null; }
+    if(!next){
+      var n=document.getElementById('noJobs');
+      n.classList.remove('hide');
+      n.textContent='That diagram could not be read \u2014 still showing '+(play?play.name:'the last play')+'.';
+      document.getElementById('playSel').value=play?play.slug:'';
+      return;
+    }
+  }else next=BY_SLUG[v];
+  if(!next)return;
+  play=next; lookIx=0; startMode();
+}
 
 /* ---------- mode switching ---------- */
 document.querySelectorAll('.tab').forEach(function(b){
@@ -829,6 +1106,19 @@ document.getElementById('themBtn').onclick=function(){
 };
 function startMode(){
   stopAnim();
+  /* My job is built out of the written jobs, and the head coach's diagrams do
+     not carry one per man. Rather than ask a question it cannot score, the tab
+     switches itself off on his plays and says why. */
+  var noJobs=!!(play&&play.his);
+  var qt=document.querySelector('.tab[data-m="quiz"]');
+  qt.disabled=noJobs;
+  var note=document.getElementById('noJobs');
+  note.classList.toggle('hide',!noJobs);
+  if(noJobs)note.innerHTML='My job is off on the offense and defense '+
+    '&mdash; those plays do not carry a written job for each man yet.';
+  if(noJobs&&mode==='quiz')mode='watch';
+  document.querySelectorAll('.tab').forEach(function(o){
+    o.setAttribute('aria-pressed',o.dataset.m===mode);});
   if(lookIx>=looksOf(play).length)lookIx=0;
   paintLooks();
   if(mode==='watch'){show('watchUI'); startWatch();}
