@@ -48,8 +48,25 @@ const body = '\n/* Generated from play-engine.js by scripts/sync-engine.js. Do n
              '   edit play-engine.js and re-run it, or the two copies drift apart again. */\n' +
              engine;
 
+/* The product carries a standalone copy of the engine, because its field client
+   is static and offline like this one. A copy is exactly how this project ended
+   up with two engines and fixed the same bug four times in a day, so it is kept
+   honest here rather than by good intentions. */
+const COPIES = ['product/engine/play-engine.js'];
+
 let drifted = [];
 let wrote = [];
+
+for (const rel of COPIES) {
+  const file = path.join(root, rel);
+  if (!fs.existsSync(path.dirname(file))) continue;
+  const want = fs.readFileSync(SRC, 'utf8');
+  const have = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+  if (have === want) continue;
+  if (check) { drifted.push(rel); continue; }
+  fs.writeFileSync(file, want);
+  wrote.push(rel);
+}
 
 for (const page of PAGES) {
   const file = path.join(root, page);
