@@ -381,6 +381,11 @@ select t.raises('INSERT a player onto another team (WITH CHECK)',
 select t.raises('MOVE his own play into another team (WITH CHECK)',
   $q$update public.plays set team_id='c0000000-0000-4000-8000-000000000004'
       where id='f0000000-0000-4000-8000-000000000001'$q$, '42501');
+-- Note, measured rather than assumed: this one is refused twice over. Setting
+-- the UPDATE policy's WITH CHECK to true still refuses it, because the new row
+-- also has to satisfy the SELECT policy. The INSERT cases above are the clean
+-- WITH CHECK proof -- an INSERT has no USING clause, so WITH CHECK is the only
+-- thing standing there, and mutating it to `true` fails 12 of these tests.
 select t.raises('MOVE his own player into a sibling team (WITH CHECK)',
   $q$update public.players set team_id='c0000000-0000-4000-8000-000000000002'
       where id='e0000000-0000-4000-8000-000000000009'$q$, '42501');
@@ -416,6 +421,28 @@ select t.raises('forge a tombstone',
      values ('e0000000-0000-4000-8000-000000000050','c0000000-0000-4000-8000-000000000004','22')$q$, '42501');
 select t.raises('run the retention job by hand',
   $q$select app.expire_season_rosters()$q$, '42501');
+
+-- Two shapes that have historically walked around a naive tenant filter: an
+-- upsert (the INSERT is refused, so the DO UPDATE never gets a turn) and a
+-- writing CTE (the policy follows the DELETE into the CTE).
+select t.raises('UPSERT onto another team''s existing play',
+  $q$insert into public.plays (team_id, slug, doc)
+     values ('c0000000-0000-4000-8000-000000000004','punt-base','{"players":[{"id":"p0","player":"x"}]}')
+     on conflict (team_id, slug) do update set doc = excluded.doc$q$, '42501');
+-- Deliberately written so that the ONLY thing that can stop it is the players
+-- DELETE policy: the outer statement is a plain SELECT the tenant may run, so a
+-- pass cannot come from a missing grant somewhere else.
+select t.val('a writing CTE does not escape the policy',
+  $q$with taken as (delete from public.players
+                     where team_id='c0000000-0000-4000-8000-000000000004' returning 1)
+    select count(*)::text from taken$q$, '0');
+select t.rows('a reading CTE does not escape it either',
+  $q$with everyone as (select * from public.players) select 1 from everyone
+      where team_id='c0000000-0000-4000-8000-000000000004'$q$, 0);
+select t.val('he cannot enumerate the platform''s memberships',
+  $q$select count(*)::text from public.memberships$q$, '4');
+select t.val('nor its board',
+  $q$select count(*)::text from public.league_memberships$q$, '0');
 
 -- Existence side channel: does a unique violation report on a row he cannot see?
 -- Logan already holds slug 'punt-base'. 42501 means the policy answered first.
@@ -653,7 +680,7 @@ select t.val('his spot, lane and coordinates are untouched',
   $q$select (doc->'players'->1->>'label') || '/' || (doc->'players'->1->>'role') || '/' || (doc->'players'->1->>'x')
       from public.plays where id='f0000000-0000-4000-8000-000000000001'$q$, 'LGD/PROTECT/186');
 select t.val('his written job is untouched',
-  $q$select left(doc->'players'->1->>'job', 24) from public.plays where id='f0000000-0000-4000-8000-000000000001'$q$, 'Punch the man over you,');
+  $q$select left(doc->'players'->1->>'job', 23) from public.plays where id='f0000000-0000-4000-8000-000000000001'$q$, 'Punch the man over you,');
 select t.val('the other ten men are untouched',
   $q$select doc->'players'->0->>'player' from public.plays where id='f0000000-0000-4000-8000-000000000001'$q$, 'Paulich');
 select t.val('routes and geometry are untouched',
@@ -762,6 +789,52 @@ select t.val('a shorter retention window does not reach a season still running',
   $q$select count(*)::text from app.expire_season_rosters('2026-09-04','a0000000-0000-4000-8000-000000000002')$q$, '0');
 
 -- ===========================================================================
+-- 10. The rulebook is data. The same question, asked of two leagues.
+--     These are constants in the single-team app; a second customer turns them
+--     into rows, which is the difference between a tool and a product.
+-- ===========================================================================
+select set_config('t.sect', '10 ruleset', false);
+\echo '=== 10. One question, two leagues, different answers ==='
+select l.name,
+       app.league_rule(l.id,'8','field_goals_allowed') as fg_8th,
+       app.league_rule(l.id,'9','field_goals_allowed') as fg_9th,
+       app.league_rule(l.id,'8','min_plays')           as min_plays_8,
+       app.league_rule(l.id,'7','x_man_min_weight_lb') as xman_lb_7,
+       app.league_rule(l.id,'8','x_man_may_fake_punt') as fake_punt_8,
+       app.league_rule(l.id,'8','illegal')             as illegal_8
+  from public.leagues l order by l.name;
+
+select t.val('UYFC: no field goals at 8th',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000001','8','field_goals_allowed')::text$q$, 'false');
+select t.val('UYFC: field goals at 9th (grade override)',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000001','9','field_goals_allowed')::text$q$, 'true');
+select t.val('Cache Valley: field goals at 8th',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000002','8','field_goals_allowed')::text$q$, 'true');
+select t.val('UYFC: 165 lb x-man at 8th',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000001','8','x_man_min_weight_lb')::text$q$, '165');
+select t.val('UYFC: 145 lb at 7th (grade override)',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000001','7','x_man_min_weight_lb')::text$q$, '145');
+select t.val('UYFC: an x-man may NOT fake a punt',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000001','8','x_man_may_fake_punt')::text$q$, 'false');
+select t.val('Cache Valley: an x-man MAY',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000002','8','x_man_may_fake_punt')::text$q$, 'true');
+select t.val('UYFC: 10 plays, escalating to 16 after Q1',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000001','8','min_plays')::text || '/' ||
+           (app.league_rule('a0000000-0000-4000-8000-000000000001','8','min_plays_escalation')->>'q1')$q$, '10/16');
+select t.val('Cache Valley: 10 at 8th, 8 everywhere else',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000002','8','min_plays')::text || '/' ||
+           app.league_rule('a0000000-0000-4000-8000-000000000002','5','min_plays')::text$q$, '10/8');
+select t.val('a rule nobody has written is NULL, not a UYFC default',
+  $q$select app.league_rule('a0000000-0000-4000-8000-000000000002','8','conversions')::text$q$, null);
+
+set role pd_authenticated;
+select t.be('d0000000-0000-4000-8000-000000000001');
+select t.val('and a coach can only read his own league''s rulebook',
+  $q$select coalesce(app.league_rule('a0000000-0000-4000-8000-000000000002','8','min_plays')::text,'NULL') || '/' ||
+           coalesce(app.league_rule('a0000000-0000-4000-8000-000000000001','8','min_plays')::text,'NULL')$q$, 'NULL/10');
+reset role;
+
+-- ===========================================================================
 -- Results
 -- ===========================================================================
 \echo ''
@@ -791,3 +864,29 @@ begin
 end $$;
 
 rollback;
+
+-- ===========================================================================
+-- MUTATION LOG -- what happens when the schema is deliberately broken.
+--
+-- A suite that only ever sees a correct schema has not been shown to detect an
+-- incorrect one. Each line below was applied to the live database, the suite was
+-- run, and the policy was put back. Reproduce with:
+--   psql ... -c '<mutation>' ; psql ... -f product/db/test-isolation.sql
+--
+--   mutation                                                     tests failed
+--   ------------------------------------------------------------ ------------
+--   baseline (nothing broken)                                               0
+--   plays_select_team  ->  using (true)                                     8
+--   plays_insert_coach ->  with check (true)                               12
+--   players_insert_coach -> with check (true)                               9
+--   memberships_write_head -> using (true) with check (true)                22
+--   drop trigger plays_no_silent_delete                                     3
+--   drop trigger players_tombstone                                          8
+--   plays.team_id fkey -> on delete cascade                                 2
+--   plays_select_team  ->  ... or board_team_ids()                          1
+--   players_update_coach -> with check (true)                               0  *
+--
+--   * not a mutation at all: Postgres reuses USING as the WITH CHECK when none
+--     is given, and the new row must satisfy the SELECT policy regardless. The
+--     INSERT rows above are where the WITH CHECK claim is actually tested.
+-- ===========================================================================
