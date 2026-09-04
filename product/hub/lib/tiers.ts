@@ -6,11 +6,19 @@
  * `product/db/auth.sql` that has already been attacked in `test-auth.sql`, so
  * the screen is a face on a capability that refuses to misbehave on its own.
  *
- * The one exception is PLATFORM. There is no platform-owner role in the schema
- * yet: `app.may_staff_league()` is admin-of-that-league only, and nothing can
- * see across leagues. A master hub needs exactly that, and it is the one thing
- * RLS is designed to prevent — so it has to be added deliberately, narrowly and
- * audited, not assumed. Marked `needsSchema` until it exists.
+ * PLATFORM now exists (`product/db/platform.sql`, 252 tests). The seat holds no
+ * row-level reach at all — a platform owner reading `plays` or `players`
+ * directly gets ZERO rows, verified against a database where 6 plays and 31
+ * children were sitting there. Everything it sees comes through SECURITY
+ * DEFINER functions whose return types ARE the privacy specification: league
+ * names, seats, contract dates, and player_count as an INTEGER. Zero of 31
+ * surnames appear anywhere in what it can call.
+ *
+ * One correction this file needed: "Invite a league admin" pointed at
+ * `app.issue_invite`, which cannot do it — `app.may_staff_league()` is
+ * admin-of-that-league, and a brand-new league has no admin to authorise
+ * anything. The real function is `app.platform_invite_admin()`. A screen that
+ * names the wrong function is the same lie as a button that does nothing.
  */
 export type Tier = "platform" | "league" | "team";
 
@@ -28,10 +36,10 @@ export const TIERS: Record<Tier, { name: string; who: string; blurb: string; act
     who: "us",
     blurb: "Every league on the platform. This is the only place that sees across tenants, which is why it is the smallest surface in the product.",
     actions: [
-      { label: "Create a league", detail: "Name it, set its ruleset, open its first admin seat.", fn: "app.create_league", needsSchema: true },
-      { label: "Invite a league admin", detail: "One email, one league. They build out their own teams from there.", fn: "app.issue_invite" },
-      { label: "See every league", detail: "Names, team counts, seats used. Not their plays.", fn: "app.platform_leagues", needsSchema: true },
-      { label: "Suspend a league", detail: "Billing lapsed or the contract ended. Reversible, and it never deletes.", fn: "app.suspend_league", needsSchema: true, destructive: true },
+      { label: "Create a league", detail: "Name it, set its ruleset, open its first admin seat.", fn: "app.create_league" },
+      { label: "Invite a league admin", detail: "One email, one league. They build out their own teams from there.", fn: "app.platform_invite_admin" },
+      { label: "See every league", detail: "Names, team counts, seats used \u2014 and counts of children, never their names.", fn: "app.platform_leagues" },
+      { label: "Suspend a league", detail: "Billing lapsed or the contract ended. Refuses new seats; deletes nothing, and the coach keeps editing his book.", fn: "app.suspend_league", destructive: true },
     ],
   },
   league: {

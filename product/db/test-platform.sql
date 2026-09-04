@@ -156,8 +156,16 @@ exception when others then
 end $fn$;
 
 create table t.state (k text primary key, v text);
-grant select, insert, update on t.state to public;
+grant select, insert, update, delete on t.state to public;
 
+-- One difference from the harness in the other two suites, and it was earned in
+-- the mutation run below: t.snap here CATCHES. A mutant that hands a tenant the
+-- platform seat lets that tenant revoke the vendor's, and then the very next
+-- t.snap -- creating a league -- raised, aborted the transaction, and the suite
+-- died without printing a tally. "It exploded" is a weaker report than "39 tests
+-- went red", so a failed snapshot is now a recorded failure and the run
+-- continues; everything downstream that wanted the value fails too, which is
+-- the honest count.
 create function t.snap(p_key text, p_sql text) returns void
 language plpgsql as $fn$
 declare got text;
@@ -165,6 +173,9 @@ begin
   execute p_sql into got;
   insert into t.state (k, v) values (p_key, got)
     on conflict (k) do update set v = excluded.v;
+exception when others then
+  delete from t.state where k = p_key;
+  perform t.note('SNAPSHOT ' || p_key, false, format('ERROR %s: %s', sqlstate, left(sqlerrm, 100)));
 end $fn$;
 
 create function t.unchanged(p_name text, p_key text, p_sql text) returns void
@@ -481,11 +492,15 @@ select set_config('t.sect', '4 counts not names', false);
 set role pd_authenticated;
 select t.be('10000000-0000-4000-8000-000000000001', 'founder@example.com');
 
+-- Snapshotted rather than selected straight out, for the same reason as the
+-- census in section 8: a bare platform call is a statement that a mutant can
+-- make raise, and a raise here would take the whole transaction and the tally
+-- with it. This prints exactly the same thing.
+select t.snap('view', $q$select jsonb_pretty(jsonb_agg(to_jsonb(q) - 'league_id' - 'created_at'
+                                                       - 'last_play_edit' order by q.league_name))
+                        from app.platform_leagues() q$q$);
 \echo '=== 4. The whole of what a platform owner can see about a league ==='
-select league_name, status, plan, seats_purchased, contract_ends_on,
-       season_count, season_first_start, season_last_end,
-       team_count, coach_seats, board_seats, player_count, play_count
-  from app.platform_leagues();
+select t.tok('view') as everything_the_vendor_sees;
 
 select t.val('he sees both leagues', $q$select count(*)::text from app.platform_leagues()$q$, '2');
 select t.val('with the right team count',
@@ -610,6 +625,17 @@ select t.val('nor any league rulebook rewritten',
 -- 6. No tenant can call a platform function. With no credential, none of them.
 -- ===========================================================================
 select set_config('t.sect', '6 functions refuse', false);
+
+-- The negative controls for the whole section. A refusal that returns an error
+-- but leaves a row behind is not a refusal, and the mutation run found that the
+-- error code alone was too thin a check here.
+select t.snap('s6_invites', $q$select count(*)::text from public.invites$q$);
+select t.snap('s6_leagues', $q$select count(*)::text from public.leagues$q$);
+select t.snap('s6_seats',   $q$select count(*)::text from public.platform_owners$q$);
+select t.snap('s6_state',   $q$select string_agg(league_id::text || '=' || status, ',' order by league_id::text)
+                                 from public.league_platform_state$q$);
+select t.snap('s6_trail',   $q$select count(*)::text from public.platform_events$q$);
+
 set role pd_authenticated;
 
 -- The whole surface, against the most powerful tenant in the fixture.
@@ -682,6 +708,13 @@ reset role;
 
 select t.val('and none of that created a league', $q$select count(*)::text from public.leagues$q$, '2');
 select t.val('nor a platform seat',               $q$select count(*)::text from public.platform_owners$q$, '2');
+select t.unchanged('NOR ONE INVITATION -- no tenant minted an admin seat anywhere', 's6_invites',
+  $q$select count(*)::text from public.invites$q$);
+select t.unchanged('nor moved a league in or out of suspension', 's6_state',
+  $q$select string_agg(league_id::text || '=' || status, ',' order by league_id::text)
+      from public.league_platform_state$q$);
+select t.unchanged('and not one line was added to the platform trail by a tenant', 's6_trail',
+  $q$select count(*)::text from public.platform_events$q$);
 
 -- ===========================================================================
 -- 7. The four actions the master hub needs
@@ -774,8 +807,12 @@ select t.snap('pre_docs',     $q$select md5(string_agg(p.doc::text, '|' order by
 
 set role pd_authenticated;
 select t.be('10000000-0000-4000-8000-000000000001', 'founder@example.com');
+-- Through t.snap rather than as a bare statement, so a mutant that breaks the
+-- seat cannot abort the transaction here and rob the run of its tally.
+select t.snap('census', $q$select jsonb_pretty(app.suspend_league(
+  'a0000000-0000-4000-8000-000000000001', 'invoice 90 days overdue'))$q$);
 \echo '=== 8. Suspending a league, and the census it returns of what it left alone ==='
-select app.suspend_league('a0000000-0000-4000-8000-000000000001', 'invoice 90 days overdue');
+select t.tok('census') as suspension_returned;
 select t.val('the suspension reports deleting nothing',
   $q$select (app.suspend_league('a0000000-0000-4000-8000-000000000001','still overdue') ->> 'deleted')$q$, '0');
 select t.val('and reports what it left intact',
@@ -1046,3 +1083,92 @@ begin
 end $$;
 
 rollback;
+
+-- ===========================================================================
+-- MUTATION LOG -- what happens when a guard in platform.sql is deliberately
+-- broken.
+--
+-- A suite that stays green when the guard is removed is decoration. Each line
+-- below was applied to a database built from schema.sql + rls.sql + auth.sql +
+-- platform.sql + seed.sql + auth-seed.sql + platform-seed.sql, all three suites
+-- were run, and the mutant was thrown away. The 183 tests in
+-- test-isolation.sql and the 243 in test-auth.sql were run against every mutant
+-- too: NOT ONE OF THEM MOVED, for any mutation on this list. That is the other
+-- half of the claim -- platform.sql is additive, and breaking it cannot make
+-- the tenant isolation or the invitation layer quietly wrong.
+--
+--   mutation                                                     tests failed
+--   ------------------------------------------------------------ ------------
+--   baseline (nothing broken)                                               0
+--   revoke_platform_owner: allow revoking your own seat                    90  *
+--   drop the platform_owners guard trigger entirely                        64  *
+--   platform_owners guard: drop the tenant-separation half                 62  *
+--   tenant_seat_guard: drop the platform-owner half (seat can be staffed)  38  **
+--   require_platform_owner: accept any signed-in user                      35
+--   require_platform_owner: accept a NULL identity too                     10
+--   platform_note: stop writing the trail                                   9
+--   grant update/delete on league_platform_state to tenants                 9
+--   select policy on plays for is_platform_owner()                          7
+--   suspend_league: delete the league's plays                               7
+--   is_platform_owner(): true for everybody signed in                       7
+--   grant select on platform_owners + a permissive policy                   6
+--   grant insert/update/delete on platform_events to tenants                5
+--   suspend_league: strip the league's memberships instead                  5
+--   grant select on platform_owners, no policy added                        5
+--   select policy on players for is_platform_owner()                        4
+--   drop the platform_events append-only triggers                           4
+--   platform_events_select -> using (true)                                  4
+--   tenant_seat_guard: drop the suspension half (new seats during it)       4
+--   platform_invite_admin: drop the platform-owner check                    4
+--   platform_league: append a child's surname to the team name              3
+--   platform_owners guard: drop the explicit-intent half                    2
+--   grant execute on app.platform_note to pd_authenticated                  2
+--   ALTER TABLE platform_owners NO FORCE ROW LEVEL SECURITY                 1
+--   platform_invite_admin: stop superseding the outstanding token           1
+--   grant execute on app.require_platform_owner to pd_authenticated         0  ***
+--
+--   *   The three worst numbers are all the same failure: a tenant ends up
+--       holding the seat. With the guard trigger gone the suite's own attacks
+--       succeed -- a head coach, a board member and a league admin all land in
+--       platform_owners -- and then the league admin, now a platform owner,
+--       REVOKES THE FOUNDER'S SEAT. The same thing happens from the other end
+--       when revoking your own seat is allowed: the founder revokes himself in
+--       section 2 and every platform call after it fails. That last mutant is
+--       also what taught this suite to catch instead of explode: t.snap used to
+--       let the error out, the transaction aborted at the first
+--       app.create_league(), and the run printed no tally at all. "It exploded"
+--       is a worse report than "90 tests went red", so t.snap now records a
+--       failed snapshot and carries on, and the two remaining bare platform
+--       calls in the file (the section 4 view and the section 8 census) were
+--       moved behind it. That is the most useful thing this mutation run
+--       produced, and it was a hole in the tests rather than in platform.sql.
+--
+--   **  Worth reading closely, because it is the whole argument for the
+--       separation rule. Nothing about the platform functions changes in this
+--       mutant. What changes is that the vendor can accept a team invitation --
+--       and section 3 immediately turns red, because he is now a helper on a
+--       team and reads its playbook and its roster by the ordinary coach
+--       policies. The separation rule is what lets "a platform owner cannot
+--       read a play" be said with no "unless" on the end of it.
+--
+--   *** Not a mutation, and kept rather than dropped. Granting a tenant EXECUTE
+--       on app.require_platform_owner() changes nothing, because the function's
+--       entire body is the refusal: a league admin who calls it gets the same
+--       42501 he got from the missing grant. Measured, not assumed. The missing
+--       grant is a second lock on a door that is already locked -- unlike
+--       app.platform_note(), where the grant IS the lock, and granting it
+--       immediately lets a tenant write lines into the vendor's audit trail.
+--
+--   Two more that are quieter than they look:
+--     * NO FORCE ROW LEVEL SECURITY on platform_owners fails exactly one test,
+--       the structural one in section 1, and no attack at all. That is correct
+--       and the test is still worth having: nobody holds a grant on the table,
+--       so FORCE has nothing to bind today. It is the guard that matters on the
+--       day somebody adds a grant for a screen, which is precisely the change
+--       that would arrive without a policy to go with it.
+--     * Dropping the explicit-intent half of the bootstrap guard fails only 2,
+--       because that half exists to bind the MIGRATION ROLE, and the migration
+--       role is not an attacker in the fixture -- no tenant can reach the table
+--       either way. Two tests are the right number for a guard whose whole job
+--       is to stop a deploy script creating a vendor seat by accident.
+-- ===========================================================================
