@@ -1,0 +1,1797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Formation library — the geometry a new team starts with</title>
+<!--
+  preview.html — every formation in the catalog, drawn, themed and checked.
+
+  Self-contained on purpose: formations.js, catalog.json, brand.js and the
+  brand records are INLINED below by sync-preview.js, because a <script src>
+  cannot be read when this page is opened as a downloaded file or run inside
+  an artifact viewer (CLAUDE.md rule 4). Run
+
+      node product/formations/sync-preview.js            # refresh the blocks
+      node product/formations/sync-preview.js --check    # fail on drift
+
+  after touching either module. No webfonts, no network, no build step.
+
+  The tuner at the top is the point of the whole exercise: the parameters are
+  the product. Change a number and eleven men move, and the same check() the
+  validator runs says on the spot whether what you asked for is still legal
+  football. Nothing is silently clamped — a clamp would lie about what the
+  coach asked for.
+-->
+<style>
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--page);color:var(--chalk);
+    font-family:var(--body);font-size:15px;line-height:1.45;
+    padding:0 12px 40px;
+  }
+  header{
+    position:sticky;top:0;z-index:5;background:var(--page);
+    padding:10px 0 8px;border-bottom:1px solid var(--hairline);
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  }
+  .mark{display:flex;align-items:center}
+  h1{font-family:var(--display);font-size:19px;margin:0;letter-spacing:.4px;font-weight:700}
+  .wm-accent{color:var(--accent)}
+  .grow{flex:1 1 auto}
+  select,input[type=number]{
+    background:var(--deep);color:var(--chalk);border:1px solid var(--hairline-strong);
+    border-radius:7px;padding:7px 8px;font:inherit;font-size:14px;min-height:38px;
+  }
+  input[type=number]{width:100%;font-family:var(--mono);font-size:13px}
+  .btn{
+    background:var(--deep);color:var(--chalk);border:1px solid var(--hairline-strong);
+    border-radius:7px;padding:7px 11px;font:inherit;font-size:14px;min-height:38px;cursor:pointer;
+  }
+  .btn[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  h2{font-family:var(--display);font-size:16px;margin:22px 0 8px;letter-spacing:.3px}
+  p.lede{color:var(--soft);margin:6px 0 0;font-size:13.5px;max-width:62ch}
+  .fieldbox{background:var(--board);border:1px solid var(--hairline);border-radius:10px;overflow:hidden}
+  svg.field{display:block;width:100%;height:auto}
+
+  /* ---- the tuner ---- */
+  #tuner{
+    background:var(--board);border:1px solid var(--hairline);border-radius:12px;
+    padding:12px;margin-top:12px;
+  }
+  #tuner .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  /* Cap the tuned field so the controls stay on the same screen as the picture
+     on a laptop; on a phone it is already the full column. */
+  #tuner .fieldbox{max-width:520px;margin:0 auto}
+  #tuner select{flex:1 1 200px}
+  #params{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}
+  #params label{display:block;font-size:11px;color:var(--soft);font-family:var(--mono);
+    text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .verdict{
+    margin-top:10px;border-radius:8px;padding:8px 10px;font-family:var(--mono);font-size:12.5px;
+    border:1px solid var(--hairline-strong);
+  }
+  .verdict.ok{color:var(--accent)}
+  .verdict.bad{color:var(--warm);border-color:var(--warm)}
+  .verdict ul{margin:6px 0 0;padding-left:16px}
+  .stats{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--soft);line-height:1.3}
+  .stats b{color:var(--chalk);font-weight:600}
+
+  /* ---- the catalog ---- */
+  #grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
+  .card{background:var(--board);border:1px solid var(--hairline);border-radius:12px;padding:10px;
+    display:flex;flex-direction:column;gap:8px}
+  .card h3{margin:0;font-size:15px;font-family:var(--display);letter-spacing:.3px}
+  .card .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;
+    border:1px solid var(--hairline-strong);border-radius:999px;padding:2px 7px;color:var(--soft)}
+  .tag.pass{color:var(--accent);border-color:var(--accent)}
+  .tag.fail{color:var(--warm);border-color:var(--warm)}
+  .card p{margin:0;font-size:12.5px;color:var(--soft)}
+  .card code{font-family:var(--mono);font-size:11.5px;color:var(--soft);word-break:break-word}
+  @media (min-width:760px){
+    body{padding:0 20px 60px}
+    #grid{grid-template-columns:repeat(2,1fr)}
+    #params{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  }
+  @media (min-width:1180px){ #grid{grid-template-columns:repeat(3,1fr)} }
+  footer{margin-top:26px;color:var(--soft);font-size:12.5px;max-width:70ch}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="mark" id="brandMark"></span>
+  <h1 id="wordmark">Formation library</h1><span class="tag">formations</span>
+  <span class="grow"></span>
+  <select id="brandSel" aria-label="Which league's look"></select>
+  <button class="btn" id="printBtn" aria-pressed="false">Print mode</button>
+</header>
+
+<h2>Tune it</h2>
+<p class="lede">The parameters are the product. Every number below is football a coach says out
+loud; nothing here is a stored coordinate. Change one and the eleven move — and the same
+check that gates the library runs on every keystroke, so an illegal alignment says so
+instead of being quietly clamped into a legal one.</p>
+
+<section id="tuner">
+  <div class="row">
+    <select id="tuneSel" aria-label="Which formation to tune"></select>
+    <button class="btn" id="mirrorBtn" aria-pressed="false">Mirror</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+  <div class="fieldbox"><svg class="field" id="tuneField" role="img" aria-label="the tuned formation"></svg></div>
+  <div id="params"></div>
+  <div class="stats" id="tuneStats"></div>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<h2 id="catHead">The library</h2>
+<p class="lede" id="catNote"></p>
+<div id="grid"></div>
+
+<footer id="foot"></footer>
+
+<script type="application/json" id="brand-data">
+{
+  "schema": "play-designer/brands@1",
+  "note": "Tenant brand records. lehi is the reference: its colours are taken verbatim from designer.html's :root and PAL_SCREEN, so it is the proof that theming cost the existing look nothing. The other two exist to prove range — one light, one loud. Contrast is audited by Brand.audit(); see product/test/test-brand.js.",
+  "brands": [
+    {
+      "id": "lehi",
+      "name": "Lehi Youth Football",
+      "shortName": "Lehi",
+      "scheme": "dark",
+      "colors": {
+        "page": "#13251F",
+        "board": "#1D3A31",
+        "deep": "#0D1B16",
+        "chalk": "#EDEBE0",
+        "soft": "#9AA69C",
+        "accent": "#E3B547",
+        "warm": "#E58A6B"
+      },
+      "field": {
+        "grass": "#1D3A31",
+        "chalk": "#EDEBE0",
+        "line": "#E3B547",
+        "plate": "#13251F",
+        "hot": "#E58A6B",
+        "circleFill": "rgba(19,37,31,.55)",
+        "routeFill": "rgba(227,181,71,.28)",
+        "stroke": 2,
+        "gridOp": 0.09,
+        "hashOp": 0.2,
+        "sideOp": 0.3,
+        "themOp": 0.42,
+        "chipOp": 0.82,
+        "losChipOp": 0.72,
+        "leadOp": 0.42,
+        "aimOp": 0.85
+      },
+      "wordmark": { "text": "Play Designer", "accent": "Designer" },
+      "mark": { "initials": "LHI", "shape": "shield" },
+      "fonts": { "body": "system", "mono": "mono", "display": "condensed" }
+    },
+
+    {
+      "id": "willow-creek",
+      "name": "Willow Creek Junior Football",
+      "shortName": "Willow Creek",
+      "scheme": "light",
+      "colors": {
+        "page": "#F3F1E9",
+        "board": "#FFFFFF",
+        "deep": "#FFFFFF",
+        "chalk": "#17211C",
+        "soft": "#4E5A53",
+        "accent": "#8E1B2E",
+        "warm": "#0F5C74"
+      },
+      "field": {
+        "grass": "#E7EEE2",
+        "chalk": "#1B2A22",
+        "line": "#8E1B2E",
+        "plate": "#FFFFFF",
+        "hot": "#0F5C74",
+        "circleFill": "rgba(255,255,255,.82)",
+        "routeFill": "rgba(142,27,46,.16)",
+        "stroke": 2,
+        "gridOp": 0.16,
+        "hashOp": 0.3,
+        "sideOp": 0.45,
+        "themOp": 0.5,
+        "chipOp": 0.92,
+        "losChipOp": 0.88,
+        "leadOp": 0.5,
+        "aimOp": 0.9
+      },
+      "wordmark": { "text": "Willow Creek Football", "accent": "Football" },
+      "mark": { "initials": "WC", "shape": "disc" },
+      "fonts": { "body": "system", "mono": "mono", "display": "slab" }
+    },
+
+    {
+      "id": "ridgeline",
+      "name": "Ridgeline Raptors",
+      "shortName": "Ridgeline",
+      "scheme": "dark",
+      "colors": {
+        "page": "#0C0716",
+        "board": "#241548",
+        "deep": "#150C2A",
+        "chalk": "#FFFFFF",
+        "soft": "#BFB2E6",
+        "accent": "#D8FF3E",
+        "warm": "#FF4FA3"
+      },
+      "field": {
+        "grass": "#241548",
+        "chalk": "#FFFFFF",
+        "line": "#D8FF3E",
+        "plate": "#0C0716",
+        "hot": "#FF4FA3",
+        "circleFill": "rgba(12,7,22,.62)",
+        "routeFill": "rgba(216,255,62,.3)",
+        "stroke": 2.2,
+        "gridOp": 0.12,
+        "hashOp": 0.24,
+        "sideOp": 0.38,
+        "themOp": 0.46,
+        "chipOp": 0.86,
+        "losChipOp": 0.78,
+        "leadOp": 0.45,
+        "aimOp": 0.9
+      },
+      "wordmark": { "text": "Ridgeline Raptors", "accent": "Raptors" },
+      "mark": { "initials": "RR", "shape": "chevron" },
+      "fonts": { "body": "grotesk", "mono": "mono", "display": "condensed" }
+    }
+  ]
+}
+</script>
+
+<script type="application/json" id="formation-catalog">
+{
+  "schema": "play-designer/formations@1",
+  "note": "The starter library a new team gets. FORMATIONS, NOT PLAYS: alignment and labels only — no routes, no jobs, no target, no names, no club. A coach draws his own football on top, and what he draws is his. Every entry is a set of parameters, not a set of coordinates; nothing here was lifted from anybody's playbook. Slugs are prefixed fm- so a starter formation can never collide with a play already in a book.",
+  "units": "Distances are yards. Depth is measured from the line named in lineLabel; width is measured from the ball (or from the kicker on a free kick). See formations.js for the two draw scales and why a line split is not drawn to scale.",
+  "formations": [
+    {
+      "id": "fm-spread-punt",
+      "name": "Punt — Spread",
+      "family": "punt",
+      "generator": "spreadPunt",
+      "note": "The standard. One-yard splits, gunners at the numbers, punter at fourteen. Seven on the line: five interior plus the two gunners, which is what leaves the wings free to be off it.",
+      "params": { "split": 1, "gunnerSplit": 21, "wingDepth": 1.5, "protectorDepth": 5, "protectorOffset": 2, "punterDepth": 14 }
+    },
+    {
+      "id": "fm-tight-punt",
+      "name": "Punt — Tight",
+      "family": "punt",
+      "generator": "spreadPunt",
+      "note": "Same eleven, everything pulled in: foot splits, gunners in tight, punter a yard shallower. For a wet ball, a short field, or a young snapper.",
+      "params": { "split": 0.5, "tackleSplit": 0.5, "gunnerSplit": 16, "wingSplit": 0.5, "wingDepth": 1.5, "protectorDepth": 4.5, "protectorOffset": 1.5, "punterDepth": 13 }
+    },
+    {
+      "id": "fm-spread-punt-left-hash",
+      "name": "Punt — Spread, left hash",
+      "family": "punt",
+      "generator": "spreadPunt",
+      "note": "The same punt with the ball on the left hash: the boundary gunner has less room, so his split comes in. Proof the ball spot is a parameter and not baked into the drawing.",
+      "params": { "ballX": 144.5, "split": 0.5, "tackleSplit": 0.5, "wingSplit": 0.5, "gunnerSplit": { "left": 15.5, "right": 26 }, "wingDepth": 1.5, "protectorDepth": 5, "protectorOffset": 2, "punterDepth": 14 }
+    },
+
+    {
+      "id": "fm-punt-return-6-2-2-1",
+      "name": "Punt Return — 6-2-2-1",
+      "family": "punt-return",
+      "generator": "puntReturn",
+      "note": "Six up front, two jammers of them on the gunners; two at the second level, two building the wall, one returner at forty.",
+      "params": { "shape": "6-2-2-1", "jammerWidth": 21, "holdUpSplit": 2.5, "level2Depth": 8, "wallDepth": 16, "returnerDepth": 40 }
+    },
+    {
+      "id": "fm-punt-return-5-2-3-1",
+      "name": "Punt Return — 5-2-3-1",
+      "family": "punt-return",
+      "generator": "puntReturn",
+      "note": "One fewer up front and a three-man wall. Less pressure on the punter, more men building the return.",
+      "params": { "shape": "5-2-3-1", "jammerWidth": 20, "holdUpSplit": 3, "level2Depth": 9, "wallDepth": 18, "wallSplit": 6, "returnerDepth": 42 }
+    },
+
+    {
+      "id": "fm-kickoff-spread",
+      "name": "Kickoff — Spread 5/5",
+      "family": "kickoff",
+      "generator": "kickoff",
+      "note": "Ten across, five either side of the kicker, evenly laddered from four yards out to twenty-four. A free kick needs four either side of the kicker and this has five.",
+      "params": { "left": { "count": 5, "near": 4, "far": 24 }, "right": { "count": 5, "near": 4, "far": 24 }, "kickerDepth": 6 }
+    },
+    {
+      "id": "fm-kickoff-cluster",
+      "name": "Kickoff — Cluster",
+      "family": "kickoff",
+      "generator": "kickoff",
+      "note": "Everybody inside the numbers in staggered pairs, then they break for their lanes on the whistle. The stagger is football, not drawing: men leaving a bunch at different times cannot start on the same line.",
+      "params": { "left": { "count": 5, "near": 3, "far": 11, "rows": 2, "rowGap": 2.5 }, "right": { "count": 5, "near": 3, "far": 11, "rows": 2, "rowGap": 2.5 }, "kickerDepth": 6 }
+    },
+    {
+      "id": "fm-onside-6-4",
+      "name": "Kickoff — Onside 6/4",
+      "family": "kickoff",
+      "generator": "kickoff",
+      "note": "Overload the kick side: six bunched right in two ranks, four spread left to cover the other half if it gets away. Where the ball is put is the coach's call, not the formation's.",
+      "params": { "left": { "count": 4, "near": 8, "far": 24 }, "right": { "count": 6, "near": 3, "far": 15, "rows": 2, "rowGap": 2.5 }, "kickerDepth": 5 }
+    },
+
+    {
+      "id": "fm-kick-return-5-2-2-2",
+      "name": "Kick Return — 5-2-2-2",
+      "family": "kick-return",
+      "generator": "kickReturn",
+      "note": "Five across as the hands team on the ten-yard line, two at the second level, two in the wall, two deep. Nobody inside the free kick zone.",
+      "params": { "shape": "5-2-2-2", "frontDepth": 10, "frontSpread": 22, "midDepth": 20, "wallDepth": 28, "deepDepth": 45, "deepPairWidth": 10 }
+    },
+    {
+      "id": "fm-kick-return-5-4-2",
+      "name": "Kick Return — 5-4-2",
+      "family": "kick-return",
+      "generator": "kickReturn",
+      "note": "Same hands team and the same deep pair; the four blockers align on one row instead of in two pairs, which builds the wall sooner and gives up the second level.",
+      "params": { "shape": "5-4-2", "frontDepth": 10, "frontSpread": 22, "wallDepth": 26, "wallSplit": 4.5, "deepDepth": 45, "deepPairWidth": 10 }
+    },
+
+    {
+      "id": "fm-offense-2x2-te",
+      "name": "Offense — 2x2, tight end right",
+      "family": "offense",
+      "generator": "offenseSet",
+      "note": "Two receivers each side counting the tight end, quarterback at five, one back. Seven on the line is solved for, not assumed: five linemen, the tight end, and the backside X.",
+      "params": {
+        "lineSplit": 0.66, "te": "R", "teSplit": 1,
+        "wide": { "left": [18, 12.5], "right": [18] },
+        "qbDepth": 5, "backs": [{ "depth": 8, "offset": 3 }]
+      }
+    },
+    {
+      "id": "fm-offense-trips-right",
+      "name": "Offense — Trips right",
+      "family": "offense",
+      "generator": "offenseSet",
+      "note": "No tight end, three receivers right, single receiver left. Two of the four have to be on the line to make seven, and the generator puts them where a legal trips set puts them: the outermost man on each side.",
+      "params": {
+        "lineSplit": 0.66, "te": "none",
+        "wide": { "left": [18], "right": [22, 17, 12.5] },
+        "qbDepth": 5, "backs": [{ "depth": 8, "offset": 3 }]
+      }
+    },
+    {
+      "id": "fm-offense-under-center-i",
+      "name": "Offense — Tight, two backs",
+      "family": "offense",
+      "generator": "offenseSet",
+      "note": "Tight end right, one receiver each side, two backs behind the quarterback. The heavy end of the same generator: only the numbers changed.",
+      "params": {
+        "lineSplit": 0.66, "te": "R", "teSplit": 1,
+        "wide": { "left": [17], "right": [19] },
+        "qbDepth": 4, "backs": [{ "depth": 8, "offset": -3 }, { "depth": 11, "offset": 2 }]
+      }
+    },
+
+    {
+      "id": "fm-defense-4-3",
+      "name": "Defense — 4-3",
+      "family": "defense",
+      "generator": "defenseFront",
+      "note": "Four down, three backers, two corners, two safeties. There is no seven-on-the-line rule for the defence; what is checked is that four men are actually down on the ball.",
+      "params": { "front": 4, "backers": 3, "dlSplit": 2, "lbDepth": 4.5, "lbWidth": 5, "cbWidth": 16, "cbDepth": 5, "safetyDepth": 12, "safetyWidth": 8 }
+    },
+    {
+      "id": "fm-defense-5-2",
+      "name": "Defense — 5-2",
+      "family": "defense",
+      "generator": "defenseFront",
+      "note": "The youth staple: a nose on the centre, five down, two backers behind them. Hard to run inside on, and it asks less of eleven- to fourteen-year-olds than reading a gap.",
+      "params": { "front": 5, "backers": 2, "dlSplit": 1.5, "lbDepth": 4.5, "lbSplit": 8, "cbWidth": 16, "cbDepth": 5, "safetyDepth": 12, "safetyWidth": 8 }
+    },
+    {
+      "id": "fm-defense-4-4",
+      "name": "Defense — 4-4",
+      "family": "defense",
+      "generator": "defenseFront",
+      "note": "Four down, four backers, one free safety. Eight in the box against a team that only runs.",
+      "params": { "front": 4, "backers": 4, "dlSplit": 2, "lbDepth": 4.5, "lbSplit": 5, "cbWidth": 18, "cbDepth": 5, "safetyDepth": 13 }
+    }
+  ]
+}
+</script>
+
+<script id="brand-js">
+/* brand.js — the white-label layer.
+ *
+ * One codebase, one engine, one field renderer; every league and every team
+ * gets its own look. A coach at another club opens the app and it is HIS
+ * club's — his name, his colours, his field. Nobody edits CSS to make that
+ * happen: a tenant hands us a brand record, this file turns it into CSS
+ * custom properties on :root and into the palette object the field renderer
+ * already takes.
+ *
+ * Constraints this file exists to hold:
+ *
+ *   - No dependencies, no build step. It is a plain <script> and it also
+ *     works from file:// and from inside an artifact viewer, which is why it
+ *     never fetches anything on its own. The caller supplies the records.
+ *   - No webfonts. A brand CANNOT supply a font URL: it picks a stack by NAME
+ *     from FONT_STACKS below, all of which ship with the OS. This gets used on
+ *     a sideline with no signal and nothing may block on the network.
+ *   - Print is the game-day output. Every brand degrades to the SAME black-on-
+ *     white palette; a brand cannot override it and put a green block on a
+ *     cartridge. See PRINT.
+ *   - Contrast is not a taste question. audit() computes real WCAG ratios for
+ *     the places that actually carry meaning — the label inside a player
+ *     circle, the name chip, the chalk on the grass — compositing translucent
+ *     fills over their real backdrop first. A brand that fails is a bug.
+ *
+ * The record shape (everything but id/name has a default):
+ *
+ * {
+ *   id: 'lehi',                       // stable key, never a display name
+ *   name: 'Lehi Youth Football',      // the league or club, spelled out
+ *   shortName: 'Lehi',
+ *   scheme: 'dark' | 'light',         // drives color-scheme, nothing else
+ *   colors: {                         // the page chrome
+ *     page,    // app background
+ *     board,   // raised surface: header, field box
+ *     deep,    // recessed surface: buttons, selects, chips
+ *     chalk,   // primary text ON page/board/deep (ink, whatever its colour)
+ *     soft,    // muted text: labels, hints
+ *     accent,  // the club colour that does the work: active states, wordmark
+ *     warm     // the second accent: alerts, collisions, the X-man badge
+ *   },
+ *   field: {                          // the picture the plays are drawn on
+ *     grass,   // turf
+ *     chalk,   // yard lines, hashes, sidelines, player names, their X marks
+ *     line,    // routes, arrowheads, the LOS, the circle stroke and its label
+ *     plate,   // the little filled chip a name or the LOS label sits on
+ *     hot,     // selection, collision rings, X-man badge
+ *     circleFill, routeFill,          // may be rgba(); composited when audited
+ *     stroke,                         // route/circle stroke width
+ *     gridOp, hashOp, sideOp, themOp, chipOp, losChipOp, leadOp, aimOp
+ *   },
+ *   wordmark: { text: 'Lehi Special Teams', accent: 'Special Teams' },
+ *   mark: { initials: 'LHI', shape: 'shield'|'disc'|'chevron', fg, bg },
+ *   fonts: { body:'system', mono:'system', display:'condensed' }   // names only
+ * }
+ *
+ * field is optional: leave it out and it is derived from colors, so a tenant
+ * can be onboarded with six hex codes and still get a coherent field.
+ */
+var Brand = (function () {
+  'use strict';
+
+  /* ---------- fonts: names, never URLs ----------
+     A brand chooses from this list. There is no escape hatch that takes a
+     font file, because the one thing that must never happen on a practice
+     field is the page waiting on a CDN. */
+  var FONT_STACKS = {
+    system: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif",
+    mono: "ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace",
+    condensed: "'Haettenschweiler','Arial Narrow',Impact,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+    grotesk: "'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif",
+    slab: "'Rockwell','Roboto Slab',Georgia,'Times New Roman',serif",
+    humanist: "'Optima','Gill Sans','Gill Sans MT',Candara,Calibri,sans-serif"
+  };
+
+  /* ---------- colour maths ---------- */
+  function parse(c) {
+    if (c == null) return null;
+    if (typeof c === 'object' && c.length === 4) return c.slice();
+    var s = String(c).trim();
+    var m = s.match(/^#([0-9a-f]{3,8})$/i);
+    if (m) {
+      var h = m[1];
+      if (h.length === 3 || h.length === 4) h = h.split('').map(function (x) { return x + x; }).join('');
+      var a = h.length === 8 ? parseInt(h.slice(6, 8), 16) / 255 : 1;
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), a];
+    }
+    m = s.match(/^rgba?\(([^)]+)\)$/i);
+    if (m) {
+      var p = m[1].split(/[,\s/]+/).filter(function (x) { return x !== ''; }).map(Number);
+      return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+    }
+    return null;
+  }
+
+  function hex(c) {
+    var p = parse(c); if (!p) return '#000000';
+    return '#' + [0, 1, 2].map(function (i) {
+      var v = Math.round(Math.max(0, Math.min(255, p[i]))).toString(16);
+      return v.length < 2 ? '0' + v : v;
+    }).join('');
+  }
+
+  /* Composite fg (which may be translucent) over an opaque backdrop. Every
+     contrast number below runs through this, because a circle fill of
+     rgba(19,37,31,.55) is not a colour until you know what is under it. */
+  function over(fg, bg, alphaOverride) {
+    var f = parse(fg), b = parse(bg);
+    if (!f) return b ? b.slice() : [0, 0, 0, 1];
+    if (!b) return f.slice();
+    var a = alphaOverride == null ? f[3] : alphaOverride;
+    return [f[0] * a + b[0] * (1 - a), f[1] * a + b[1] * (1 - a), f[2] * a + b[2] * (1 - a), 1];
+  }
+
+  function luminance(c) {
+    var p = parse(c); if (!p) return 0;
+    function ch(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    return 0.2126 * ch(p[0]) + 0.7152 * ch(p[1]) + 0.0722 * ch(p[2]);
+  }
+
+  /* WCAG 2.1 relative-contrast ratio. Both arguments must already be opaque —
+     use over() first if either is not. */
+  function contrast(a, b) {
+    var l1 = luminance(a), l2 = luminance(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+
+  function mix(a, b, t) {
+    var x = parse(a), y = parse(b);
+    return hex([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t, 1]);
+  }
+
+  function rgba(c, a) {
+    var p = parse(c);
+    return 'rgba(' + Math.round(p[0]) + ',' + Math.round(p[1]) + ',' + Math.round(p[2]) + ',' + a + ')';
+  }
+
+  function isDark(c) { return luminance(c) < 0.22; }
+
+  /* ---------- the print palette ----------
+     Deliberately not per-brand and deliberately not overridable. Print is the
+     game-day output and toner costs money: black on white, every tenant, the
+     same way designer.html has always done it. */
+  var PRINT = {
+    grass: '#FFFFFF', chalk: '#000000', line: '#000000', plate: '#FFFFFF', hot: '#000000',
+    gridOp: 0.13, hashOp: 0.26, sideOp: 0.5, themOp: 0.8, chipOp: 1, losChipOp: 1,
+    leadOp: 0.5, aimOp: 1, circleFill: '#FFFFFF', routeFill: '#FFFFFF', stroke: 1.6
+  };
+
+  var FIELD_DEFAULT_OPS = {
+    gridOp: 0.09, hashOp: 0.2, sideOp: 0.3, themOp: 0.42, chipOp: 0.82,
+    losChipOp: 0.72, leadOp: 0.42, aimOp: 0.85, stroke: 2
+  };
+
+  /* ---------- normalise ----------
+     Fills every slot so the rest of the file never has to test for one, and
+     derives a whole field from the chrome colours when a tenant only gave us
+     six hex codes. Additive: it never drops a key it did not recognise. */
+  function normalize(rec) {
+    if (!rec || !rec.id) throw new Error('brand: a record needs an id');
+    var b = {};
+    for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) b[k] = rec[k];
+
+    var c = {};
+    var src = rec.colors || {};
+    c.page = src.page || '#13251F';
+    c.board = src.board || mix(c.page, isDark(c.page) ? '#FFFFFF' : '#000000', 0.06);
+    c.deep = src.deep || mix(c.page, isDark(c.page) ? '#000000' : '#FFFFFF', 0.35);
+    c.chalk = src.chalk || (isDark(c.page) ? '#EDEBE0' : '#16211C');
+    c.soft = src.soft || mix(c.chalk, c.page, 0.42);
+    c.accent = src.accent || '#E3B547';
+    c.warm = src.warm || '#E58A6B';
+    b.colors = c;
+
+    b.scheme = rec.scheme || (isDark(c.page) ? 'dark' : 'light');
+
+    var f = {}, fs = rec.field || {};
+    f.grass = fs.grass || c.board;
+    f.chalk = fs.chalk || c.chalk;
+    f.line = fs.line || c.accent;
+    f.plate = fs.plate || c.page;
+    f.hot = fs.hot || c.warm;
+    f.circleFill = fs.circleFill || rgba(f.plate, 0.55);
+    f.routeFill = fs.routeFill || rgba(f.line, 0.28);
+    Object.keys(FIELD_DEFAULT_OPS).forEach(function (k) {
+      f[k] = fs[k] == null ? FIELD_DEFAULT_OPS[k] : fs[k];
+    });
+    b.field = f;
+
+    var w = rec.wordmark || {};
+    b.wordmark = { text: w.text || rec.name, accent: w.accent || '' };
+
+    var m = rec.mark || {};
+    b.mark = {
+      initials: (m.initials || (rec.shortName || rec.name || '?').slice(0, 3)).toUpperCase(),
+      shape: m.shape || 'shield',
+      bg: m.bg || c.accent,
+      fg: m.fg || (isDark(m.bg || c.accent) ? c.chalk : c.page)
+    };
+
+    b.shortName = rec.shortName || rec.name;
+
+    /* Fonts by name only. An unknown name — or anything that looks like a URL,
+       which is the failure this guard exists for — falls back to the system
+       stack and says so, rather than shipping a page that waits on a CDN. */
+    var fr = rec.fonts || {};
+    b.fonts = {
+      body: stack(fr.body, 'system'),
+      mono: stack(fr.mono, 'mono'),
+      display: stack(fr.display, 'condensed')
+    };
+    return b;
+  }
+
+  /* The most legible of the brand's own surfaces against a filled accent. */
+  function accentInk(c, printing) {
+    if (printing) return '#FFFFFF';
+    var best = c.page, bestR = 0;
+    [c.page, c.deep, c.chalk, c.board].forEach(function (cand) {
+      var r = contrast(cand, c.accent);
+      if (r > bestR) { bestR = r; best = cand; }
+    });
+    return best;
+  }
+
+  function stack(name, fallback) {
+    if (!name) return FONT_STACKS[fallback];
+    if (FONT_STACKS[name]) return FONT_STACKS[name];
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('brand: unknown font stack "' + name + '" — no webfonts are allowed, using ' + fallback);
+    }
+    return FONT_STACKS[fallback];
+  }
+
+  /* ---------- the field palette ----------
+     Same shape designer.html's PAL_SCREEN/PAL_PRINT already have, including the
+     legacy key names (gold, deep), so a renderer written against those keeps
+     working with no edit: pal() becomes Brand.palette(current, printing). */
+  function palette(rec, printing) {
+    var b = rec && rec.field ? rec : normalize(rec || { id: 'default' });
+    var f = printing ? PRINT : b.field;
+    return {
+      grass: f.grass, chalk: f.chalk, line: f.line, plate: f.plate, hot: f.hot,
+      gold: f.line,   // legacy name: the accent that draws routes and circles
+      deep: f.plate,  // legacy name: the chip backdrop
+      gridOp: f.gridOp, hashOp: f.hashOp, sideOp: f.sideOp, themOp: f.themOp,
+      chipOp: f.chipOp, losChipOp: f.losChipOp, leadOp: f.leadOp, aimOp: f.aimOp,
+      circleFill: f.circleFill, routeFill: f.routeFill, stroke: f.stroke,
+      printing: !!printing
+    };
+  }
+
+  /* ---------- the CSS custom properties ----------
+     The whole point of the layer: everything the chrome needs is a var, so a
+     tenant changes by data and no stylesheet is touched. Returns the map it
+     set, which is what a test asserts against. */
+  function vars(rec, printing) {
+    var b = rec && rec.colors ? rec : normalize(rec);
+    var P = palette(b, printing);
+    var c = b.colors, ink, page;
+
+    if (printing) {
+      page = '#FFFFFF'; ink = '#000000';
+      c = { page: page, board: page, deep: page, chalk: ink, soft: ink, accent: ink, warm: ink };
+    }
+    /* Dark keeps designer.html's own rgba(237,235,224,.25) so Lehi is
+       byte-identical to today. A light theme needs more: the same alpha over a
+       white button collapsed to 1.01:1, which is a border nobody can see. */
+    var dark = !printing && b.scheme === 'dark';
+    var hair = rgba(c.chalk, dark ? 0.25 : 0.45);
+
+    var v = {
+      '--page': c.page, '--board': c.board, '--deep': c.deep,
+      '--chalk': c.chalk, '--soft': c.soft,
+      '--accent': c.accent, '--warm': c.warm,
+      /* designer.html's stylesheet says var(--gold); keeping the alias means an
+         existing page themes with no CSS edit at all. */
+      '--gold': c.accent,
+      '--hairline': hair,
+      '--hairline-strong': rgba(c.chalk, dark ? 0.4 : 0.6),
+      /* Text on an accent-filled button. "Dark accent means light text" is the
+         obvious rule and it is wrong: on a light theme with a crimson accent it
+         picks the dark ink and lands at 1.85:1. Pick whichever surface the brand
+         already owns actually reads on it. */
+      '--accent-ink': accentInk(c, printing),
+      '--field-grass': P.grass, '--field-chalk': P.chalk, '--field-line': P.line,
+      '--field-plate': P.plate, '--field-hot': P.hot,
+      '--field-circle-fill': P.circleFill, '--field-route-fill': P.routeFill,
+      '--field-stroke': String(P.stroke),
+      '--body': b.fonts.body, '--mono': b.fonts.mono, '--display': b.fonts.display
+    };
+    return v;
+  }
+
+  /* Apply to a root element (default :root). Also sets color-scheme so form
+     controls and scrollbars follow the theme, and data-brand so a page can
+     hang a rule off the tenant if it ever has to. */
+  function apply(rec, opts) {
+    opts = opts || {};
+    var b = rec && rec.colors ? rec : normalize(rec);
+    var root = opts.root || (typeof document !== 'undefined' ? document.documentElement : null);
+    if (!root) return null;
+    var v = vars(b, opts.print);
+    Object.keys(v).forEach(function (k) { root.style.setProperty(k, v[k]); });
+    root.style.setProperty('color-scheme', opts.print ? 'light' : b.scheme);
+    if (root.setAttribute) {
+      root.setAttribute('data-brand', b.id);
+      root.setAttribute('data-scheme', opts.print ? 'print' : b.scheme);
+    }
+    return v;
+  }
+
+  /* ---------- wordmark and mark ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  /* "Lehi Special Teams" with "Special Teams" in the club colour. The accent
+     run is matched literally and only the first occurrence is wrapped. */
+  function wordmarkHTML(rec) {
+    var b = rec && rec.wordmark ? rec : normalize(rec);
+    var t = b.wordmark.text || b.name, a = b.wordmark.accent;
+    if (!a) return esc(t);
+    var i = t.indexOf(a);
+    if (i < 0) return esc(t);
+    return esc(t.slice(0, i)) + '<span class="wm-accent">' + esc(a) + '</span>' + esc(t.slice(i + a.length));
+  }
+
+  /* A club mark with no image file behind it: initials in a shape, drawn from
+     the brand's own colours. Nothing to host, nothing to load offline. */
+  function markSVG(rec, size, printing) {
+    var b = rec && rec.mark ? rec : normalize(rec);
+    var s = size || 28, m = b.mark, d;
+    /* On paper the club mark is an outline, not a block of club colour. Same
+       reason the field goes black on white: toner. */
+    if (printing) m = { initials: m.initials, shape: m.shape, bg: '#FFFFFF', fg: '#000000' };
+    if (m.shape === 'disc') d = 'M14,1 A13,13 0 1,1 13.99,1 Z';
+    else if (m.shape === 'chevron') d = 'M2,3 H26 L14,27 Z';
+    else d = 'M3,3 H25 V14 C25,21 20,25 14,27 C8,25 3,21 3,14 Z';
+    var fsz = m.initials.length > 2 ? 9 : 11;
+    return '<svg viewBox="0 0 28 28" width="' + s + '" height="' + s + '" role="img" aria-label="' +
+      esc(b.shortName || b.name) + '">' +
+      '<path d="' + d + '" fill="' + esc(m.bg) + '"' +
+      (printing ? ' stroke="#000000" stroke-width="1.5"' : '') + '/>' +
+      '<text x="14" y="' + (m.shape === 'chevron' ? 15 : 18) + '" text-anchor="middle" fill="' + esc(m.fg) +
+      '" font-family="' + esc(FONT_STACKS.mono) + '" font-size="' + fsz + '" font-weight="700"' +
+      ' letter-spacing="0.5">' + esc(m.initials) + '</text></svg>';
+  }
+
+  /* ---------- contrast audit ----------
+     Every check names the real pair of colours a human actually looks at, with
+     the translucent layers composited first. Tiers:
+       text     4.5  something a coach or a boy has to read
+       graphic  3.0  a line or a ring that has to be seen, not read
+       faint    1.6  deliberately recessive: the yard grid, the sidelines,
+                     the other team's marks. They must be visible without
+                     competing with the eleven men who matter. */
+  var MIN = { text: 4.5, graphic: 3.0, faint: 1.6 };
+
+  function audit(rec, printing) {
+    var b = rec && rec.colors ? rec : normalize(rec);
+    var f = printing ? PRINT : b.field, c = b.colors;
+    if (printing) c = { page: '#FFFFFF', board: '#FFFFFF', deep: '#FFFFFF', chalk: '#000000', soft: '#000000', accent: '#000000', warm: '#000000' };
+
+    var circle = over(f.circleFill, f.grass);
+    var chip = over(f.plate, f.grass, f.chipOp);
+    var losChip = over(f.plate, f.grass, f.losChipOp);
+    /* Read the button ink back out of vars(), so the audit can never pass a
+       colour the page does not actually paint. */
+    var ink = vars(b, printing)['--accent-ink'];
+
+    var checks = [
+      ck('label-on-circle', 'position label inside a player circle', f.line, circle, 'text'),
+      ck('name-on-chip', 'player name on its chip', f.chalk, chip, 'text'),
+      ck('chalk-on-grass', 'field ink on the grass', f.chalk, f.grass, 'text'),
+      ck('los-label', 'line-of-scrimmage label on its chip', f.line, losChip, 'text'),
+      ck('route-on-grass', 'a route line on the grass', f.line, f.grass, 'graphic'),
+      ck('collision-on-grass', 'collision ring / X-man badge', f.hot, f.grass, 'graphic'),
+      ck('circle-edge', 'the circle stroke against the grass', f.line, f.grass, 'graphic'),
+      ck('them-on-grass', 'the other team\'s marks', over(f.chalk, f.grass, f.themOp), f.grass, 'faint'),
+      ck('sideline-on-grass', 'sideline', over(f.chalk, f.grass, f.sideOp), f.grass, 'faint'),
+      ck('ui-text', 'body text on the page', c.chalk, c.page, 'text'),
+      ck('ui-muted', 'hint and label text', c.soft, c.page, 'text'),
+      ck('ui-on-board', 'header text on the raised surface', c.chalk, c.board, 'text'),
+      ck('ui-accent', 'the club colour in the wordmark', c.accent, c.board, 'text'),
+      ck('ui-button', 'button text', c.chalk, c.deep, 'text'),
+      ck('ui-accent-button', 'text on an accent-filled button', ink, c.accent, 'text'),
+      ck('ui-border', 'a control\'s hairline against the control', over(vars(b, printing)['--hairline'], c.deep), c.deep, 'faint'),
+      ck('ui-warm', 'the second accent in the chrome', c.warm, c.page, 'graphic')
+    ];
+    var fails = checks.filter(function (x) { return !x.pass; });
+    return { id: b.id, print: !!printing, checks: checks, fails: fails, pass: fails.length === 0 };
+  }
+
+  function ck(id, what, fg, bg, tier) {
+    var r = contrast(fg, bg);
+    return {
+      id: id, what: what, tier: tier, min: MIN[tier],
+      fg: hex(fg), bg: hex(bg),
+      ratio: Math.round(r * 100) / 100, pass: r + 1e-9 >= MIN[tier]
+    };
+  }
+
+  /* Throws with the failing lines named. Use it in a test, not on a field. */
+  function assertContrast(rec) {
+    var out = [audit(rec, false), audit(rec, true)];
+    var bad = out.reduce(function (a, o) {
+      return a.concat(o.fails.map(function (x) {
+        return (o.print ? 'print ' : '') + x.id + ' ' + x.ratio + ':1 (needs ' + x.min + ')';
+      }));
+    }, []);
+    if (bad.length) throw new Error('brand ' + (rec.id || '?') + ' fails contrast: ' + bad.join('; '));
+    return true;
+  }
+
+  /* ---------- the registry ----------
+     No fetching in here on purpose (rule 4): the page decides where records
+     come from — an inlined <script type="application/json">, a fetch when one
+     is reachable, or a tenant row out of the database. */
+  var REG = {}, ORDER = [];
+  function register(recs) {
+    (Array.isArray(recs) ? recs : [recs]).forEach(function (r) {
+      var b = normalize(r);
+      if (!REG[b.id]) ORDER.push(b.id);
+      REG[b.id] = b;
+    });
+    return ORDER.map(function (id) { return REG[id]; });
+  }
+  function get(id) { return REG[id] || null; }
+  function all() { return ORDER.map(function (id) { return REG[id]; }); }
+
+  return {
+    FONT_STACKS: FONT_STACKS, PRINT: PRINT, MIN: MIN,
+    normalize: normalize, palette: palette, vars: vars, apply: apply,
+    wordmarkHTML: wordmarkHTML, markSVG: markSVG,
+    audit: audit, assertContrast: assertContrast, contrast: contrast,
+    luminance: luminance, over: over, mix: mix, rgba: rgba, hex: hex, parse: parse,
+    register: register, get: get, all: all
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = Brand;
+
+</script>
+
+<script id="formations-js">
+/* formations.js — the shippable geometry.
+ *
+ * A team that signs up gets an EMPTY playbook. It cannot get anybody else's
+ * plays: a play is a coach's IP, and a product whose content is one club's
+ * offense is worthless to a buyer. What it CAN get is formations — a spread
+ * punt, a 6-2-2-1, ten across from the 40. That is public-domain football
+ * every coach already knows, and it is the difference between an empty screen
+ * and a coach drawing his first route in ninety seconds.
+ *
+ *   Ship alignments. Never ship plays.
+ *
+ * So everything in here emits alignment and labels ONLY. No routes, no jobs,
+ * no target mark, no player names, no team name. check() enforces that, not
+ * as a style rule but as the licence boundary: the moment a formation carries
+ * a route it has stopped being geometry and started being somebody's call.
+ *
+ * NOT COORDINATES — PARAMETERS. Nothing in this file was lifted out of an
+ * existing playbook. Every man's spot is computed from numbers a coach says
+ * out loud: one-yard splits, punter at fourteen, gunners at the numbers,
+ * returner at forty. That is the product. A coach who wants wider splits
+ * changes a number and the geometry follows; a coach who is handed a picture
+ * has to drag eleven circles.
+ *
+ * ---- the two scales, and why they are not the same ----
+ *
+ * ACROSS the field is true: 392px between the sidelines is 53.3 yards, so
+ * across(yd) is honest and a gunner at 21 yards from the ball is drawn where
+ * 21 yards is.
+ *
+ * A SPLIT between two neighbours cannot be. A player circle is 24px across —
+ * 3.3 yards — so a true two-foot line split draws five men in one pile. So
+ * split(yd) = one body + the true distance. Two-foot splits and two-yard
+ * splits still draw differently, in the right order, by the right amount;
+ * they are simply both pushed out by a body. The root app already made this
+ * compromise by hand for its offensive line. This is that compromise, named,
+ * measured and in one function.
+ *
+ * DEPTH is compressed past six yards, because a formation has to hold a wing
+ * one yard off the ball AND a kick returner forty-five yards away inside 500
+ * pixels. depth() is piecewise linear and strictly increasing: nothing ever
+ * reorders, a deeper man is always drawn deeper.
+ *
+ * ---- conventions ----
+ *
+ * Labels follow the house convention (CLAUDE.md, "Label convention"):
+ * L/R prefix for the side, numbering OUTWARD from the reference man (the ball,
+ * or the kicker). L is screen-left of the ball in every formation here;
+ * mirror() flips the geometry AND the labels together, so it stays true.
+ *
+ * Our team is always at LARGER y — downfield is up the screen, toward y=0.
+ *
+ * No dependencies, no build step, works from file://.
+ */
+var Formations = (function () {
+  'use strict';
+
+  /* ---------- the field ---------- */
+  var FIELD = { W: 420, H: 500, left: 14, right: 406, yardsWide: 53.3 };
+  var PX_PER_YD = (FIELD.right - FIELD.left) / FIELD.yardsWide;   /* 7.3546 */
+  var BODY = 24;    /* a player circle is r=12 */
+  var CLEAR = 26;   /* centre to centre: a body, plus a hair so two never kiss */
+  var DEPTH = { nearYd: 6, near: 10, far: 5.2 };
+  var LINE_TOL = 5; /* within half a yard of the line counts as ON the line */
+
+  function across(yd) { return yd * PX_PER_YD; }
+  function split(yd) { return CLEAR + Math.max(0, yd) * PX_PER_YD; }
+  function depth(yd, d) {
+    d = d || DEPTH;
+    if (yd <= d.nearYd) return yd * d.near;
+    return d.nearYd * d.near + (yd - d.nearYd) * d.far;
+  }
+  function yards(px) { return px / PX_PER_YD; }
+  function r1(v) { return Math.round(v * 10) / 10; }
+
+  /* ---------- small helpers ---------- */
+  function def(v, d) { return v === undefined || v === null ? d : v; }
+  function merge() {
+    var out = {}, i, k;
+    for (i = 0; i < arguments.length; i++) {
+      var o = arguments[i]; if (!o) continue;
+      for (k in o) if (Object.prototype.hasOwnProperty.call(o, k)) out[k] = o[k];
+    }
+    return out;
+  }
+  function fail(msg) { throw new Error('formations: ' + msg); }
+  /* A width that may be one number for both sides, or {left,right} when the
+     ball is not in the middle of the field and the two sides are not the
+     same job. */
+  function sideVal(v, side) { return (v && typeof v === 'object') ? v[side] : v; }
+
+  /* Evenly spaced splits from `near` to `far`, in yards, n of them.
+     n===1 sits at the near number, not at the average of the two, because a
+     coach who says "one man, four yards off me" means four. */
+  function ladder(n, near, far) {
+    var out = [], i;
+    if (n <= 0) return out;
+    if (n === 1) return [near];
+    for (i = 0; i < n; i++) out.push(near + (far - near) * (i / (n - 1)));
+    return out;
+  }
+
+  /* Symmetric neighbour splits around a middle: n men, gap g px between
+     neighbours. Returns px offsets from the middle, left to right. */
+  function row(n, g) {
+    var out = [], i, start = -(n - 1) / 2;
+    for (i = 0; i < n; i++) out.push((start + i) * g);
+    return out;
+  }
+
+  /* ---------- the document ---------- */
+  var SEQ = 0;
+  function man(label, x, y) {
+    return { id: 'f' + (++SEQ), team: 'us', label: label, x: r1(x), y: r1(y) };
+  }
+  function doc(o) {
+    var d = {
+      slug: o.slug || null,
+      name: o.name || null,
+      formation: true,
+      family: o.family,
+      phase: o.phase,
+      generator: o.generator,
+      params: o.params,
+      lineOfScrimmage: r1(o.los),
+      lineLabel: o.lineLabel,
+      players: o.players
+    };
+    if (o.params.mirror) { d = mirror(d); d.params = merge(d.params, { mirror: true }); }
+    return d;
+  }
+
+  /* ---------- mirror ----------
+     Flips about the ball and swaps the side labels with it, so L stays
+     screen-left and a formation's STRENGTH is what actually changes. This is
+     the only sanctioned way to flip: hand-rolling one is how a look called
+     "ball left" ended up running right. */
+  var PAIRS = { WILL: 'SAM', SAM: 'WILL' };
+  function swapSideLabel(lab) {
+    if (PAIRS[lab]) return PAIRS[lab];
+    if (/^L[A-Z0-9]/.test(lab)) return 'R' + lab.slice(1);
+    if (/^R[A-Z0-9]/.test(lab)) return 'L' + lab.slice(1);
+    return lab;
+  }
+  function mirror(d) {
+    var bx = d.params.ballX;
+    var players = d.players.map(function (p) {
+      return { id: p.id, team: p.team, label: swapSideLabel(p.label), x: r1(2 * bx - p.x), y: p.y };
+    });
+    return merge(d, { players: players });
+  }
+
+  /* ================================================================
+     1. PUNT — the spread punt, and every punt between spread and tight
+     ================================================================
+     { split, punterDepth, wingDepth, protectorOffset } are the four numbers a
+     punt coach actually says. Seven on the line: five interior plus the two
+     gunners. The wings are OFF the line by design — that is what makes the
+     seven legal, and it is checked, not assumed. */
+  var PUNT = {
+    los: 190, ballX: 210, lineLabel: 'LINE OF SCRIMMAGE',
+    split: 1,             /* yd between interior linemen */
+    tackleSplit: null,    /* defaults to split */
+    gunnerSplit: 21,      /* yd from the ball out to the gunner; a number, or
+                             {left,right} when the ball is on a hash and the
+                             boundary gunner has less field to work with */
+    wingSplit: 1,         /* yd outside the tackle */
+    wingDepth: 1.5,       /* yd behind the line */
+    protectorDepth: 5,
+    protectorOffset: 2,   /* yd off the midline, so the snap lane is clear */
+    protectorSide: 'L',
+    punterDepth: 14,
+    mirror: false
+  };
+  function spreadPunt(opts) {
+    var q = merge(PUNT, opts || {});
+    if (q.tackleSplit == null) q.tackleSplit = q.split;
+    var g = split(q.split), t = g + split(q.tackleSplit), P = [];
+    var b = q.ballX, los = q.los;
+
+    P.push(man('S', b, los));
+    P.push(man('LGD', b - g, los));
+    P.push(man('RGD', b + g, los));
+    P.push(man('LT', b - t, los));
+    P.push(man('RT', b + t, los));
+    P.push(man('LG', b - across(sideVal(q.gunnerSplit, 'left')), los));   /* gunners, on the line */
+    P.push(man('RG', b + across(sideVal(q.gunnerSplit, 'right')), los));
+    P.push(man('LW', b - t - split(q.wingSplit), los + depth(q.wingDepth)));
+    P.push(man('RW', b + t + split(q.wingSplit), los + depth(q.wingDepth)));
+    P.push(man('PP', b + (q.protectorSide === 'L' ? -1 : 1) * across(q.protectorOffset),
+      los + depth(q.protectorDepth)));
+    P.push(man('P', b, los + depth(q.punterDepth)));
+
+    return doc({
+      family: 'punt', phase: 'special', generator: 'spreadPunt', params: q,
+      los: los, lineLabel: q.lineLabel, players: P
+    });
+  }
+
+  /* ================================================================
+     2. PUNT RETURN — any n-n-n-1 shape
+     ================================================================
+     shape is read, not hardcoded: '6-2-2-1' is six up front, two second
+     level, two in the wall, one returner. Change it to '5-2-3-1' and the rows
+     rebuild with the right labels. */
+  var PUNT_RETURN = {
+    los: 126, ballX: 210, lineLabel: 'LINE OF SCRIMMAGE',
+    shape: '6-2-2-1',
+    jammerWidth: 21,     /* yd from the ball — they line up on the gunners */
+    holdUpSplit: 2.5,    /* yd between the interior front men */
+    frontDepth: 1.5,     /* yd off the ball: nobody in the neutral zone */
+    level2Depth: 8, level2Width: 6,
+    wallDepth: 16, wallWidth: 9, wallSplit: 5,
+    returnerDepth: 40, returnerWidth: 5,
+    mirror: false
+  };
+  function rows(shape) {
+    var r = String(shape).split('-').map(Number);
+    if (r.some(function (n) { return !(n > 0) || n !== Math.round(n); })) fail('shape "' + shape + '" is not a row count');
+    var sum = r.reduce(function (a, b) { return a + b; }, 0);
+    if (sum !== 11) fail('shape "' + shape + '" adds up to ' + sum + ', not 11');
+    return r;
+  }
+  /* Interior labels, numbered OUTWARD from the middle. One per side drops the
+     numeral (LH, not LH1) because that is how it is said out loud. */
+  function outward(n, base) {
+    var per = n >> 1, out = [], i, mid = n % 2 === 1;
+    for (i = per; i >= 1; i--) out.push('L' + base + (per > 1 ? i : ''));
+    if (mid) out.push('M' + base);
+    for (i = 1; i <= per; i++) out.push('R' + base + (per > 1 ? i : ''));
+    return out;
+  }
+  function puntReturn(opts) {
+    var q = merge(PUNT_RETURN, opts || {});
+    var R = rows(q.shape), b = q.ballX, los = q.los, P = [];
+    if (R.length < 3) fail('a punt return needs a front, a second level and a returner');
+
+    /* front row: two jammers on the gunners, the rest holding up inside */
+    var nf = R[0];
+    if (nf < 3) fail('front row of ' + nf + ' has no room for two jammers and a hold-up man');
+    var fy = los + depth(q.frontDepth);
+    P.push(man('LJ', b - across(q.jammerWidth), fy));
+    P.push(man('RJ', b + across(q.jammerWidth), fy));
+    var inner = outward(nf - 2, 'H'), off = row(nf - 2, split(q.holdUpSplit));
+    inner.forEach(function (lab, i) { P.push(man(lab, b + off[i], fy)); });
+
+    /* the middle rows: second level, then the wall */
+    var mid = R.slice(1, R.length - 1);
+    mid.forEach(function (n, i) {
+      var last = i === mid.length - 1;
+      var base = last ? 'W' : 'M';
+      var dep = mid.length === 1 ? q.wallDepth
+        : q.level2Depth + (q.wallDepth - q.level2Depth) * (i / (mid.length - 1));
+      var wid = last ? q.wallWidth : q.level2Width;
+      var y = los + depth(dep);
+      if (n === 2) {
+        P.push(man('L' + base, b - across(wid), y));
+        P.push(man('R' + base, b + across(wid), y));
+      } else {
+        var labs = outward(n, base), o = row(n, split(q.wallSplit));
+        labs.forEach(function (lab, j) { P.push(man(lab, b + o[j], y)); });
+      }
+    });
+
+    /* the returner, or a pair of them */
+    var nr = R[R.length - 1], ry = los + depth(q.returnerDepth);
+    if (nr === 1) P.push(man('PR', b, ry));
+    else if (nr === 2) {
+      P.push(man('LPR', b - across(q.returnerWidth), ry));
+      P.push(man('RPR', b + across(q.returnerWidth), ry));
+    } else fail('a punt return fields one or two returners, not ' + nr);
+
+    return doc({
+      family: 'punt-return', phase: 'special', generator: 'puntReturn', params: q,
+      los: los, lineLabel: q.lineLabel, players: P
+    });
+  }
+
+  /* ================================================================
+     3. KICKOFF — from { kicker spot, how many either side, restraining line }
+     ================================================================
+     Each side is its own object so a 6/4 onside look is the same generator as
+     ten across: the kick side bunches (near 3, far 15), the away side spreads.
+     `rows` staggers alternate men back — that is what a cluster IS, and it is
+     also the only way eleven men fit inside the numbers without overlapping. */
+  var KICKOFF = {
+    los: 330, kickerX: 210, lineLabel: 'FREE KICK LINE',
+    kickerDepth: 6,   /* his approach, drawn behind the line */
+    lineDepth: 0.5,   /* the cover men, a half yard behind it */
+    left: { count: 5, near: 4, far: 24, rows: 1, rowGap: 2.5 },
+    right: { count: 5, near: 4, far: 24, rows: 1, rowGap: 2.5 },
+    mirror: false
+  };
+  function kickoff(opts) {
+    var q = merge(KICKOFF, opts || {});
+    q.left = merge(KICKOFF.left, q.left); q.right = merge(KICKOFF.right, q.right);
+    var n = q.left.count + q.right.count;
+    if (n !== 10) fail('a kickoff has ten cover men plus the kicker, not ' + n);
+    var los = q.los, k = q.kickerX, P = [];
+
+    ['left', 'right'].forEach(function (side) {
+      var s = q[side], sign = side === 'left' ? -1 : 1;
+      ladder(s.count, s.near, s.far).forEach(function (yd, i) {
+        var back = s.rows > 1 ? (i % s.rows) * s.rowGap : 0;
+        P.push(man((side === 'left' ? 'L' : 'R') + (i + 1),
+          k + sign * across(yd), los + depth(q.lineDepth + back)));
+      });
+    });
+    P.push(man('K', k, los + depth(q.kickerDepth)));
+
+    return doc({
+      family: 'kickoff', phase: 'special', generator: 'kickoff', params: q,
+      los: los, lineLabel: q.lineLabel, players: P
+    });
+  }
+
+  /* ================================================================
+     4. KICK RETURN — { front line count, wall depth, deep pair width }
+     ================================================================
+     First row is the hands team, H1..Hn left to right. Last row is the deep
+     pair. Everything between is blockers: one middle row is the wall (LB/RB),
+     two rows are a second level (LM/RM) and then the wall. */
+  var KICK_RETURN = {
+    los: 60, ballX: 210, lineLabel: 'THEIR FREE KICK LINE',
+    shape: '5-2-2-2',
+    frontDepth: 10,     /* the receiving team's own restraining line */
+    frontSpread: 22,    /* yd from the ball out to the widest hands man */
+    midDepth: 20, midWidth: 6,
+    wallDepth: 28, wallWidth: 9, wallSplit: 4,
+    deepDepth: 45, deepPairWidth: 10,   /* width BETWEEN the two deep men */
+    mirror: false
+  };
+  function kickReturn(opts) {
+    var q = merge(KICK_RETURN, opts || {});
+    var R = rows(q.shape), b = q.ballX, los = q.los, P = [];
+    if (R.length < 2) fail('a kick return needs a front line and a deep man');
+
+    var fy = los + depth(q.frontDepth), nf = R[0];
+    ladder(nf, -q.frontSpread, q.frontSpread).forEach(function (yd, i) {
+      P.push(man('H' + (i + 1), b + across(yd), fy));
+    });
+
+    var mid = R.slice(1, R.length - 1);
+    mid.forEach(function (n, i) {
+      var last = i === mid.length - 1;
+      var base = last ? 'B' : 'M';
+      var dep = mid.length === 1 ? q.wallDepth
+        : q.midDepth + (q.wallDepth - q.midDepth) * (i / (mid.length - 1));
+      var wid = last ? q.wallWidth : q.midWidth;
+      var y = los + depth(dep);
+      if (n === 2) {
+        P.push(man('L' + base, b - across(wid), y));
+        P.push(man('R' + base, b + across(wid), y));
+      } else {
+        var labs = outward(n, base), o = row(n, split(q.wallSplit));
+        labs.forEach(function (lab, j) { P.push(man(lab, b + o[j], y)); });
+      }
+    });
+
+    var nd = R[R.length - 1], dy = los + depth(q.deepDepth);
+    if (nd === 2) {
+      P.push(man('LR', b - across(q.deepPairWidth / 2), dy));
+      P.push(man('RR', b + across(q.deepPairWidth / 2), dy));
+    } else if (nd === 1) P.push(man('R1', b, dy));
+    else fail('a kick return keeps one or two men deep, not ' + nd);
+
+    return doc({
+      family: 'kick-return', phase: 'special', generator: 'kickReturn', params: q,
+      los: los, lineLabel: q.lineLabel, players: P
+    });
+  }
+
+  /* ================================================================
+     5. OFFENSE — a scrimmage set, from splits, back depth, receiver width
+     ================================================================
+     Seven on the line is not a preference, it is the rule the whole formation
+     is built around, so this generator SOLVES for it: five linemen, plus the
+     tight end if there is one, plus as many outside receivers as it takes to
+     reach seven — outermost first, which is exactly how a legal trips set is
+     aligned. If the personnel cannot make seven it throws rather than emit an
+     illegal formation. */
+  var OFFENSE = {
+    los: 250, ballX: 210, lineLabel: 'LINE OF SCRIMMAGE',
+    lineSplit: 0.66,      /* two feet. Drawn a body apart; see split(). */
+    te: 'R',              /* 'L', 'R' or 'none' */
+    teSplit: 1,
+    wide: { left: [18, 12.5], right: [18] },  /* yd from the ball; a 2x2 with the TE */
+    qbDepth: 5,
+    backs: [{ depth: 8, offset: 3 }],
+    offBall: 1.2,         /* how far a receiver off the line is drawn back */
+    mirror: false
+  };
+  var SLOT_LABELS = ['H', 'Y', 'W', 'A'];
+  var BACK_LABELS = ['F', 'H', 'B', 'T'];
+  function offenseSet(opts) {
+    var q = merge(OFFENSE, opts || {});
+    q.wide = merge(OFFENSE.wide, q.wide);
+    var b = q.ballX, los = q.los, P = [], used = {};
+    var te = q.te === 'L' || q.te === 'R' ? q.te : null;
+
+    var nw = q.wide.left.length + q.wide.right.length;
+    var nb = q.backs.length;
+    var total = 5 + (te ? 1 : 0) + nw + 1 + nb;
+    if (total !== 11) fail('this set has ' + total + ' men: 5 line + ' + (te ? 1 : 0) +
+      ' TE + ' + nw + ' wide + QB + ' + nb + ' back(s)');
+
+    /* the five, and the tight end beside a tackle */
+    var g = split(q.lineSplit), t = 2 * g;
+    P.push(man('C', b, los)); used.C = 1;
+    P.push(man('LG', b - g, los)); P.push(man('RG', b + g, los));
+    P.push(man('LT', b - t, los)); P.push(man('RT', b + t, los));
+    var teX = null;
+    if (te) {
+      teX = te === 'L' ? b - t - split(q.teSplit) : b + t + split(q.teSplit);
+      P.push(man('Y', teX, los)); used.Y = 1;
+    }
+
+    /* how many wide receivers have to be on the line to make seven */
+    var need = 7 - 5 - (te ? 1 : 0);
+    if (need < 0 || need > nw) fail('cannot make seven on the line with ' + nw +
+      ' receiver(s) and ' + (te ? 'a' : 'no') + ' tight end');
+
+    /* widest first, backside (the side without the tight end) first: the
+       outermost man on a side is the one who may be on the line without
+       covering up the man inside him. */
+    var sides = te === 'R' ? ['left', 'right'] : ['right', 'left'];
+    var order = [], slot = 0;
+    sides.forEach(function (side) {
+      q.wide[side].slice().sort(function (a, c) { return c - a; }).forEach(function (yd, i) {
+        order.push({ side: side, yd: yd, outermost: i === 0 });
+      });
+    });
+    var onLine = 0;
+    order.forEach(function (w) {
+      w.online = w.outermost && onLine < need;
+      if (w.online) onLine++;
+    });
+    if (onLine !== need) fail('only ' + onLine + ' receiver(s) can legally be on the line; needed ' + need);
+
+    order.forEach(function (w) {
+      var sign = w.side === 'left' ? -1 : 1, lab;
+      if (w.outermost) lab = w.side === 'left' ? 'X' : 'Z';
+      else { while (used[SLOT_LABELS[slot]]) slot++; lab = SLOT_LABELS[slot]; }
+      used[lab] = 1;
+      P.push(man(lab, b + sign * across(w.yd), los + (w.online ? 0 : depth(q.offBall))));
+    });
+
+    P.push(man('QB', b, los + depth(q.qbDepth))); used.QB = 1;
+    var bi = 0;
+    q.backs.forEach(function (bk) {
+      while (used[BACK_LABELS[bi]]) bi++;
+      var lab = BACK_LABELS[bi]; used[lab] = 1;
+      P.push(man(lab, b + across(def(bk.offset, 0)), los + depth(bk.depth)));
+    });
+
+    return doc({
+      family: 'offense', phase: 'offense', generator: 'offenseSet', params: q,
+      los: los, lineLabel: q.lineLabel, players: P
+    });
+  }
+
+  /* ================================================================
+     6. DEFENSE — a front, from { front, backers, widths, depths }
+     ================================================================
+     front + backers + two corners + whatever is left at safety = 11, so 4-3
+     and 5-2 keep two safeties and a 4-4 keeps one. The defence has no
+     seven-on-the-line rule; what IS checked is that the declared front is the
+     number of men actually down on the ball. */
+  var DEFENSE = {
+    los: 250, ballX: 210, lineLabel: 'LINE OF SCRIMMAGE',
+    front: 4, backers: 3,
+    dlSplit: 2,      /* yd between down linemen */
+    dlDepth: 1,      /* off the ball */
+    lbDepth: 4.5, lbWidth: 5, lbSplit: 5,
+    cbDepth: 5, cbWidth: 16,
+    safetyDepth: 12, safetyWidth: 8,
+    mirror: false
+  };
+  var DL4 = ['LDE', 'LDT', 'RDT', 'RDE'];
+  var DL5 = ['LDE', 'LDT', 'NG', 'RDT', 'RDE'];
+  var DL3 = ['LDE', 'NG', 'RDE'];
+  var DL6 = ['LDE', 'LDT', 'LNG', 'RNG', 'RDT', 'RDE'];
+  var LB2 = ['WILL', 'SAM'], LB3 = ['WILL', 'MIKE', 'SAM'], LB4 = ['WILL', 'MIKE', 'SAM', 'ROVER'];
+  function defenseFront(opts) {
+    var q = merge(DEFENSE, opts || {});
+    var b = q.ballX, los = q.los, P = [];
+    var dl = { 3: DL3, 4: DL4, 5: DL5, 6: DL6 }[q.front];
+    var lb = { 2: LB2, 3: LB3, 4: LB4 }[q.backers];
+    if (!dl) fail('no label set for a ' + q.front + '-man front');
+    if (!lb) fail('no label set for ' + q.backers + ' linebackers');
+    var safeties = 11 - q.front - q.backers - 2;
+    if (safeties < 0 || safeties > 2) fail('a ' + q.front + '-' + q.backers +
+      ' leaves ' + safeties + ' safeties; that is not a defence');
+
+    var off = row(q.front, split(q.dlSplit)), dy = los + depth(q.dlDepth);
+    dl.forEach(function (lab, i) { P.push(man(lab, b + off[i], dy)); });
+
+    var ly = los + depth(q.lbDepth);
+    if (q.backers === 3) {
+      P.push(man('WILL', b - across(q.lbWidth), ly));
+      P.push(man('MIKE', b, ly));
+      P.push(man('SAM', b + across(q.lbWidth), ly));
+    } else {
+      var lo = row(q.backers, split(q.lbSplit));
+      lb.forEach(function (lab, i) { P.push(man(lab, b + lo[i], ly)); });
+    }
+
+    P.push(man('LCB', b - across(q.cbWidth), los + depth(q.cbDepth)));
+    P.push(man('RCB', b + across(q.cbWidth), los + depth(q.cbDepth)));
+    var sy = los + depth(q.safetyDepth);
+    if (safeties === 2) {
+      P.push(man('FS', b - across(q.safetyWidth), sy));
+      P.push(man('SS', b + across(q.safetyWidth), sy));
+    } else if (safeties === 1) P.push(man('FS', b, sy));
+
+    return doc({
+      family: 'defense', phase: 'defense', generator: 'defenseFront', params: q,
+      los: los, lineLabel: q.lineLabel, players: P
+    });
+  }
+
+  /* ================================================================
+     check() — validate the FOOTBALL, not just the code
+     ================================================================
+     Shared with the browser on purpose. A coach dragging a slider gets told
+     his alignment is illegal; nothing is silently clamped, because a clamp
+     lies about what he asked for. */
+  var GEN = {
+    spreadPunt: spreadPunt, puntReturn: puntReturn, kickoff: kickoff,
+    kickReturn: kickReturn, offenseSet: offenseSet, defenseFront: defenseFront
+  };
+  var SNAPPING = { punt: true, offense: true };
+
+  function dist(a, c) { return Math.sqrt((a.x - c.x) * (a.x - c.x) + (a.y - c.y) * (a.y - c.y)); }
+
+  function check(d) {
+    var errs = [], warn = [], P = d.players || [], los = d.lineOfScrimmage;
+    var b = (d.params && d.params.ballX) || (d.params && d.params.kickerX) || FIELD.W / 2;
+    function e(m) { errs.push(m); }
+
+    /* --- eleven men --- */
+    if (P.length !== 11) e('has ' + P.length + ' men, not 11');
+
+    /* --- the licence boundary: alignment only --- */
+    ['routes', 'aim', 'looks', 'howItWorks', 'mirrorOf'].forEach(function (k) {
+      if (d[k] != null) e('carries "' + k + '" — a formation is alignment only, never a play');
+    });
+    P.forEach(function (p) {
+      ['player', 'name', 'job', 'role', 'covers', 'number'].forEach(function (k) {
+        if (p[k] != null) e(p.label + ' carries "' + k + '" — formations ship no personnel');
+      });
+    });
+
+    /* --- inside the field --- */
+    P.forEach(function (p) {
+      if (p.x < FIELD.left || p.x > FIELD.right)
+        e(p.label + ' is outside the sideline at x=' + p.x + ' (field is ' + FIELD.left + '–' + FIELD.right + ')');
+      if (p.y < 8 || p.y > FIELD.H - 8)
+        e(p.label + ' is off the picture at y=' + p.y + ' (0–' + FIELD.H + ')');
+    });
+
+    /* --- a body width apart --- */
+    var closest = { d: Infinity, a: null, b: null }, i, j;
+    for (i = 0; i < P.length; i++) for (j = i + 1; j < P.length; j++) {
+      var dd = dist(P[i], P[j]);
+      if (dd < closest.d) closest = { d: dd, a: P[i].label, b: P[j].label };
+      if (dd < CLEAR) e(P[i].label + ' and ' + P[j].label + ' are ' + r1(dd) +
+        'px apart — closer than a body (' + CLEAR + 'px)');
+    }
+
+    /* --- labels: unique, and the house convention --- */
+    var seen = {};
+    P.forEach(function (p) {
+      if (!p.label) e('a man has no label');
+      else if (seen[p.label]) e('two men are labelled ' + p.label);
+      else if (!/^[A-Z][A-Z0-9]{0,4}$/.test(p.label)) e('label "' + p.label + '" is not the house convention');
+      seen[p.label] = 1;
+    });
+    /* L is one side of the reference, R is the other, M is on it. */
+    P.forEach(function (p) {
+      if (/^L[A-Z0-9]/.test(p.label) && p.x >= b) e(p.label + ' is an L label but sits right of the ball');
+      if (/^R[A-Z0-9]/.test(p.label) && p.x <= b) e(p.label + ' is an R label but sits left of the ball');
+      if (/^M[A-Z]$/.test(p.label) && Math.abs(p.x - b) > CLEAR)
+        e(p.label + ' is a middle label but sits ' + r1(Math.abs(p.x - b)) + 'px off the ball');
+    });
+    /* numbering runs OUTWARD from the reference (L1 nearest, L5 widest) */
+    var groups = {};
+    P.forEach(function (p) {
+      var m = /^([LR][A-Z]*?)(\d+)$/.exec(p.label);
+      if (m) { (groups[m[1]] = groups[m[1]] || []).push({ n: +m[2], x: p.x, label: p.label }); }
+    });
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k].sort(function (a, c) { return a.n - c.n; });
+      for (var i2 = 1; i2 < g.length; i2++)
+        if (Math.abs(g[i2].x - b) <= Math.abs(g[i2 - 1].x - b))
+          e(g[i2].label + ' is not further out than ' + g[i2 - 1].label + ' — numbering runs outward');
+    });
+    /* the hands team reads left to right */
+    var H = P.filter(function (p) { return /^H\d+$/.test(p.label); })
+      .sort(function (a, c) { return +a.label.slice(1) - +c.label.slice(1); });
+    for (i = 1; i < H.length; i++)
+      if (H[i].x <= H[i - 1].x) e(H[i].label + ' is not right of ' + H[i - 1].label);
+
+    /* --- the football, per family --- */
+    var onLine = P.filter(function (p) { return Math.abs(p.y - los) <= LINE_TOL; });
+    if (SNAPPING[d.family]) {
+      if (onLine.length !== 7)
+        e('has ' + onLine.length + ' men on the line, not 7 (' +
+          onLine.map(function (p) { return p.label; }).join(' ') + ')');
+      P.forEach(function (p) {
+        if (p.y < los - 0.01) e(p.label + ' is over the line of scrimmage');
+      });
+    }
+    if (d.family === 'punt-return' || d.family === 'defense') {
+      P.forEach(function (p) {
+        if (p.y <= los + 3) e(p.label + ' is in the neutral zone at y=' + p.y);
+      });
+    }
+    if (d.family === 'defense') {
+      var down = P.filter(function (p) { return p.y <= los + depth(2) + 0.01; });
+      if (down.length !== d.params.front)
+        e('declared a ' + d.params.front + '-man front but ' + down.length + ' men are down on the ball');
+    }
+    if (d.family === 'kickoff') {
+      P.forEach(function (p) {
+        if (p.y < los - 0.01) e(p.label + ' is over the restraining line at y=' + p.y);
+      });
+      var k = P.filter(function (p) { return p.label === 'K'; })[0];
+      if (!k) e('no kicker');
+      else {
+        var L = P.filter(function (p) { return p.x < k.x; }).length;
+        var R = P.filter(function (p) { return p.x > k.x; }).length;
+        if (L < 4) e('only ' + L + ' men left of the kicker; a free kick needs four either side');
+        if (R < 4) e('only ' + R + ' men right of the kicker; a free kick needs four either side');
+      }
+    }
+    if (d.family === 'kick-return') {
+      var lim = los + depth(10) - 0.5;
+      P.forEach(function (p) {
+        if (p.y < lim) e(p.label + ' is inside the ten-yard free kick zone at y=' + p.y);
+      });
+    }
+
+    return {
+      ok: errs.length === 0, errors: errs, warnings: warn,
+      men: P.length, onLine: onLine.length,
+      closest: r1(closest.d), closestPair: closest.a + '/' + closest.b,
+      span: r1(Math.max.apply(null, P.map(function (p) { return p.x; })) -
+        Math.min.apply(null, P.map(function (p) { return p.x; }))),
+      depth: r1(Math.max.apply(null, P.map(function (p) { return p.y; })) - los)
+    };
+  }
+
+  /* build a catalog entry: { id, name, generator, params } */
+  function build(entry) {
+    var g = GEN[entry.generator];
+    if (!g) fail('no generator called ' + entry.generator);
+    var d = g(entry.params || {});
+    d.slug = entry.id; d.name = entry.name;
+    if (entry.lineLabel) d.lineLabel = entry.lineLabel;
+    return d;
+  }
+  function buildAll(catalog) {
+    return (catalog.formations || []).map(build);
+  }
+
+  return {
+    FIELD: FIELD, PX_PER_YD: PX_PER_YD, BODY: BODY, CLEAR: CLEAR, DEPTH: DEPTH, LINE_TOL: LINE_TOL,
+    across: across, split: split, depth: depth, yards: yards,
+    spreadPunt: spreadPunt, puntReturn: puntReturn, kickoff: kickoff,
+    kickReturn: kickReturn, offenseSet: offenseSet, defenseFront: defenseFront,
+    generators: GEN, defaults: {
+      spreadPunt: PUNT, puntReturn: PUNT_RETURN, kickoff: KICKOFF,
+      kickReturn: KICK_RETURN, offenseSet: OFFENSE, defenseFront: DEFENSE
+    },
+    mirror: mirror, swapSideLabel: swapSideLabel,
+    check: check, build: build, buildAll: buildAll
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = Formations;
+
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  function inlineJSON(id) { try { return JSON.parse(document.getElementById(id).textContent || '{}'); } catch (e) { return {}; } }
+  var CATALOG = inlineJSON('formation-catalog');
+  var BRANDS = Brand.register(inlineJSON('brand-data').brands || []);
+  var F = Formations;
+  var printing = false, BRAND = BRANDS[0];
+
+  /* ---------- drawing ----------
+     A formation has no routes, no target and no names, so this renderer draws
+     exactly three things: the grass, the line, and eleven labelled circles.
+     Every colour is C.something out of Brand.palette — there is no literal
+     colour in here, which is what makes the two systems compose. */
+  var NS = 'http://www.w3.org/2000/svg';
+  var MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  function E(tag, attrs) {
+    var n = document.createElementNS(NS, tag), k;
+    for (k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  var VBW = F.FIELD.W, VBH = F.FIELD.H;
+
+  function computeView(d) {
+    var xs = d.players.map(function (p) { return p.x; });
+    var ys = d.players.map(function (p) { return p.y; });
+    ys.push(d.lineOfScrimmage);
+    var x0 = Math.min.apply(null, xs) - 20, x1 = Math.max.apply(null, xs) + 20;
+    /* room above and below the line for the caption chip wherever it lands */
+    var y0 = Math.min.apply(null, ys) - 30, y1 = Math.max.apply(null, ys) + 30;
+    var w = x1 - x0, h = y1 - y0, c;
+    if (w < 300) { c = (x0 + x1) / 2; x0 = c - 150; w = 300; }
+    if (h < 210) { c = (y0 + y1) / 2; y0 = c - 105; h = 210; }
+    var scale = Math.min(VBW / w, VBH / h);
+    if (scale > 2.4) { var cx = x0 + w / 2, cy = y0 + h / 2; w = VBW / 2.4; h = VBH / 2.4; x0 = cx - w / 2; y0 = cy - h / 2; }
+    return { x: x0, y: y0, w: w, h: h };
+  }
+
+  function draw(svg, d, C) {
+    svg.innerHTML = '';
+    var V = computeView(d), y;
+    svg.setAttribute('viewBox', V.x + ' ' + V.y + ' ' + V.w + ' ' + V.h);
+    svg.appendChild(E('rect', { x: V.x, y: V.y, width: V.w, height: V.h, fill: C.grass }));
+
+    var g = E('g', {});
+    for (y = 10; y <= VBH - 6; y += 28) g.appendChild(E('line', { x1: 14, x2: 406, y1: y, y2: y, stroke: C.chalk, 'stroke-opacity': C.gridOp }));
+    [140, 280].forEach(function (hx) {
+      for (y = 10; y <= VBH - 6; y += 28) g.appendChild(E('line', { x1: hx - 3, x2: hx + 3, y1: y, y2: y, stroke: C.chalk, 'stroke-opacity': C.hashOp }));
+    });
+    [14, 406].forEach(function (sx) {
+      g.appendChild(E('line', { x1: sx, x2: sx, y1: 0, y2: VBH, stroke: C.chalk, 'stroke-opacity': C.sideOp, 'stroke-width': 2 }));
+    });
+    svg.appendChild(g);
+
+    var los = d.lineOfScrimmage;
+    svg.appendChild(E('line', { x1: V.x, x2: V.x + V.w, y1: los, y2: los, stroke: C.line, 'stroke-width': 1.8, 'stroke-dasharray': '6 4' }));
+    if (d.lineLabel) {
+      /* Anchored at the left of the view and moved OFF the line, not along it:
+         eleven men are standing on the line, so there is no horizontal gap to
+         slide into. First offset that clears every circle wins — the caption
+         sat on top of a gunner and a wing until this was a real search. */
+      var lw = d.lineLabel.length * 5.6 + 8, lx = V.x + 6, ly = 34, offs = [-8, -22, 20, 34, -36, 48];
+      for (var oi = 0; oi < offs.length; oi++) {
+        var rr = { x: lx - 3, y: los + offs[oi] - 8, w: lw, h: 11 };
+        var clash = d.players.some(function (p) {
+          return !(rr.x > p.x + 15 || rr.x + rr.w < p.x - 15 || rr.y > p.y + 15 || rr.y + rr.h < p.y - 15);
+        });
+        if (!clash) { ly = offs[oi]; break; }
+      }
+      svg.appendChild(E('rect', { x: lx - 3, y: los + ly - 8, width: lw, height: 11, rx: 2, fill: C.plate, 'fill-opacity': C.losChipOp }));
+      var lt = E('text', { x: lx + 1, y: los + ly + 0.5, fill: C.line, 'font-family': MONO, 'font-size': 8.5 });
+      lt.textContent = d.lineLabel; svg.appendChild(lt);
+    }
+
+    d.players.forEach(function (p) {
+      svg.appendChild(E('circle', { cx: p.x, cy: p.y, r: 12, fill: C.circleFill, stroke: C.line, 'stroke-width': C.stroke }));
+      var t = E('text', {
+        x: p.x, y: p.y + 3.4, 'text-anchor': 'middle', fill: C.line,
+        'font-family': MONO, 'font-size': p.label.length > 3 ? 6.6 : (p.label.length > 2 ? 8 : 9)
+      });
+      t.textContent = p.label; svg.appendChild(t);
+    });
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* What the badge should say depends on which rule the formation is under.
+     "7 on the line" is the legality rule for the team snapping the ball, so
+     saying it on a free kick would advertise a rule that does not apply
+     there; a kickoff is judged on four men either side of the kicker. */
+  function verdictLine(d, res) {
+    if (d.family === 'punt' || d.family === 'offense')
+      return res.men + ' men · ' + res.onLine + ' on the line · legal';
+    if (d.family === 'kickoff') {
+      var k = d.players.filter(function (p) { return p.label === 'K'; })[0];
+      var L = d.players.filter(function (p) { return p.x < k.x; }).length;
+      var R = d.players.filter(function (p) { return p.x > k.x; }).length;
+      return res.men + ' men · ' + L + ' left / ' + R + ' right of the kicker · legal';
+    }
+    return res.men + ' men · legal';
+  }
+
+  /* ---------- the catalog ---------- */
+  var grid = document.getElementById('grid'), CARDS = [];
+  CATALOG.formations.forEach(function (entry) {
+    var d, res;
+    try { d = F.build(entry); res = F.check(d); }
+    catch (err) { d = null; res = { ok: false, errors: ['threw: ' + err.message] }; }
+    var el = document.createElement('section');
+    el.className = 'card';
+    el.setAttribute('data-formation', entry.id);
+    el.innerHTML =
+      '<h3>' + esc(entry.name) + '</h3>' +
+      '<div class="meta"><span class="tag">' + esc(entry.family) + '</span>' +
+      '<span class="tag ' + (res.ok ? 'pass' : 'fail') + '" data-check>' +
+      (res.ok ? verdictLine(d, res) : 'FAILS: ' + esc(res.errors[0])) + '</span></div>' +
+      '<div class="fieldbox"><svg class="field" role="img" aria-label="' + esc(entry.name) + '"></svg></div>' +
+      '<p>' + esc(entry.note || '') + '</p>' +
+      '<code>' + esc(JSON.stringify(entry.params)) + '</code>';
+    grid.appendChild(el);
+    if (d) CARDS.push({ doc: d, svg: el.querySelector('svg.field') });
+  });
+  document.getElementById('catNote').textContent = CATALOG.note || '';
+  document.getElementById('catHead').textContent =
+    'The library — ' + CATALOG.formations.length + ' formations, ' +
+    Object.keys(F.generators).length + ' generators';
+
+  /* ---------- the tuner ----------
+     The inputs are generated by walking the resolved parameters, so a
+     generator that grows a parameter grows a control with no edit here. */
+  var tuneSel = document.getElementById('tuneSel');
+  var paramsEl = document.getElementById('params');
+  var verdictEl = document.getElementById('verdict');
+  var statsEl = document.getElementById('tuneStats');
+  var tuneSvg = document.getElementById('tuneField');
+  var TUNED = null, ENTRY = null;
+
+  tuneSel.innerHTML = CATALOG.formations.map(function (e, i) {
+    return '<option value="' + i + '">' + esc(e.name) + '</option>';
+  }).join('');
+
+  function walk(obj, path, out) {
+    Object.keys(obj).forEach(function (k) {
+      if (k === 'lineLabel' || k === 'mirror') return;
+      var v = obj[k], p = path ? path + '.' + k : k;
+      if (typeof v === 'number') out.push(p);
+      else if (Array.isArray(v)) v.forEach(function (item, i) {
+        if (typeof item === 'number') out.push(p + '.' + i);
+        else if (item && typeof item === 'object') walk(item, p + '.' + i, out);
+      });
+      else if (v && typeof v === 'object') walk(v, p, out);
+    });
+    return out;
+  }
+  function getAt(o, p) { return p.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
+  function setAt(o, p, v) {
+    var ks = p.split('.'), last = ks.pop();
+    var t = ks.reduce(function (a, k) { return a[k]; }, o);
+    t[last] = v;
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function human(p) { return p.replace(/\./g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase(); }
+
+  function paintTuner() {
+    var C = Brand.palette(BRAND, printing), d, res;
+    try { d = F.generators[ENTRY.generator](TUNED); res = F.check(d); }
+    catch (err) {
+      verdictEl.className = 'verdict bad';
+      verdictEl.textContent = 'will not build: ' + err.message;
+      return;
+    }
+    draw(tuneSvg, d, C);
+    statsEl.innerHTML =
+      '<span>men <b>' + res.men + '</b></span>' +
+      '<span>on the line <b>' + res.onLine + '</b></span>' +
+      '<span>closest pair <b>' + res.closest + 'px</b> (' + esc(res.closestPair) + ')</span>' +
+      '<span>widest <b>' + res.span + 'px</b> = ' + (Math.round(F.yards(res.span) * 10) / 10) + ' yd</span>' +
+      '<span>deepest <b>' + res.depth + 'px</b> behind the line</span>';
+    verdictEl.className = 'verdict ' + (res.ok ? 'ok' : 'bad');
+    verdictEl.innerHTML = res.ok
+      ? 'legal: eleven men, inside the sidelines, a body apart, labelled to convention, alignment only.'
+      : 'illegal — ' + res.errors.length + ' problem' + (res.errors.length > 1 ? 's' : '') +
+        '<ul>' + res.errors.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>';
+    window.__tuned = d;   /* what the browser test measures */
+  }
+
+  function buildInputs() {
+    var paths = walk(TUNED, '', []);
+    paramsEl.innerHTML = paths.map(function (p) {
+      var v = getAt(TUNED, p);
+      var step = Math.abs(v) >= 10 ? 1 : 0.5;
+      return '<div><label for="pp-' + p + '">' + esc(human(p)) + '</label>' +
+        '<input type="number" id="pp-' + p + '" data-path="' + p + '" value="' + v + '" step="' + step + '"></div>';
+    }).join('');
+    Array.prototype.forEach.call(paramsEl.querySelectorAll('input'), function (inp) {
+      inp.addEventListener('input', function () {
+        var v = parseFloat(inp.value);
+        if (isNaN(v)) return;
+        setAt(TUNED, inp.getAttribute('data-path'), v);
+        paintTuner();
+      });
+    });
+  }
+
+  function chooseTune(i) {
+    ENTRY = CATALOG.formations[i];
+    var full = F.build(ENTRY);
+    TUNED = clone(full.params);
+    delete TUNED.mirror;
+    TUNED.mirror = document.getElementById('mirrorBtn').getAttribute('aria-pressed') === 'true';
+    buildInputs();
+    paintTuner();
+  }
+  tuneSel.addEventListener('change', function () { chooseTune(+tuneSel.value); });
+  document.getElementById('resetBtn').addEventListener('click', function () { chooseTune(+tuneSel.value); });
+  var mirrorBtn = document.getElementById('mirrorBtn');
+  mirrorBtn.addEventListener('click', function () {
+    var on = mirrorBtn.getAttribute('aria-pressed') !== 'true';
+    mirrorBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    TUNED.mirror = on; paintTuner();
+  });
+
+  /* ---------- brand + print ---------- */
+  var brandSel = document.getElementById('brandSel');
+  brandSel.innerHTML = BRANDS.map(function (b, i) {
+    return '<option value="' + i + '">' + esc(b.shortName || b.name) + '</option>';
+  }).join('');
+  function renderAll() {
+    Brand.apply(BRAND, { print: printing });
+    document.getElementById('brandMark').innerHTML = Brand.markSVG(BRAND, 26, printing);
+    document.getElementById('wordmark').innerHTML = Brand.wordmarkHTML(BRAND);
+    var C = Brand.palette(BRAND, printing);
+    CARDS.forEach(function (c) { draw(c.svg, c.doc, C); });
+    paintTuner();
+  }
+  brandSel.addEventListener('change', function () { BRAND = BRANDS[+brandSel.value]; renderAll(); });
+  var printBtn = document.getElementById('printBtn');
+  function setPrint(on) { printing = on; printBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); renderAll(); }
+  printBtn.addEventListener('click', function () { setPrint(!printing); });
+  window.addEventListener('beforeprint', function () { setPrint(true); });
+  window.addEventListener('afterprint', function () { setPrint(false); });
+
+  document.getElementById('foot').textContent =
+    'Formations, not plays: alignment and labels only. A new team gets these and draws its own ' +
+    'football on top — what it draws is its own. ' + CATALOG.formations.length +
+    ' formations, every one checked for eleven men, the sidelines, a body of space, seven on the ' +
+    'line where the rule applies, and the label convention. Themed through brand.js, so the ' +
+    'geometry and the look are independent.';
+
+  chooseTune(0);
+  renderAll();
+})();
+</script>
+</body>
+</html>

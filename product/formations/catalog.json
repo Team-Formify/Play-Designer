@@ -1,0 +1,152 @@
+{
+  "schema": "play-designer/formations@1",
+  "note": "The starter library a new team gets. FORMATIONS, NOT PLAYS: alignment and labels only — no routes, no jobs, no target, no names, no club. A coach draws his own football on top, and what he draws is his. Every entry is a set of parameters, not a set of coordinates; nothing here was lifted from anybody's playbook. Slugs are prefixed fm- so a starter formation can never collide with a play already in a book.",
+  "units": "Distances are yards. Depth is measured from the line named in lineLabel; width is measured from the ball (or from the kicker on a free kick). See formations.js for the two draw scales and why a line split is not drawn to scale.",
+  "formations": [
+    {
+      "id": "fm-spread-punt",
+      "name": "Punt — Spread",
+      "family": "punt",
+      "generator": "spreadPunt",
+      "note": "The standard. One-yard splits, gunners at the numbers, punter at fourteen. Seven on the line: five interior plus the two gunners, which is what leaves the wings free to be off it.",
+      "params": { "split": 1, "gunnerSplit": 21, "wingDepth": 1.5, "protectorDepth": 5, "protectorOffset": 2, "punterDepth": 14 }
+    },
+    {
+      "id": "fm-tight-punt",
+      "name": "Punt — Tight",
+      "family": "punt",
+      "generator": "spreadPunt",
+      "note": "Same eleven, everything pulled in: foot splits, gunners in tight, punter a yard shallower. For a wet ball, a short field, or a young snapper.",
+      "params": { "split": 0.5, "tackleSplit": 0.5, "gunnerSplit": 16, "wingSplit": 0.5, "wingDepth": 1.5, "protectorDepth": 4.5, "protectorOffset": 1.5, "punterDepth": 13 }
+    },
+    {
+      "id": "fm-spread-punt-left-hash",
+      "name": "Punt — Spread, left hash",
+      "family": "punt",
+      "generator": "spreadPunt",
+      "note": "The same punt with the ball on the left hash: the boundary gunner has less room, so his split comes in. Proof the ball spot is a parameter and not baked into the drawing.",
+      "params": { "ballX": 144.5, "split": 0.5, "tackleSplit": 0.5, "wingSplit": 0.5, "gunnerSplit": { "left": 15.5, "right": 26 }, "wingDepth": 1.5, "protectorDepth": 5, "protectorOffset": 2, "punterDepth": 14 }
+    },
+
+    {
+      "id": "fm-punt-return-6-2-2-1",
+      "name": "Punt Return — 6-2-2-1",
+      "family": "punt-return",
+      "generator": "puntReturn",
+      "note": "Six up front, two jammers of them on the gunners; two at the second level, two building the wall, one returner at forty.",
+      "params": { "shape": "6-2-2-1", "jammerWidth": 21, "holdUpSplit": 2.5, "level2Depth": 8, "wallDepth": 16, "returnerDepth": 40 }
+    },
+    {
+      "id": "fm-punt-return-5-2-3-1",
+      "name": "Punt Return — 5-2-3-1",
+      "family": "punt-return",
+      "generator": "puntReturn",
+      "note": "One fewer up front and a three-man wall. Less pressure on the punter, more men building the return.",
+      "params": { "shape": "5-2-3-1", "jammerWidth": 20, "holdUpSplit": 3, "level2Depth": 9, "wallDepth": 18, "wallSplit": 6, "returnerDepth": 42 }
+    },
+
+    {
+      "id": "fm-kickoff-spread",
+      "name": "Kickoff — Spread 5/5",
+      "family": "kickoff",
+      "generator": "kickoff",
+      "note": "Ten across, five either side of the kicker, evenly laddered from four yards out to twenty-four. A free kick needs four either side of the kicker and this has five.",
+      "params": { "left": { "count": 5, "near": 4, "far": 24 }, "right": { "count": 5, "near": 4, "far": 24 }, "kickerDepth": 6 }
+    },
+    {
+      "id": "fm-kickoff-cluster",
+      "name": "Kickoff — Cluster",
+      "family": "kickoff",
+      "generator": "kickoff",
+      "note": "Everybody inside the numbers in staggered pairs, then they break for their lanes on the whistle. The stagger is football, not drawing: men leaving a bunch at different times cannot start on the same line.",
+      "params": { "left": { "count": 5, "near": 3, "far": 11, "rows": 2, "rowGap": 2.5 }, "right": { "count": 5, "near": 3, "far": 11, "rows": 2, "rowGap": 2.5 }, "kickerDepth": 6 }
+    },
+    {
+      "id": "fm-onside-6-4",
+      "name": "Kickoff — Onside 6/4",
+      "family": "kickoff",
+      "generator": "kickoff",
+      "note": "Overload the kick side: six bunched right in two ranks, four spread left to cover the other half if it gets away. Where the ball is put is the coach's call, not the formation's.",
+      "params": { "left": { "count": 4, "near": 8, "far": 24 }, "right": { "count": 6, "near": 3, "far": 15, "rows": 2, "rowGap": 2.5 }, "kickerDepth": 5 }
+    },
+
+    {
+      "id": "fm-kick-return-5-2-2-2",
+      "name": "Kick Return — 5-2-2-2",
+      "family": "kick-return",
+      "generator": "kickReturn",
+      "note": "Five across as the hands team on the ten-yard line, two at the second level, two in the wall, two deep. Nobody inside the free kick zone.",
+      "params": { "shape": "5-2-2-2", "frontDepth": 10, "frontSpread": 22, "midDepth": 20, "wallDepth": 28, "deepDepth": 45, "deepPairWidth": 10 }
+    },
+    {
+      "id": "fm-kick-return-5-4-2",
+      "name": "Kick Return — 5-4-2",
+      "family": "kick-return",
+      "generator": "kickReturn",
+      "note": "Same hands team and the same deep pair; the four blockers align on one row instead of in two pairs, which builds the wall sooner and gives up the second level.",
+      "params": { "shape": "5-4-2", "frontDepth": 10, "frontSpread": 22, "wallDepth": 26, "wallSplit": 4.5, "deepDepth": 45, "deepPairWidth": 10 }
+    },
+
+    {
+      "id": "fm-offense-2x2-te",
+      "name": "Offense — 2x2, tight end right",
+      "family": "offense",
+      "generator": "offenseSet",
+      "note": "Two receivers each side counting the tight end, quarterback at five, one back. Seven on the line is solved for, not assumed: five linemen, the tight end, and the backside X.",
+      "params": {
+        "lineSplit": 0.66, "te": "R", "teSplit": 1,
+        "wide": { "left": [18, 12.5], "right": [18] },
+        "qbDepth": 5, "backs": [{ "depth": 8, "offset": 3 }]
+      }
+    },
+    {
+      "id": "fm-offense-trips-right",
+      "name": "Offense — Trips right",
+      "family": "offense",
+      "generator": "offenseSet",
+      "note": "No tight end, three receivers right, single receiver left. Two of the four have to be on the line to make seven, and the generator puts them where a legal trips set puts them: the outermost man on each side.",
+      "params": {
+        "lineSplit": 0.66, "te": "none",
+        "wide": { "left": [18], "right": [22, 17, 12.5] },
+        "qbDepth": 5, "backs": [{ "depth": 8, "offset": 3 }]
+      }
+    },
+    {
+      "id": "fm-offense-under-center-i",
+      "name": "Offense — Tight, two backs",
+      "family": "offense",
+      "generator": "offenseSet",
+      "note": "Tight end right, one receiver each side, two backs behind the quarterback. The heavy end of the same generator: only the numbers changed.",
+      "params": {
+        "lineSplit": 0.66, "te": "R", "teSplit": 1,
+        "wide": { "left": [17], "right": [19] },
+        "qbDepth": 4, "backs": [{ "depth": 8, "offset": -3 }, { "depth": 11, "offset": 2 }]
+      }
+    },
+
+    {
+      "id": "fm-defense-4-3",
+      "name": "Defense — 4-3",
+      "family": "defense",
+      "generator": "defenseFront",
+      "note": "Four down, three backers, two corners, two safeties. There is no seven-on-the-line rule for the defence; what is checked is that four men are actually down on the ball.",
+      "params": { "front": 4, "backers": 3, "dlSplit": 2, "lbDepth": 4.5, "lbWidth": 5, "cbWidth": 16, "cbDepth": 5, "safetyDepth": 12, "safetyWidth": 8 }
+    },
+    {
+      "id": "fm-defense-5-2",
+      "name": "Defense — 5-2",
+      "family": "defense",
+      "generator": "defenseFront",
+      "note": "The youth staple: a nose on the centre, five down, two backers behind them. Hard to run inside on, and it asks less of eleven- to fourteen-year-olds than reading a gap.",
+      "params": { "front": 5, "backers": 2, "dlSplit": 1.5, "lbDepth": 4.5, "lbSplit": 8, "cbWidth": 16, "cbDepth": 5, "safetyDepth": 12, "safetyWidth": 8 }
+    },
+    {
+      "id": "fm-defense-4-4",
+      "name": "Defense — 4-4",
+      "family": "defense",
+      "generator": "defenseFront",
+      "note": "Four down, four backers, one free safety. Eight in the box against a team that only runs.",
+      "params": { "front": 4, "backers": 4, "dlSplit": 2, "lbDepth": 4.5, "lbSplit": 5, "cbWidth": 18, "cbDepth": 5, "safetyDepth": 13 }
+    }
+  ]
+}

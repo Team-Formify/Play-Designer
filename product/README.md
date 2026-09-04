@@ -14,6 +14,7 @@ bundles stay gitignored.
 | `engine/` | the play engine, byte-identical to the proven one at the repo root. **Not a fork** — `scripts/sync-engine.js` keeps it honest and `--check` fails on drift, because this project has already paid for having two engines once. |
 | `db/` | leagues → teams → seasons → memberships → players → plays. Isolation lives in Postgres RLS, not in application code. |
 | `brand/` | white-label. One codebase, a look per league and per team. |
+| `formations/` | what a new team's empty playbook starts with. **Formations, not plays** — parametric generators for the alignments everybody already knows, so nothing anybody owns is ever shipped to a customer. `node product/formations/validate.js` proves every one of them legal. |
 
 ## Two positions that are already settled
 
