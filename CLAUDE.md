@@ -224,6 +224,49 @@ his own plays — no combination, no gain, and it read as a different product. A
 the direction is *his app into Steve's*, not the reverse: the version he opens
 daily to edit special teams is `designer.html` at `/designer`, which is his and stays his.
 
+## Where this is going — a product, sold to leagues
+
+**Settled, by him: Steve is a co-founder, not a customer.** They intend to sell this to
+leagues, layered down to the teams inside them. That changes the ownership question and it
+does **not** change the publishing one — see the paragraph after next.
+
+What the measurement says, so nobody re-derives it:
+
+- **The engine is the company.** `play-engine.js` is 216 lines with zero occurrences of
+  "Lehi", "UYFC" or any team name — already tenant-agnostic. His 1,433 diagrams are
+  pictures; ours is a model, and that asymmetry is the whole asset.
+- **His schema is single-tenant in the primary key.** Eight tables are literally one row
+  (`id text primary key default 'current'`), two are keyed by date alone (two teams
+  practising on the same Tuesday collide), one has a globally unique slug, and **no table
+  carries a `team_id` or `league_id`**. His own `schema.sql` says there is no per-coach
+  partitioning. Isolation belongs in Postgres RLS, not in route handlers.
+- **His gate has no identity in it.** The cookie carries a tier and nothing else, and the
+  hash namespace is hardcoded `lehi-8a::`. No way to revoke one coach, no audit trail. It
+  cannot be sold as-is.
+- **His app cannot work offline, by construction.** Three layouts set `force-dynamic`
+  deliberately, because CloudFront once served a cached page to someone with no password.
+  So `designer.html` is the **field client** — static, offline, printable — and the React
+  app is the **desk client**. That is a measurement, not a compromise.
+- **Ship formations, not plays.** A spread punt or a 6-2-2-1 is geometry and is
+  shippable. A play is a coach's IP, and a product whose content is Lehi's offense is
+  worthless to a buyer.
+- **A league product covers under-13s even though his 8th graders are not.** That is what
+  brings COPPA in. It forces consents, per-league field toggles, retention with an end of
+  season, and deletion that **tombstones rather than cascades** — a parent's removal
+  request degrades a play to a jersey number and never destroys the play. Rules 1 and 2 of
+  this file, restated for a new domain. The existing "last name and number" convention is
+  already data minimisation, which is a head start.
+- **Do not build multi-tenant first.** Prove it on a second team by hand — empty book,
+  formations, print, no backend — and find out whether a coach who is not Dom finds it
+  useful without Dom next to him.
+
+**Co-founder does not mean his artwork can be published here.** This repo is PUBLIC and
+his `diagramArt.ts` says the offense is password-protected. Joint ownership settles who
+owns the product; it does not settle publishing one partner's playbook to the open
+internet. `bridge/combined.html`, `bridge/steve-book.json` and `bridge/steve-plays.json`
+stay gitignored, and no diagram of his goes in a tracked file, until they either make the
+repo private or say plainly that the book may be published.
+
 ## Architecture
 
 Vanilla JS, SVG, no dependencies, no build.
