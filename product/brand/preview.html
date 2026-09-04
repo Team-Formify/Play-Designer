@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brand preview — one play, one engine, every tenant</title>
+<!--
+  preview.html — the proof that the white-label layer works.
+
+  The SAME play, drawn by the SAME engine (product/engine/play-engine.js) and
+  the SAME field renderer, once per tenant brand, side by side. Chrome, field
+  and wordmark all come from the brand record; not one line of CSS is per-brand.
+
+  Everything is inlined — the engine, brand.js and brands.json — because a
+  <script src> cannot be read when this page is opened as a downloaded file or
+  run inside an artifact viewer (CLAUDE.md rule 4). The inlining is mechanical:
+
+      node product/brand/sync-preview.js            # rewrite the blocks
+      node product/brand/sync-preview.js --check    # exit 1 if they drifted
+
+  The play data is fetched from special-teams-plays.json when that is reachable
+  (which gives the play picker every unit) and falls back to the one unit
+  inlined below when it is not.
+
+  PRINT HIDE LIST — anything added to this page that is not the field or its
+  caption must go in the @media print rule marked PRINT-HIDE below, or it
+  prints. That is how the game-day bar once leaked onto a sheet of paper.
+-->
+<style>
+  /* No webfonts anywhere on this page, on purpose: it is the same rule the app
+     lives under. Every stack below ships with the OS. The values come out of
+     the brand record as --body / --mono / --display. */
+  :root{
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+    --display:'Haettenschweiler','Arial Narrow',Impact,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--page);color:var(--chalk);font-family:var(--body);
+       font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 10px 40px}
+
+  #top{background:var(--board);padding:14px 12px 12px}
+  #top h1{font-family:var(--display);font-weight:800;text-transform:uppercase;
+          font-size:20px;letter-spacing:.04em;margin:0}
+  #top h1 span{color:var(--accent)}
+  #top p{margin:4px 0 0;font-size:13px;color:var(--soft);max-width:60ch}
+
+  #controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 0;
+            position:sticky;top:0;background:var(--page);z-index:5}
+  select,.btn{font-family:var(--body);font-size:13px;background:var(--deep);color:var(--chalk);
+              border:1px solid var(--hairline);border-radius:4px;padding:7px 10px;cursor:pointer}
+  .btn.accent{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+  .btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+  .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+
+  /* One column on a phone, three across on a desk. A control he has to scroll
+     to find has not shipped, so the picker sits above the fold at 390px. */
+  #grid{display:grid;gap:12px;grid-template-columns:1fr}
+  @media (min-width:900px){#grid{grid-template-columns:repeat(3,1fr)}}
+
+  /* THE WHOLE TRICK: every rule below reads a custom property. Brand.apply()
+     sets those properties on the .panel element, so three tenants render from
+     one stylesheet. Nobody edits CSS to add a club. */
+  .panel{background:var(--page);color:var(--chalk);font-family:var(--body);
+         border:1px solid var(--hairline);border-radius:8px;overflow:hidden}
+  .phdr{background:var(--board);padding:10px 11px;display:flex;align-items:center;gap:8px}
+  .phdr .wm{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:17px;
+            letter-spacing:.04em;margin:0;flex:1;min-width:0}
+  .phdr .wm .wm-accent{color:var(--accent)}
+  .phdr .mark{display:flex;flex:none}
+  .phdr .mark svg{display:block}
+  .dot{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+       padding:3px 6px;border-radius:3px;background:var(--accent);color:var(--accent-ink);font-weight:700}
+  .pbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:8px 9px}
+  .pbar select{max-width:132px}
+  .fieldbox{background:var(--field-grass);margin:0 9px;border-radius:6px;overflow:hidden}
+  .fieldbox svg{width:100%;height:auto;display:block}
+  .how{margin:8px 9px 0;font-size:12.5px;color:var(--soft)}
+  .how b{color:var(--chalk);font-weight:600}
+
+  .audit{width:calc(100% - 18px);margin:9px;border-collapse:collapse;font-family:var(--mono);font-size:10px}
+  .audit th{text-align:left;color:var(--soft);font-weight:400;letter-spacing:.07em;
+            text-transform:uppercase;font-size:9px;padding:2px 3px;border-bottom:1px solid var(--hairline)}
+  .audit td{padding:1.5px 3px;color:var(--chalk)}
+  .audit td.n{text-align:right;color:var(--soft)}
+  .audit tr.bad td{color:var(--warm);font-weight:700}
+  .audit td.ok::after{content:'\2713';color:var(--accent);margin-left:4px}
+  .audit td.no::after{content:'\2715';color:var(--warm);margin-left:4px}
+
+  #foot{margin:18px 0 0;font-size:12.5px;color:var(--soft)}
+  #foot code{font-family:var(--mono);font-size:11.5px;color:var(--chalk)}
+
+  /* PRINT-HIDE. Print is the game-day output: the field and its caption, black
+     on white, and nothing else. Add an element to this page, add it here. */
+  @media print{
+    @page{size:letter portrait;margin:12mm}
+    #controls,#foot,.audit,#top p,.dot,.pbar{display:none!important}
+    body,.panel{background:#fff!important;color:#000!important}
+    #grid{grid-template-columns:1fr 1fr;gap:8mm}
+    .panel{border:1px solid #000;break-inside:avoid}
+    .phdr{background:#fff!important;border-bottom:1px solid #000}
+    .fieldbox{background:#fff!important}
+  }
+</style>
+</head>
+<body>
+
+<header id="top">
+  <h1>Brand <span>preview</span></h1>
+  <p>One play, one engine, one stylesheet — rendered once per tenant. Chrome, field and
+     wordmark all come from the brand record. The table under each field is that brand's
+     measured WCAG contrast; a theme that fails a floor is a bug, not a taste question.</p>
+</header>
+
+<div class="wrap">
+  <div id="controls">
+    <span class="tag">Play</span>
+    <select id="playSel" aria-label="Choose the play every brand draws"></select>
+    <span class="tag">Look</span>
+    <select id="lookSel" aria-label="Choose the look"></select>
+    <button class="btn" id="printBtn" aria-pressed="false">Print mode</button>
+    <button class="btn" id="namesBtn" aria-pressed="true">Names</button>
+    <span class="tag" id="srcNote"></span>
+  </div>
+
+  <div id="grid"></div>
+
+  <p id="foot">
+    Page chrome above is the <code>lehi</code> brand applied to <code>:root</code>; each panel
+    below has its own brand applied to the panel element, which is the same call with a
+    different root. Print mode swaps every brand to the one shared black-on-white palette —
+    <code>Brand.PRINT</code> is not overridable per tenant, because toner costs money.
+    Checked headless by <code>node product/test/test-brand.js</code>.
+  </p>
+</div>
+
+<!-- The play data fallback: one real unit, so the page draws a real eleven even
+     with no network and no sibling file. The picker gets every unit when
+     special-teams-plays.json is reachable. -->
+<script type="application/json" id="play-fallback">
+{
+ "generated": "2026-08-23",
+ "roster": [
+  {
+   "last": "Archuletta",
+   "first": "Cree",
+   "number": "14",
+   "xman": false,
+   "offense": "QB / LG / X",
+   "defense": "MIKE"
+  },
+  {
+   "last": "Bagley",
+   "first": "Ledger",
+   "number": "27",
+   "xman": false,
+   "offense": "Z",
+   "defense": "LCB / SS"
+  },
+  {
+   "last": "Bearnson",
+   "first": "Ryker",
+   "number": "49",
+   "xman": false,
+   "offense": "RG / QB / Z / F / Y",
+   "defense": "SS"
+  },
+  {
+   "last": "Black",
+   "first": "Brave",
+   "number": "12",
+   "xman": false,
+   "offense": "F / Y",
+   "defense": "RDE / FS"
+  },
+  {
+   "last": "Bullock",
+   "first": "Tistyn",
+   "number": null,
+   "xman": true,
+   "offense": "RG",
+   "defense": "LDT",
+   "tenPlay": true
+  },
+  {
+   "last": "Dalley",
+   "first": "Caleb",
+   "number": "17",
+   "xman": false,
+   "offense": "H / Y / F / RT",
+   "defense": "LDE"
+  },
+  {
+   "last": "Debenham",
+   "first": "Dolan",
+   "number": "16",
+   "xman": false,
+   "offense": "C / RT",
+   "defense": "SAM"
+  },
+  {
+   "last": "Grover",
+   "first": "Ja'corey",
+   "number": "55",
+   "xman": false,
+   "offense": "H",
+   "defense": "LCB / RCB",
+   "tenPlay": true
+  },
+  {
+   "last": "Martinez",
+   "first": "Daxton",
+   "number": "22",
+   "xman": false,
+   "offense": "C / LT",
+   "defense": "LDT / RDT",
+   "tenPlay": true
+  },
+  {
+   "last": "Mineer",
+   "first": "Mason",
+   "number": "47",
+   "xman": false,
+   "offense": "X",
+   "defense": "RCB"
+  },
+  {
+   "last": "Mitchell",
+   "first": "Cole",
+   "number": "48",
+   "xman": true,
+   "offense": "LG",
+   "defense": "RDT"
+  },
+  {
+   "last": "Pace",
+   "first": "Kyler",
+   "number": "10",
+   "xman": false,
+   "offense": "Y / H",
+   "defense": "FS"
+  },
+  {
+   "last": "Paulich",
+   "first": "Andrew",
+   "number": "35",
+   "xman": false,
+   "offense": "LT",
+   "defense": "RDE / LDT / MIKE"
+  },
+  {
+   "last": "Prasad",
+   "first": "Joseph",
+   "number": "67",
+   "xman": false,
+   "offense": "Z",
+   "defense": "LCB",
+   "tenPlay": true
+  },
+  {
+   "last": "Reary",
+   "first": "Cache",
+   "number": "9",
+   "xman": false,
+   "offense": "QB",
+   "defense": "FS"
+  },
+  {
+   "last": "Rowley",
+   "first": "Mason",
+   "number": "73",
+   "xman": false,
+   "offense": "C",
+   "defense": "RDT"
+  },
+  {
+   "last": "Ruelas",
+   "first": "Jehudiel",
+   "number": "74",
+   "xman": true,
+   "offense": "RG",
+   "defense": "LDT"
+  },
+  {
+   "last": "Scott",
+   "first": "Rowan",
+   "number": "99",
+   "xman": false,
+   "offense": "Z",
+   "defense": "RCB / WILL"
+  },
+  {
+   "last": "Severts",
+   "first": "Cooper",
+   "number": "34",
+   "xman": false,
+   "offense": "Z",
+   "defense": "WILL / FS"
+  },
+  {
+   "last": "Steinke",
+   "first": "Zander",
+   "number": "33",
+   "xman": false,
+   "offense": "—",
+   "defense": "LDE / RDT / MIKE / SAM"
+  },
+  {
+   "last": "Wentzel",
+   "first": "Carter",
+   "number": "7",
+   "xman": false,
+   "offense": "X",
+   "defense": "RCB"
+  }
+ ],
+ "plays": [
+  {
+   "slug": "std-punt",
+   "name": "Punt — Base",
+   "order": 1,
+   "lineOfScrimmage": 190,
+   "lineLabel": "LINE OF SCRIMMAGE",
+   "players": [
+    {
+     "id": "p0",
+     "team": "us",
+     "label": "S",
+     "player": "Paulich",
+     "x": 210,
+     "y": 190,
+     "role": "SNAPPER",
+     "job": "Snap it back to the punter, then get your head up. You are the middle of the coverage, so run straight down the field at the returner."
+    },
+    {
+     "id": "p1",
+     "team": "us",
+     "label": "RGD",
+     "player": "Prasad",
+     "x": 248,
+     "y": 190,
+     "role": "PROTECT",
+     "job": "Hold your gap. Nobody comes through you. After the kick, get downfield and take the middle of the field."
+    },
+    {
+     "id": "p2",
+     "team": "us",
+     "label": "LGD",
+     "player": "Steinke",
+     "x": 172,
+     "y": 190,
+     "role": "PROTECT",
+     "job": "Protection comes first. Punch the rusher inside and keep him off the punter. When the ball is away, release and fill the middle."
+    },
+    {
+     "id": "p3",
+     "team": "us",
+     "label": "RT",
+     "player": "Bearnson",
+     "x": 286,
+     "y": 190,
+     "role": "COVER",
+     "job": "Block first, then go. Once the ball is gone you are coverage. Keep outside leverage and turn the returner into your help."
+    },
+    {
+     "id": "p4",
+     "team": "us",
+     "label": "LT",
+     "player": "Black",
+     "x": 134,
+     "y": 190,
+     "role": "COVER",
+     "job": "Block the man over you for two counts so the punter is safe, then release and cover. Stay outside the returner and squeeze him back inside."
+    },
+    {
+     "id": "p5",
+     "team": "us",
+     "label": "RG",
+     "player": "Grover",
+     "x": 376,
+     "y": 190,
+     "role": "GUNNER",
+     "job": "Same as the other gunner. Get off the line, get downfield fast, and be the first man to the returner. Do not run past the ball."
+    },
+    {
+     "id": "p6",
+     "team": "us",
+     "label": "LG",
+     "player": "Pace",
+     "x": 44,
+     "y": 190,
+     "role": "GUNNER",
+     "job": "You are the first one down there. Release outside, beat the man trying to hold you up, and get to the returner before he starts upfield. Stay in your lane."
+    },
+    {
+     "id": "p7",
+     "team": "us",
+     "label": "RW",
+     "player": "Dalley",
+     "x": 280,
+     "y": 230,
+     "role": "WING",
+     "job": "Seal the edge, then cover. Once you release, stay wide. If he gets outside you there is nobody behind you."
+    },
+    {
+     "id": "p8",
+     "team": "us",
+     "label": "LW",
+     "player": "Scott",
+     "x": 140,
+     "y": 230,
+     "role": "WING",
+     "job": "You are the edge of the wall. Nobody gets around you to the punter. Block first, then release outside and keep the returner in front of you."
+    },
+    {
+     "id": "p9",
+     "team": "us",
+     "label": "PP",
+     "player": "Archuletta",
+     "x": 192,
+     "y": 264,
+     "role": "PROTECTOR",
+     "job": "You are the last man before the punter. Check the count, call the protection, and block anybody who comes free. Then get downfield."
+    },
+    {
+     "id": "p10",
+     "team": "us",
+     "label": "P",
+     "player": "Debenham",
+     "x": 210,
+     "y": 340,
+     "role": "PUNTER",
+     "job": "Catch it, two steps, get it off. After the kick you are the safety, so stay behind the ball and be ready to make the tackle."
+    }
+   ],
+   "routes": [
+    {
+     "playerId": "p0",
+     "points": [
+      {
+       "x": 210,
+       "y": 182
+      },
+      {
+       "x": 210,
+       "y": 130
+      },
+      {
+       "x": 210,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p1",
+     "points": [
+      {
+       "x": 248,
+       "y": 176
+      },
+      {
+       "x": 243,
+       "y": 127
+      },
+      {
+       "x": 237,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p2",
+     "points": [
+      {
+       "x": 172,
+       "y": 176
+      },
+      {
+       "x": 177,
+       "y": 127
+      },
+      {
+       "x": 183,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p3",
+     "points": [
+      {
+       "x": 286,
+       "y": 174
+      },
+      {
+       "x": 276,
+       "y": 126
+      },
+      {
+       "x": 263,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p4",
+     "points": [
+      {
+       "x": 134,
+       "y": 174
+      },
+      {
+       "x": 144,
+       "y": 126
+      },
+      {
+       "x": 157,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p5",
+     "points": [
+      {
+       "x": 354,
+       "y": 134
+      },
+      {
+       "x": 326,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p6",
+     "points": [
+      {
+       "x": 66,
+       "y": 134
+      },
+      {
+       "x": 94,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p7",
+     "points": [
+      {
+       "x": 280,
+       "y": 210
+      },
+      {
+       "x": 271,
+       "y": 144
+      },
+      {
+       "x": 259,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p8",
+     "points": [
+      {
+       "x": 140,
+       "y": 210
+      },
+      {
+       "x": 149,
+       "y": 144
+      },
+      {
+       "x": 161,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p9",
+     "points": [
+      {
+       "x": 192,
+       "y": 246
+      },
+      {
+       "x": 194,
+       "y": 162
+      },
+      {
+       "x": 197,
+       "y": 78
+      }
+     ]
+    },
+    {
+     "playerId": "p10",
+     "points": [
+      {
+       "x": 210,
+       "y": 294
+      },
+      {
+       "x": 210,
+       "y": 248
+      }
+     ]
+    }
+   ],
+   "howItWorks": "Spread punt. Wide splits force them to spread out too, which cuts down the rush angles at the punter. Everybody blocks first and covers second — the ball is gone in about two seconds, so protection is short and then all eleven are in coverage lanes. The gunners are the only two who release straight away; their landmark is three yards outside the returner so he cannot get to the sideline.",
+   "aim": {
+    "x": 92,
+    "y": 95,
+    "from": "P",
+    "label": "PUNT HERE — OUTSIDE THE NUMBERS, 35 YARDS"
+   },
+   "mirrorOf": "punt-return-purple-d",
+   "phase": "special"
+  }
+ ]
+}
+</script>
+
+<!-- brands.json, inlined by sync-preview.js. The fetched file wins when reachable. -->
+<script type="application/json" id="brand-data">
+{
+  "schema": "play-designer/brands@1",
+  "note": "Tenant brand records. lehi is the reference: its colours are taken verbatim from designer.html's :root and PAL_SCREEN, so it is the proof that theming cost the existing look nothing. The other two exist to prove range — one light, one loud. Contrast is audited by Brand.audit(); see product/test/test-brand.js.",
+  "brands": [
+    {
+      "id": "lehi",
+      "name": "Lehi Youth Football",
+      "shortName": "Lehi",
+      "scheme": "dark",
+      "colors": {
+        "page": "#13251F",
+        "board": "#1D3A31",
+        "deep": "#0D1B16",
+        "chalk": "#EDEBE0",
+        "soft": "#9AA69C",
+        "accent": "#E3B547",
+        "warm": "#E58A6B"
+      },
+      "field": {
+        "grass": "#1D3A31",
+        "chalk": "#EDEBE0",
+        "line": "#E3B547",
+        "plate": "#13251F",
+        "hot": "#E58A6B",
+        "circleFill": "rgba(19,37,31,.55)",
+        "routeFill": "rgba(227,181,71,.28)",
+        "stroke": 2,
+        "gridOp": 0.09,
+        "hashOp": 0.2,
+        "sideOp": 0.3,
+        "themOp": 0.42,
+        "chipOp": 0.82,
+        "losChipOp": 0.72,
+        "leadOp": 0.42,
+        "aimOp": 0.85
+      },
+      "wordmark": { "text": "Play Designer", "accent": "Designer" },
+      "mark": { "initials": "LHI", "shape": "shield" },
+      "fonts": { "body": "system", "mono": "mono", "display": "condensed" }
+    },
+
+    {
+      "id": "willow-creek",
+      "name": "Willow Creek Junior Football",
+      "shortName": "Willow Creek",
+      "scheme": "light",
+      "colors": {
+        "page": "#F3F1E9",
+        "board": "#FFFFFF",
+        "deep": "#FFFFFF",
+        "chalk": "#17211C",
+        "soft": "#4E5A53",
+        "accent": "#8E1B2E",
+        "warm": "#0F5C74"
+      },
+      "field": {
+        "grass": "#E7EEE2",
+        "chalk": "#1B2A22",
+        "line": "#8E1B2E",
+        "plate": "#FFFFFF",
+        "hot": "#0F5C74",
+        "circleFill": "rgba(255,255,255,.82)",
+        "routeFill": "rgba(142,27,46,.16)",
+        "stroke": 2,
+        "gridOp": 0.16,
+        "hashOp": 0.3,
+        "sideOp": 0.45,
+        "themOp": 0.5,
+        "chipOp": 0.92,
+        "losChipOp": 0.88,
+        "leadOp": 0.5,
+        "aimOp": 0.9
+      },
+      "wordmark": { "text": "Willow Creek Football", "accent": "Football" },
+      "mark": { "initials": "WC", "shape": "disc" },
+      "fonts": { "body": "system", "mono": "mono", "display": "slab" }
+    },
+
+    {
+      "id": "ridgeline",
+      "name": "Ridgeline Raptors",
+      "shortName": "Ridgeline",
+      "scheme": "dark",
+      "colors": {
+        "page": "#0C0716",
+        "board": "#241548",
+        "deep": "#150C2A",
+        "chalk": "#FFFFFF",
+        "soft": "#BFB2E6",
+        "accent": "#D8FF3E",
+        "warm": "#FF4FA3"
+      },
+      "field": {
+        "grass": "#241548",
+        "chalk": "#FFFFFF",
+        "line": "#D8FF3E",
+        "plate": "#0C0716",
+        "hot": "#FF4FA3",
+        "circleFill": "rgba(12,7,22,.62)",
+        "routeFill": "rgba(216,255,62,.3)",
+        "stroke": 2.2,
+        "gridOp": 0.12,
+        "hashOp": 0.24,
+        "sideOp": 0.38,
+        "themOp": 0.46,
+        "chipOp": 0.86,
+        "losChipOp": 0.78,
+        "leadOp": 0.45,
+        "aimOp": 0.9
+      },
+      "wordmark": { "text": "Ridgeline Raptors", "accent": "Raptors" },
+      "mark": { "initials": "RR", "shape": "chevron" },
+      "fonts": { "body": "grotesk", "mono": "mono", "display": "condensed" }
+    }
+  ]
+}
+</script>
+
+<!-- product/engine/play-engine.js, inlined by sync-preview.js -->
+<script id="play-engine">
+/* play-engine.js — the shared geometry behind both apps.
+ *
+ * The coach's app and the boys' app were each carrying their own copy of this,
+ * and every fix had to be written twice. Four times in one day the second copy
+ * was the one that went wrong. This is the one source of truth for it.
+ *
+ * Pure functions only: no DOM, no storage, no knowledge of either page's data
+ * shapes. Each page passes plain numbers in and decorates what comes back.
+ *
+ * It is INLINED into index.html and learn.html by scripts/sync-engine.js, the
+ * same way special-teams-plays.json is, because a <script src> cannot be read
+ * when the page is opened as a downloaded file or run inside the artifact
+ * viewer. Edit this file, then run:
+ *
+ *     node scripts/sync-engine.js
+ *     node scripts/sync-engine.js --check     # exit 1 if they have drifted
+ *
+ * No dependencies, no build step. Running the app needs nothing.
+ */
+var PE = (function () {
+  var VBW = 420, VBH = 500;
+
+  /* ---------- curves ----------
+     Nobody runs in straight lines with corners on them. The stored points are
+     the shape of the run; these round them into one continuous path and sample
+     that same path, so a man runs along the line that is drawn rather than
+     cutting its corners. Two points stay a straight line, because that is what
+     a straight line is. */
+  var CURVE = 0.5;
+
+  function smoothD(pts) {
+    if (!pts || pts.length < 2) return '';
+    var d = 'M' + pts[0].x + ',' + pts[0].y;
+    if (pts.length === 2) return d + ' L' + pts[1].x + ',' + pts[1].y;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      d += ' C' + (p1.x + (p2.x - p0.x) / 6 * CURVE) + ',' + (p1.y + (p2.y - p0.y) / 6 * CURVE) +
+           ' ' + (p2.x - (p3.x - p1.x) / 6 * CURVE) + ',' + (p2.y - (p3.y - p1.y) / 6 * CURVE) +
+           ' ' + p2.x + ',' + p2.y;
+    }
+    return d;
+  }
+
+  function smoothPts(pts) {
+    if (!pts || pts.length < 3) return pts || [];
+    var out = [{ x: pts[0].x, y: pts[0].y }], STEP = 6;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+      var c1x = p1.x + (p2.x - p0.x) / 6 * CURVE, c1y = p1.y + (p2.y - p0.y) / 6 * CURVE;
+      var c2x = p2.x - (p3.x - p1.x) / 6 * CURVE, c2y = p2.y - (p3.y - p1.y) / 6 * CURVE;
+      for (var k = 1; k <= STEP; k++) {
+        var u = k / STEP, v = 1 - u;
+        out.push({ x: v * v * v * p1.x + 3 * v * v * u * c1x + 3 * v * u * u * c2x + u * u * u * p2.x,
+                   y: v * v * v * p1.y + 3 * v * v * u * c1y + 3 * v * u * u * c2y + u * u * u * p2.y });
+      }
+    }
+    return out;
+  }
+
+  /* Where a man is when the clock reads t, along the whole path. */
+  function walk(pts, t) {
+    if (!pts || !pts.length) return { x: 0, y: 0 };
+    var segs = [], total = 0, i;
+    for (i = 1; i < pts.length; i++) {
+      var L = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      segs.push(L); total += L;
+    }
+    if (total <= 0) return pts[0];
+    var want = total * t, run = 0;
+    for (i = 0; i < segs.length; i++) {
+      if (run + segs[i] >= want) {
+        var f = segs[i] ? (want - run) / segs[i] : 0;
+        return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f,
+                 y: pts[i].y + (pts[i + 1].y - pts[i].y) * f };
+      }
+      run += segs[i];
+    }
+    return pts[pts.length - 1];
+  }
+
+  function rectsOverlap(a, b) {
+    return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
+  }
+
+  /* ---------- the other team ----------
+     A kickoff and a kick return are the two sides of the same snap, so the
+     likely opposing look on one IS the other: his own coached play, reflected
+     across the line of scrimmage and flipped left to right, because their left
+     is our right. Scaled so it fits the depth the host play has to spare.
+
+       host = {los, ours:[{x,y}]}
+       src  = {los, ours:[{id,x,y,...}], routes:[{playerId, points:[{x,y}]}]}
+
+     Returns {men:[{x,y,q,path}], routes:[{from,points}]}, where q is the source
+     player untouched — labels, lanes and jobs come along with him, which is what
+     lets the matchup be named instead of invented. */
+  function mid(list, key) {
+    return list.reduce(function (a, q) { return a + q[key]; }, 0) / (list.length || 1);
+  }
+
+  function mirror(host, src) {
+    var ho = host.ours || [], so = src.ours || [];
+    if (!ho.length || !so.length) return { men: [], routes: [] };
+    var sSgn = Math.sign(mid(so, 'y') - src.los) || 1;
+    var hSgn = -(Math.sign(mid(ho, 'y') - host.los) || 1);
+    var depth = Math.max.apply(null, so.map(function (q) { return Math.abs(q.y - src.los); })) || 1;
+    var room = (hSgn < 0 ? (host.los - 18) : (VBH - 18 - host.los));
+    var k = Math.min(1, Math.max(0.2, room / depth));
+    function M(x, y) { return { x: VBW - x, y: host.los + hSgn * ((y - src.los) * sSgn) * k }; }
+
+    var rt = {};
+    (src.routes || []).forEach(function (r) { rt[r.playerId] = r; });
+    var routes = [];
+    var men = so.map(function (q) {
+      var m = M(q.x, q.y);
+      m.q = q;
+      var r = rt[q.id];
+      m.path = [{ x: m.x, y: m.y }].concat(
+        (r && r.points) ? r.points.map(function (t) { return M(t.x, t.y); }) : []);
+      if (m.path.length > 1) routes.push({ from: m.path[0], points: m.path.slice(1) });
+      return m;
+    });
+    return { men: men, routes: routes };
+  }
+
+  /* ---------- who is across from whom ----------
+     Anything he has assigned by hand is the answer and takes its man off the
+     board first. Nearest-man is a fair guess on a kickoff and a poor one on a
+     return, where a wall man blocks the cover man arriving in his zone rather
+     than the one standing closest at the snap. Best pair first, so two of ours
+     cannot claim the same man while a third goes unmatched.
+
+       ours = [{id, x, y, covers}]        men = from mirror(), or stored X's
+       labelOf(man) -> the label to match `covers` against
+
+     Returns {ourId: {bi, assigned}}. */
+  function matchups(ours, men, labelOf) {
+    var out = {}, usedA = {}, usedB = {};
+    if (!men.length) return out;
+    labelOf = labelOf || function (m) { return (m.q && m.q.label) || m.label || ''; };
+
+    ours.forEach(function (a) {
+      if (!a.covers) return;
+      var bi = -1;
+      men.forEach(function (m, i) { if (bi < 0 && labelOf(m) === a.covers) bi = i; });
+      if (bi < 0 || usedB[bi]) return;   // a label renamed on the other play: fall back to auto
+      usedA[a.id] = 1; usedB[bi] = 1;
+      out[a.id] = { bi: bi, assigned: true };
+    });
+
+    var pairs = [];
+    ours.forEach(function (a) {
+      if (usedA[a.id]) return;
+      men.forEach(function (b, bi) {
+        if (usedB[bi]) return;
+        pairs.push({ a: a, bi: bi, d: Math.hypot(a.x - b.x, a.y - b.y) });
+      });
+    });
+    pairs.sort(function (x, y) { return x.d - y.d; });
+    pairs.forEach(function (pr) {
+      if (usedA[pr.a.id] || usedB[pr.bi]) return;
+      usedA[pr.a.id] = 1; usedB[pr.bi] = 1;
+      out[pr.a.id] = { bi: pr.bi, assigned: false };
+    });
+    return out;
+  }
+
+  /* ---------- where they collide ----------
+     Both men are walked down their own routes on one clock. The collision is the
+     first step where they are within touching distance AND somebody has actually
+     run there — a pair lined up across the ball starts inside touching distance,
+     and without that check the very first sample counts and both men freeze on
+     their own alignment without ever moving. A pair that never quite touches
+     counts at its closest approach, provided that is close enough to be a
+     collision and not two men passing on opposite sides of the field. A pair he
+     assigned himself always gets a mark, however far apart their routes keep
+     them: he has said this man takes that man, so a mark sitting off on its own
+     is the app telling him the route needs redrawing.
+
+       pairs = [{id, bi, assigned, ours:[pts], theirs:[pts]}]
+
+     Returns [{id, bi, assigned, t, a, b, d, x, y}] — a and b are where each man
+     stops, x/y the point between them. */
+  var TOUCH = 22, NEAR = 44, MOVED = 16;
+
+  function meets(pairs) {
+    var out = [];
+    (pairs || []).forEach(function (pr) {
+      var a = pr.ours || [], b = pr.theirs || [];
+      if (a.length < 2 && b.length < 2) return;   // nobody moves; there is no collision
+      var a0 = a[0], b0 = b[0], hit = null, near = null;
+      for (var i = 0; i <= 120; i++) {
+        var t = i / 120, pa = walk(a, t), pb = walk(b, t);
+        var gone = Math.hypot(pa.x - a0.x, pa.y - a0.y) + Math.hypot(pb.x - b0.x, pb.y - b0.y);
+        if (gone < MOVED) continue;
+        var d = Math.hypot(pa.x - pb.x, pa.y - pb.y);
+        if (!near || d < near.d) near = { t: t, a: pa, b: pb, d: d };
+        if (d <= TOUCH) { hit = { t: t, a: pa, b: pb, d: d }; break; }
+      }
+      var c = hit || ((near && (pr.assigned || near.d <= NEAR)) ? near : null);
+      if (!c) return;
+      out.push({ id: pr.id, bi: pr.bi, assigned: !!pr.assigned,
+                 t: c.t, a: c.a, b: c.b, d: c.d,
+                 x: (c.a.x + c.b.x) / 2, y: (c.a.y + c.b.y) / 2 });
+    });
+    return out;
+  }
+
+  return {
+    VBW: VBW, VBH: VBH, CURVE: CURVE,
+    MEET_TOUCH: TOUCH, MEET_NEAR: NEAR, MEET_MOVED: MOVED,
+    smoothD: smoothD, smoothPts: smoothPts, walk: walk, rectsOverlap: rectsOverlap,
+    mirror: mirror, matchups: matchups, meets: meets
+  };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = PE;
+
+</script>
+
+<!-- product/brand/brand.js, inlined by sync-preview.js -->
+<script id="brand-js">
+/* brand.js — the white-label layer.
+ *
+ * One codebase, one engine, one field renderer; every league and every team
+ * gets its own look. A coach at another club opens the app and it is HIS
+ * club's — his name, his colours, his field. Nobody edits CSS to make that
+ * happen: a tenant hands us a brand record, this file turns it into CSS
+ * custom properties on :root and into the palette object the field renderer
+ * already takes.
+ *
+ * Constraints this file exists to hold:
+ *
+ *   - No dependencies, no build step. It is a plain <script> and it also
+ *     works from file:// and from inside an artifact viewer, which is why it
+ *     never fetches anything on its own. The caller supplies the records.
+ *   - No webfonts. A brand CANNOT supply a font URL: it picks a stack by NAME
+ *     from FONT_STACKS below, all of which ship with the OS. This gets used on
+ *     a sideline with no signal and nothing may block on the network.
+ *   - Print is the game-day output. Every brand degrades to the SAME black-on-
+ *     white palette; a brand cannot override it and put a green block on a
+ *     cartridge. See PRINT.
+ *   - Contrast is not a taste question. audit() computes real WCAG ratios for
+ *     the places that actually carry meaning — the label inside a player
+ *     circle, the name chip, the chalk on the grass — compositing translucent
+ *     fills over their real backdrop first. A brand that fails is a bug.
+ *
+ * The record shape (everything but id/name has a default):
+ *
+ * {
+ *   id: 'lehi',                       // stable key, never a display name
+ *   name: 'Lehi Youth Football',      // the league or club, spelled out
+ *   shortName: 'Lehi',
+ *   scheme: 'dark' | 'light',         // drives color-scheme, nothing else
+ *   colors: {                         // the page chrome
+ *     page,    // app background
+ *     board,   // raised surface: header, field box
+ *     deep,    // recessed surface: buttons, selects, chips
+ *     chalk,   // primary text ON page/board/deep (ink, whatever its colour)
+ *     soft,    // muted text: labels, hints
+ *     accent,  // the club colour that does the work: active states, wordmark
+ *     warm     // the second accent: alerts, collisions, the X-man badge
+ *   },
+ *   field: {                          // the picture the plays are drawn on
+ *     grass,   // turf
+ *     chalk,   // yard lines, hashes, sidelines, player names, their X marks
+ *     line,    // routes, arrowheads, the LOS, the circle stroke and its label
+ *     plate,   // the little filled chip a name or the LOS label sits on
+ *     hot,     // selection, collision rings, X-man badge
+ *     circleFill, routeFill,          // may be rgba(); composited when audited
+ *     stroke,                         // route/circle stroke width
+ *     gridOp, hashOp, sideOp, themOp, chipOp, losChipOp, leadOp, aimOp
+ *   },
+ *   wordmark: { text: 'Lehi Special Teams', accent: 'Special Teams' },
+ *   mark: { initials: 'LHI', shape: 'shield'|'disc'|'chevron', fg, bg },
+ *   fonts: { body:'system', mono:'system', display:'condensed' }   // names only
+ * }
+ *
+ * field is optional: leave it out and it is derived from colors, so a tenant
+ * can be onboarded with six hex codes and still get a coherent field.
+ */
+var Brand = (function () {
+  'use strict';
+
+  /* ---------- fonts: names, never URLs ----------
+     A brand chooses from this list. There is no escape hatch that takes a
+     font file, because the one thing that must never happen on a practice
+     field is the page waiting on a CDN. */
+  var FONT_STACKS = {
+    system: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif",
+    mono: "ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace",
+    condensed: "'Haettenschweiler','Arial Narrow',Impact,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+    grotesk: "'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif",
+    slab: "'Rockwell','Roboto Slab',Georgia,'Times New Roman',serif",
+    humanist: "'Optima','Gill Sans','Gill Sans MT',Candara,Calibri,sans-serif"
+  };
+
+  /* ---------- colour maths ---------- */
+  function parse(c) {
+    if (c == null) return null;
+    if (typeof c === 'object' && c.length === 4) return c.slice();
+    var s = String(c).trim();
+    var m = s.match(/^#([0-9a-f]{3,8})$/i);
+    if (m) {
+      var h = m[1];
+      if (h.length === 3 || h.length === 4) h = h.split('').map(function (x) { return x + x; }).join('');
+      var a = h.length === 8 ? parseInt(h.slice(6, 8), 16) / 255 : 1;
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), a];
+    }
+    m = s.match(/^rgba?\(([^)]+)\)$/i);
+    if (m) {
+      var p = m[1].split(/[,\s/]+/).filter(function (x) { return x !== ''; }).map(Number);
+      return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+    }
+    return null;
+  }
+
+  function hex(c) {
+    var p = parse(c); if (!p) return '#000000';
+    return '#' + [0, 1, 2].map(function (i) {
+      var v = Math.round(Math.max(0, Math.min(255, p[i]))).toString(16);
+      return v.length < 2 ? '0' + v : v;
+    }).join('');
+  }
+
+  /* Composite fg (which may be translucent) over an opaque backdrop. Every
+     contrast number below runs through this, because a circle fill of
+     rgba(19,37,31,.55) is not a colour until you know what is under it. */
+  function over(fg, bg, alphaOverride) {
+    var f = parse(fg), b = parse(bg);
+    if (!f) return b ? b.slice() : [0, 0, 0, 1];
+    if (!b) return f.slice();
+    var a = alphaOverride == null ? f[3] : alphaOverride;
+    return [f[0] * a + b[0] * (1 - a), f[1] * a + b[1] * (1 - a), f[2] * a + b[2] * (1 - a), 1];
+  }
+
+  function luminance(c) {
+    var p = parse(c); if (!p) return 0;
+    function ch(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    return 0.2126 * ch(p[0]) + 0.7152 * ch(p[1]) + 0.0722 * ch(p[2]);
+  }
+
+  /* WCAG 2.1 relative-contrast ratio. Both arguments must already be opaque —
+     use over() first if either is not. */
+  function contrast(a, b) {
+    var l1 = luminance(a), l2 = luminance(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+
+  function mix(a, b, t) {
+    var x = parse(a), y = parse(b);
+    return hex([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t, 1]);
+  }
+
+  function rgba(c, a) {
+    var p = parse(c);
+    return 'rgba(' + Math.round(p[0]) + ',' + Math.round(p[1]) + ',' + Math.round(p[2]) + ',' + a + ')';
+  }
+
+  function isDark(c) { return luminance(c) < 0.22; }
+
+  /* ---------- the print palette ----------
+     Deliberately not per-brand and deliberately not overridable. Print is the
+     game-day output and toner costs money: black on white, every tenant, the
+     same way designer.html has always done it. */
+  var PRINT = {
+    grass: '#FFFFFF', chalk: '#000000', line: '#000000', plate: '#FFFFFF', hot: '#000000',
+    gridOp: 0.13, hashOp: 0.26, sideOp: 0.5, themOp: 0.8, chipOp: 1, losChipOp: 1,
+    leadOp: 0.5, aimOp: 1, circleFill: '#FFFFFF', routeFill: '#FFFFFF', stroke: 1.6
+  };
+
+  var FIELD_DEFAULT_OPS = {
+    gridOp: 0.09, hashOp: 0.2, sideOp: 0.3, themOp: 0.42, chipOp: 0.82,
+    losChipOp: 0.72, leadOp: 0.42, aimOp: 0.85, stroke: 2
+  };
+
+  /* ---------- normalise ----------
+     Fills every slot so the rest of the file never has to test for one, and
+     derives a whole field from the chrome colours when a tenant only gave us
+     six hex codes. Additive: it never drops a key it did not recognise. */
+  function normalize(rec) {
+    if (!rec || !rec.id) throw new Error('brand: a record needs an id');
+    var b = {};
+    for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) b[k] = rec[k];
+
+    var c = {};
+    var src = rec.colors || {};
+    c.page = src.page || '#13251F';
+    c.board = src.board || mix(c.page, isDark(c.page) ? '#FFFFFF' : '#000000', 0.06);
+    c.deep = src.deep || mix(c.page, isDark(c.page) ? '#000000' : '#FFFFFF', 0.35);
+    c.chalk = src.chalk || (isDark(c.page) ? '#EDEBE0' : '#16211C');
+    c.soft = src.soft || mix(c.chalk, c.page, 0.42);
+    c.accent = src.accent || '#E3B547';
+    c.warm = src.warm || '#E58A6B';
+    b.colors = c;
+
+    b.scheme = rec.scheme || (isDark(c.page) ? 'dark' : 'light');
+
+    var f = {}, fs = rec.field || {};
+    f.grass = fs.grass || c.board;
+    f.chalk = fs.chalk || c.chalk;
+    f.line = fs.line || c.accent;
+    f.plate = fs.plate || c.page;
+    f.hot = fs.hot || c.warm;
+    f.circleFill = fs.circleFill || rgba(f.plate, 0.55);
+    f.routeFill = fs.routeFill || rgba(f.line, 0.28);
+    Object.keys(FIELD_DEFAULT_OPS).forEach(function (k) {
+      f[k] = fs[k] == null ? FIELD_DEFAULT_OPS[k] : fs[k];
+    });
+    b.field = f;
+
+    var w = rec.wordmark || {};
+    b.wordmark = { text: w.text || rec.name, accent: w.accent || '' };
+
+    var m = rec.mark || {};
+    b.mark = {
+      initials: (m.initials || (rec.shortName || rec.name || '?').slice(0, 3)).toUpperCase(),
+      shape: m.shape || 'shield',
+      bg: m.bg || c.accent,
+      fg: m.fg || (isDark(m.bg || c.accent) ? c.chalk : c.page)
+    };
+
+    b.shortName = rec.shortName || rec.name;
+
+    /* Fonts by name only. An unknown name — or anything that looks like a URL,
+       which is the failure this guard exists for — falls back to the system
+       stack and says so, rather than shipping a page that waits on a CDN. */
+    var fr = rec.fonts || {};
+    b.fonts = {
+      body: stack(fr.body, 'system'),
+      mono: stack(fr.mono, 'mono'),
+      display: stack(fr.display, 'condensed')
+    };
+    return b;
+  }
+
+  /* The most legible of the brand's own surfaces against a filled accent. */
+  function accentInk(c, printing) {
+    if (printing) return '#FFFFFF';
+    var best = c.page, bestR = 0;
+    [c.page, c.deep, c.chalk, c.board].forEach(function (cand) {
+      var r = contrast(cand, c.accent);
+      if (r > bestR) { bestR = r; best = cand; }
+    });
+    return best;
+  }
+
+  function stack(name, fallback) {
+    if (!name) return FONT_STACKS[fallback];
+    if (FONT_STACKS[name]) return FONT_STACKS[name];
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('brand: unknown font stack "' + name + '" — no webfonts are allowed, using ' + fallback);
+    }
+    return FONT_STACKS[fallback];
+  }
+
+  /* ---------- the field palette ----------
+     Same shape designer.html's PAL_SCREEN/PAL_PRINT already have, including the
+     legacy key names (gold, deep), so a renderer written against those keeps
+     working with no edit: pal() becomes Brand.palette(current, printing). */
+  function palette(rec, printing) {
+    var b = rec && rec.field ? rec : normalize(rec || { id: 'default' });
+    var f = printing ? PRINT : b.field;
+    return {
+      grass: f.grass, chalk: f.chalk, line: f.line, plate: f.plate, hot: f.hot,
+      gold: f.line,   // legacy name: the accent that draws routes and circles
+      deep: f.plate,  // legacy name: the chip backdrop
+      gridOp: f.gridOp, hashOp: f.hashOp, sideOp: f.sideOp, themOp: f.themOp,
+      chipOp: f.chipOp, losChipOp: f.losChipOp, leadOp: f.leadOp, aimOp: f.aimOp,
+      circleFill: f.circleFill, routeFill: f.routeFill, stroke: f.stroke,
+      printing: !!printing
+    };
+  }
+
+  /* ---------- the CSS custom properties ----------
+     The whole point of the layer: everything the chrome needs is a var, so a
+     tenant changes by data and no stylesheet is touched. Returns the map it
+     set, which is what a test asserts against. */
+  function vars(rec, printing) {
+    var b = rec && rec.colors ? rec : normalize(rec);
+    var P = palette(b, printing);
+    var c = b.colors, ink, page;
+
+    if (printing) {
+      page = '#FFFFFF'; ink = '#000000';
+      c = { page: page, board: page, deep: page, chalk: ink, soft: ink, accent: ink, warm: ink };
+    }
+    /* Dark keeps designer.html's own rgba(237,235,224,.25) so Lehi is
+       byte-identical to today. A light theme needs more: the same alpha over a
+       white button collapsed to 1.01:1, which is a border nobody can see. */
+    var dark = !printing && b.scheme === 'dark';
+    var hair = rgba(c.chalk, dark ? 0.25 : 0.45);
+
+    var v = {
+      '--page': c.page, '--board': c.board, '--deep': c.deep,
+      '--chalk': c.chalk, '--soft': c.soft,
+      '--accent': c.accent, '--warm': c.warm,
+      /* designer.html's stylesheet says var(--gold); keeping the alias means an
+         existing page themes with no CSS edit at all. */
+      '--gold': c.accent,
+      '--hairline': hair,
+      '--hairline-strong': rgba(c.chalk, dark ? 0.4 : 0.6),
+      /* Text on an accent-filled button. "Dark accent means light text" is the
+         obvious rule and it is wrong: on a light theme with a crimson accent it
+         picks the dark ink and lands at 1.85:1. Pick whichever surface the brand
+         already owns actually reads on it. */
+      '--accent-ink': accentInk(c, printing),
+      '--field-grass': P.grass, '--field-chalk': P.chalk, '--field-line': P.line,
+      '--field-plate': P.plate, '--field-hot': P.hot,
+      '--field-circle-fill': P.circleFill, '--field-route-fill': P.routeFill,
+      '--field-stroke': String(P.stroke),
+      '--body': b.fonts.body, '--mono': b.fonts.mono, '--display': b.fonts.display
+    };
+    return v;
+  }
+
+  /* Apply to a root element (default :root). Also sets color-scheme so form
+     controls and scrollbars follow the theme, and data-brand so a page can
+     hang a rule off the tenant if it ever has to. */
+  function apply(rec, opts) {
+    opts = opts || {};
+    var b = rec && rec.colors ? rec : normalize(rec);
+    var root = opts.root || (typeof document !== 'undefined' ? document.documentElement : null);
+    if (!root) return null;
+    var v = vars(b, opts.print);
+    Object.keys(v).forEach(function (k) { root.style.setProperty(k, v[k]); });
+    root.style.setProperty('color-scheme', opts.print ? 'light' : b.scheme);
+    if (root.setAttribute) {
+      root.setAttribute('data-brand', b.id);
+      root.setAttribute('data-scheme', opts.print ? 'print' : b.scheme);
+    }
+    return v;
+  }
+
+  /* ---------- wordmark and mark ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  /* "Lehi Special Teams" with "Special Teams" in the club colour. The accent
+     run is matched literally and only the first occurrence is wrapped. */
+  function wordmarkHTML(rec) {
+    var b = rec && rec.wordmark ? rec : normalize(rec);
+    var t = b.wordmark.text || b.name, a = b.wordmark.accent;
+    if (!a) return esc(t);
+    var i = t.indexOf(a);
+    if (i < 0) return esc(t);
+    return esc(t.slice(0, i)) + '<span class="wm-accent">' + esc(a) + '</span>' + esc(t.slice(i + a.length));
+  }
+
+  /* A club mark with no image file behind it: initials in a shape, drawn from
+     the brand's own colours. Nothing to host, nothing to load offline. */
+  function markSVG(rec, size, printing) {
+    var b = rec && rec.mark ? rec : normalize(rec);
+    var s = size || 28, m = b.mark, d;
+    /* On paper the club mark is an outline, not a block of club colour. Same
+       reason the field goes black on white: toner. */
+    if (printing) m = { initials: m.initials, shape: m.shape, bg: '#FFFFFF', fg: '#000000' };
+    if (m.shape === 'disc') d = 'M14,1 A13,13 0 1,1 13.99,1 Z';
+    else if (m.shape === 'chevron') d = 'M2,3 H26 L14,27 Z';
+    else d = 'M3,3 H25 V14 C25,21 20,25 14,27 C8,25 3,21 3,14 Z';
+    var fsz = m.initials.length > 2 ? 9 : 11;
+    return '<svg viewBox="0 0 28 28" width="' + s + '" height="' + s + '" role="img" aria-label="' +
+      esc(b.shortName || b.name) + '">' +
+      '<path d="' + d + '" fill="' + esc(m.bg) + '"' +
+      (printing ? ' stroke="#000000" stroke-width="1.5"' : '') + '/>' +
+      '<text x="14" y="' + (m.shape === 'chevron' ? 15 : 18) + '" text-anchor="middle" fill="' + esc(m.fg) +
+      '" font-family="' + esc(FONT_STACKS.mono) + '" font-size="' + fsz + '" font-weight="700"' +
+      ' letter-spacing="0.5">' + esc(m.initials) + '</text></svg>';
+  }
+
+  /* ---------- contrast audit ----------
+     Every check names the real pair of colours a human actually looks at, with
+     the translucent layers composited first. Tiers:
+       text     4.5  something a coach or a boy has to read
+       graphic  3.0  a line or a ring that has to be seen, not read
+       faint    1.6  deliberately recessive: the yard grid, the sidelines,
+                     the other team's marks. They must be visible without
+                     competing with the eleven men who matter. */
+  var MIN = { text: 4.5, graphic: 3.0, faint: 1.6 };
+
+  function audit(rec, printing) {
+    var b = rec && rec.colors ? rec : normalize(rec);
+    var f = printing ? PRINT : b.field, c = b.colors;
+    if (printing) c = { page: '#FFFFFF', board: '#FFFFFF', deep: '#FFFFFF', chalk: '#000000', soft: '#000000', accent: '#000000', warm: '#000000' };
+
+    var circle = over(f.circleFill, f.grass);
+    var chip = over(f.plate, f.grass, f.chipOp);
+    var losChip = over(f.plate, f.grass, f.losChipOp);
+    /* Read the button ink back out of vars(), so the audit can never pass a
+       colour the page does not actually paint. */
+    var ink = vars(b, printing)['--accent-ink'];
+
+    var checks = [
+      ck('label-on-circle', 'position label inside a player circle', f.line, circle, 'text'),
+      ck('name-on-chip', 'player name on its chip', f.chalk, chip, 'text'),
+      ck('chalk-on-grass', 'field ink on the grass', f.chalk, f.grass, 'text'),
+      ck('los-label', 'line-of-scrimmage label on its chip', f.line, losChip, 'text'),
+      ck('route-on-grass', 'a route line on the grass', f.line, f.grass, 'graphic'),
+      ck('collision-on-grass', 'collision ring / X-man badge', f.hot, f.grass, 'graphic'),
+      ck('circle-edge', 'the circle stroke against the grass', f.line, f.grass, 'graphic'),
+      ck('them-on-grass', 'the other team\'s marks', over(f.chalk, f.grass, f.themOp), f.grass, 'faint'),
+      ck('sideline-on-grass', 'sideline', over(f.chalk, f.grass, f.sideOp), f.grass, 'faint'),
+      ck('ui-text', 'body text on the page', c.chalk, c.page, 'text'),
+      ck('ui-muted', 'hint and label text', c.soft, c.page, 'text'),
+      ck('ui-on-board', 'header text on the raised surface', c.chalk, c.board, 'text'),
+      ck('ui-accent', 'the club colour in the wordmark', c.accent, c.board, 'text'),
+      ck('ui-button', 'button text', c.chalk, c.deep, 'text'),
+      ck('ui-accent-button', 'text on an accent-filled button', ink, c.accent, 'text'),
+      ck('ui-border', 'a control\'s hairline against the control', over(vars(b, printing)['--hairline'], c.deep), c.deep, 'faint'),
+      ck('ui-warm', 'the second accent in the chrome', c.warm, c.page, 'graphic')
+    ];
+    var fails = checks.filter(function (x) { return !x.pass; });
+    return { id: b.id, print: !!printing, checks: checks, fails: fails, pass: fails.length === 0 };
+  }
+
+  function ck(id, what, fg, bg, tier) {
+    var r = contrast(fg, bg);
+    return {
+      id: id, what: what, tier: tier, min: MIN[tier],
+      fg: hex(fg), bg: hex(bg),
+      ratio: Math.round(r * 100) / 100, pass: r + 1e-9 >= MIN[tier]
+    };
+  }
+
+  /* Throws with the failing lines named. Use it in a test, not on a field. */
+  function assertContrast(rec) {
+    var out = [audit(rec, false), audit(rec, true)];
+    var bad = out.reduce(function (a, o) {
+      return a.concat(o.fails.map(function (x) {
+        return (o.print ? 'print ' : '') + x.id + ' ' + x.ratio + ':1 (needs ' + x.min + ')';
+      }));
+    }, []);
+    if (bad.length) throw new Error('brand ' + (rec.id || '?') + ' fails contrast: ' + bad.join('; '));
+    return true;
+  }
+
+  /* ---------- the registry ----------
+     No fetching in here on purpose (rule 4): the page decides where records
+     come from — an inlined <script type="application/json">, a fetch when one
+     is reachable, or a tenant row out of the database. */
+  var REG = {}, ORDER = [];
+  function register(recs) {
+    (Array.isArray(recs) ? recs : [recs]).forEach(function (r) {
+      var b = normalize(r);
+      if (!REG[b.id]) ORDER.push(b.id);
+      REG[b.id] = b;
+    });
+    return ORDER.map(function (id) { return REG[id]; });
+  }
+  function get(id) { return REG[id] || null; }
+  function all() { return ORDER.map(function (id) { return REG[id]; }); }
+
+  return {
+    FONT_STACKS: FONT_STACKS, PRINT: PRINT, MIN: MIN,
+    normalize: normalize, palette: palette, vars: vars, apply: apply,
+    wordmarkHTML: wordmarkHTML, markSVG: markSVG,
+    audit: audit, assertContrast: assertContrast, contrast: contrast,
+    luminance: luminance, over: over, mix: mix, rgba: rgba, hex: hex, parse: parse,
+    register: register, get: get, all: all
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = Brand;
+
+</script>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- data ---------- */
+function inlineJSON(id){ try{ return JSON.parse(document.getElementById(id).textContent||'{}'); }catch(e){ return {}; } }
+var BRANDS = Brand.register((inlineJSON('brand-data').brands)||[]);
+var FALLBACK = inlineJSON('play-fallback');
+var DATA = { plays: FALLBACK.plays||[], roster: FALLBACK.roster||[] };
+var NUM = {};
+
+var printing=false, showNames=true, PLAY=null, LOOKI=0;
+
+/* ---------- the play, in the shape the renderer wants ----------
+   special-teams-plays.json calls it lineOfScrimmage and puts the name on
+   `player`; a play may carry several looks. This is the only adapter. */
+function looksOf(raw){
+  if(raw.looks&&raw.looks.length)return raw.looks;
+  return [{name:'', how:raw.howItWorks||'', aim:raw.aim, routes:raw.routes||[]}];
+}
+function adapt(raw, li){
+  var L = looksOf(raw)[li] || looksOf(raw)[0];
+  return {
+    slug: raw.slug, name: raw.name,
+    los: raw.lineOfScrimmage, losLabel: raw.lineLabel||'',
+    players: raw.players.filter(function(p){return p.team!=='them';}).map(function(p){
+      return {id:p.id,label:p.label||'',name:p.player||'',x:p.x,y:p.y,xman:!!p.xman};
+    }),
+    routes: L.routes||[], aim: L.aim||null, how: L.how||raw.howItWorks||'', look: L.name||''
+  };
+}
+function nameOf(last){ var n=NUM[last]; return last + (n?' '+n:''); }
+
+/* ---------- the view ----------
+   Crop to what is actually on the field, the way the app does, so a cropped
+   punt does not sit in a sea of empty grass in a 3-across preview. */
+var VBW=PE.VBW, VBH=PE.VBH;
+function computeView(p, rects){
+  var xs=[], ys=[];
+  p.players.forEach(function(q){xs.push(q.x);ys.push(q.y);});
+  (p.routes||[]).forEach(function(r){(r.points||[]).forEach(function(t){xs.push(t.x);ys.push(t.y);});});
+  if(p.aim){xs.push(p.aim.x);ys.push(p.aim.y);}
+  ys.push(p.los);
+  (rects||[]).forEach(function(r){xs.push(r.x,r.x+r.w);ys.push(r.y,r.y+r.h);});
+  var x0=Math.min.apply(null,xs)-18, x1=Math.max.apply(null,xs)+18;
+  var y0=Math.min.apply(null,ys)-22, y1=Math.max.apply(null,ys)+24;
+  var w=x1-x0, h=y1-y0, c;
+  if(w<300){c=(x0+x1)/2;x0=c-150;w=300;}
+  if(h<250){c=(y0+y1)/2;y0=c-125;h=250;}
+  /* Cap the zoom, or a cluster kickoff blows up so far you lose where on the
+     field it is happening. */
+  var scale=Math.min(VBW/w, VBH/h);
+  if(scale>2.4){ var cx=x0+w/2, cy=y0+h/2; w=VBW/2.4; h=VBH/2.4; x0=cx-w/2; y0=cy-h/2; }
+  return {x:x0,y:y0,w:w,h:h};
+}
+
+/* Names must not sit on a circle, on another name, or on top of each other.
+   First offset that is clear wins; the renderer draws a leader line whenever a
+   name had to leave its default spot. */
+var SPOTS=[[0,20],[0,-26],[30,4],[-30,4],[0,34],[34,-18],[-34,-18],[0,-38]];
+function placeLabels(p){
+  var out={}, taken=[];
+  p.players.forEach(function(q){ taken.push({x:q.x-13,y:q.y-13,w:26,h:26}); });
+  p.players.forEach(function(q){
+    var txt=nameOf(q.name), w=Math.max(24, txt.length*5.4+8);
+    for(var i=0;i<SPOTS.length;i++){
+      var dx=SPOTS[i][0], dy=SPOTS[i][1];
+      var r={x:q.x+dx-w/2, y:q.y+dy, w:w, h:12};
+      var clash=taken.some(function(t){return PE.rectsOverlap(r,t);});
+      if(!clash||i===SPOTS.length-1){ taken.push(r); out[q.id]={dx:dx,dy:dy,w:w,text:txt,rect:r}; break; }
+    }
+  });
+  return out;
+}
+
+/* ---------- the field ----------
+   Every colour below is C.something, and C is Brand.palette(brand, printing).
+   There is no literal colour in this function, which is the entire point. */
+function E(tag,attrs){
+  var n=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(var k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+var MONO="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+
+function drawField(svg, p, C){
+  svg.innerHTML='';
+  var lay = showNames ? placeLabels(p) : {};
+  var rects = Object.keys(lay).map(function(k){return lay[k].rect;});
+  var V = computeView(p, rects);
+  svg.setAttribute('viewBox', V.x+' '+V.y+' '+V.w+' '+V.h);
+
+  svg.appendChild(E('rect',{x:V.x,y:V.y,width:V.w,height:V.h,fill:C.grass}));
+
+  var g=E('g',{}), y;
+  for(y=10;y<=VBH-6;y+=28) g.appendChild(E('line',{x1:14,x2:406,y1:y,y2:y,stroke:C.chalk,'stroke-opacity':C.gridOp}));
+  [140,280].forEach(function(hx){
+    for(y=10;y<=VBH-6;y+=28) g.appendChild(E('line',{x1:hx-3,x2:hx+3,y1:y,y2:y,stroke:C.chalk,'stroke-opacity':C.hashOp}));
+  });
+  [14,406].forEach(function(sx){
+    g.appendChild(E('line',{x1:sx,x2:sx,y1:0,y2:VBH,stroke:C.chalk,'stroke-opacity':C.sideOp,'stroke-width':2}));
+  });
+  svg.appendChild(g);
+
+  // line of scrimmage, and its chip
+  svg.appendChild(E('line',{x1:V.x,x2:V.x+V.w,y1:p.los,y2:p.los,stroke:C.line,
+    'stroke-width':1.8,'stroke-dasharray':'6 4'}));
+  if(p.losLabel){
+    /* Anchored at the left of the view and moved OFF the line rather than along
+       it: eleven men are standing on the line, so there is no horizontal gap to
+       slide into. Same offsets designer.html's losLabelRect() uses. */
+    var lw=p.losLabel.length*5.6+8, lx=V.x+6, ly=-6, offs=[-6,-25,20,36];
+    for(var i=0;i<offs.length;i++){
+      var rr={x:lx-3,y:p.los+offs[i]-8,w:lw,h:11};
+      var clash=p.players.some(function(q){return PE.rectsOverlap(rr,{x:q.x-15,y:q.y-15,w:30,h:30});});
+      if(!clash){ ly=offs[i]; break; }
+    }
+    svg.appendChild(E('rect',{x:lx-3,y:p.los+ly-8,width:lw,height:11,rx:2,fill:C.plate,'fill-opacity':C.losChipOp}));
+    var lt=E('text',{x:lx+1,y:p.los+ly+0.5,fill:C.line,'font-family':MONO,'font-size':8.5});
+    lt.textContent=p.losLabel; svg.appendChild(lt);
+  }
+
+  // routes, drawn as the curve the engine draws and walks
+  var byId={}; p.players.forEach(function(q){byId[q.id]=q;});
+  (p.routes||[]).forEach(function(r){
+    var o=byId[r.playerId]; if(!o||!r.points||!r.points.length)return;
+    var pts=[{x:o.x,y:o.y}].concat(r.points);
+    svg.appendChild(E('path',{d:PE.smoothD(pts),fill:'none',stroke:C.line,'stroke-width':C.stroke,
+      'stroke-linecap':'round','stroke-linejoin':'round'}));
+    var sm=PE.smoothPts(pts), last=r.points[r.points.length-1];
+    var prev=sm.length>2?sm[sm.length-2]:pts[pts.length-2];
+    var ang=Math.atan2(last.y-prev.y,last.x-prev.x);
+    [2.8,-2.8].forEach(function(s){
+      svg.appendChild(E('line',{x1:last.x,y1:last.y,
+        x2:last.x-9*Math.cos(ang)+s*Math.sin(ang), y2:last.y-9*Math.sin(ang)-s*Math.cos(ang),
+        stroke:C.line,'stroke-width':C.stroke,'stroke-linecap':'round'}));
+    });
+  });
+
+  // the other team, mirrored out of the play this one faces
+  if(p.them){
+    p.them.men.forEach(function(m){
+      [[-7,-7,7,7],[-7,7,7,-7]].forEach(function(d){
+        svg.appendChild(E('line',{x1:m.x+d[0],y1:m.y+d[1],x2:m.x+d[2],y2:m.y+d[3],
+          stroke:C.chalk,'stroke-opacity':C.themOp,'stroke-width':2.2,'stroke-linecap':'round'}));
+      });
+    });
+  }
+
+  // the target mark: where the ball is meant to end up
+  if(p.aim) drawAim(svg,p,C,V);
+
+  // the eleven
+  p.players.forEach(function(q){
+    svg.appendChild(E('circle',{cx:q.x,cy:q.y,r:12,fill:C.circleFill,stroke:C.line,'stroke-width':C.stroke}));
+    if(q.label){
+      var t=E('text',{x:q.x,y:q.y+3.4,'text-anchor':'middle',fill:C.line,'font-family':MONO,'font-size':9});
+      t.textContent=q.label; svg.appendChild(t);
+    }
+    var L=lay[q.id];
+    if(L&&q.name){
+      var lx=q.x+L.dx, ly=q.y+L.dy;
+      if(Math.abs(L.dx)>4||L.dy<0||L.dy>20){
+        svg.appendChild(E('line',{x1:q.x,y1:q.y+(L.dy<0?-12:12),x2:lx,y2:L.dy<0?ly+12:ly,
+          stroke:C.chalk,'stroke-opacity':C.leadOp}));
+      }
+      svg.appendChild(E('rect',{x:lx-L.w/2,y:ly,width:L.w,height:12,rx:2,fill:C.plate,'fill-opacity':C.chipOp}));
+      var n=E('text',{x:lx,y:ly+9,'text-anchor':'middle',fill:C.chalk,'font-family':MONO,
+        'font-size':9.5,'letter-spacing':.2});
+      n.textContent=L.text; svg.appendChild(n);
+    }
+  });
+}
+
+function drawAim(svg,p,C,V){
+  var a=p.aim, from=p.players.filter(function(q){return q.label===a.from;})[0];
+  if(from){
+    var mx=(from.x+a.x)/2 + (a.x-from.x)*0.1, my=(from.y+a.y)/2 - 34;
+    svg.appendChild(E('path',{d:'M'+from.x+','+from.y+' Q'+mx+','+my+' '+a.x+','+a.y,fill:'none',
+      stroke:C.line,'stroke-opacity':C.aimOp*.7,'stroke-width':1.3,'stroke-dasharray':'2 5'}));
+  }
+  svg.appendChild(E('circle',{cx:a.x,cy:a.y,r:8,fill:'none',stroke:C.hot,'stroke-opacity':C.aimOp,'stroke-width':1.6}));
+  [[-13,0,13,0],[0,-13,0,13]].forEach(function(d){
+    svg.appendChild(E('line',{x1:a.x+d[0],y1:a.y+d[1],x2:a.x+d[2],y2:a.y+d[3],
+      stroke:C.hot,'stroke-opacity':C.aimOp,'stroke-width':1.4}));
+  });
+  if(!a.label)return;
+  // Break the caption at the em dash and clamp it inside the view, or a long
+  // line runs off the side of a cropped field.
+  var lines=String(a.label).split(/\s*—\s*/), fs=8;
+  // a mono glyph is ~0.6em wide; underestimating it ran the caption off its chip
+  var w=Math.max.apply(null,lines.map(function(s){return s.length*fs*0.62+8;}));
+  var x=Math.max(V.x+3, Math.min(V.x+V.w-w-3, a.x-w/2));
+  var y=(a.y+16+lines.length*10 > V.y+V.h-3) ? a.y-16-lines.length*10 : a.y+14;
+  svg.appendChild(E('rect',{x:x,y:y,width:w,height:lines.length*10+2,rx:2,fill:C.plate,'fill-opacity':C.chipOp}));
+  lines.forEach(function(s,i){
+    var t=E('text',{x:x+4,y:y+9+i*10,fill:C.hot,'font-family':MONO,'font-size':fs,'letter-spacing':.3});
+    t.textContent=s; svg.appendChild(t);
+  });
+}
+
+/* ---------- the panels ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var grid=document.getElementById('grid'), PANELS=[];
+BRANDS.forEach(function(b){
+  var el=document.createElement('section');
+  el.className='panel'; el.setAttribute('data-brand',b.id);
+  el.innerHTML=
+    '<div class="phdr"><span class="mark"></span><h2 class="wm">'+Brand.wordmarkHTML(b)+'</h2>'+
+      '<span class="dot">saved</span></div>'+
+    '<div class="pbar"><select><option>'+esc(b.shortName)+' — special teams</option></select>'+
+      '<button class="btn">Move</button><button class="btn accent">Run it</button></div>'+
+    '<div class="fieldbox"><svg class="field" role="img"></svg></div>'+
+    '<p class="how"><b>'+esc(b.name)+'</b> — <span class="hownote"></span></p>'+
+    '<table class="audit"><thead><tr><th>contrast check</th><th>fg on bg</th><th>ratio</th><th>min</th></tr></thead><tbody></tbody></table>';
+  grid.appendChild(el);
+  PANELS.push({brand:b, el:el, svg:el.querySelector('svg.field'), mark:el.querySelector('.mark'),
+               note:el.querySelector('.hownote'), body:el.querySelector('.audit tbody')});
+});
+
+function paintAudit(P){
+  var a=Brand.audit(P.brand, printing);
+  P.body.innerHTML=a.checks.map(function(c){
+    return '<tr class="'+(c.pass?'':'bad')+'"><td>'+esc(c.id)+'</td>'+
+      '<td class="n">'+esc(c.fg)+' / '+esc(c.bg)+'</td>'+
+      '<td class="n '+(c.pass?'ok':'no')+'">'+c.ratio.toFixed(2)+'</td>'+
+      '<td class="n">'+c.min+'</td></tr>';
+  }).join('');
+  P.el.setAttribute('data-audit', a.pass?'pass':'FAIL');
+}
+
+function render(){
+  PANELS.forEach(function(P){
+    Brand.apply(P.brand,{root:P.el, print:printing});
+    P.mark.innerHTML=Brand.markSVG(P.brand,26,printing);
+    drawField(P.svg, PLAY, Brand.palette(P.brand, printing));
+    P.note.textContent = PLAY.name + (PLAY.look?' — '+PLAY.look:'');
+    paintAudit(P);
+  });
+  // the page chrome itself is a themed surface: the first brand owns :root
+  Brand.apply(BRANDS[0],{print:printing});
+}
+
+/* ---------- controls ---------- */
+var playSel=document.getElementById('playSel'), lookSel=document.getElementById('lookSel');
+function fillPlays(){
+  playSel.innerHTML=DATA.plays.map(function(p,i){return '<option value="'+i+'">'+esc(p.name)+'</option>';}).join('');
+}
+function fillLooks(raw){
+  var ls=looksOf(raw);
+  lookSel.innerHTML=ls.map(function(l,i){return '<option value="'+i+'">'+esc(l.name||'Only look')+'</option>';}).join('');
+  lookSel.disabled = ls.length<2;
+}
+function choose(i){
+  var raw=DATA.plays[i]; if(!raw)return;
+  LOOKI=Math.min(LOOKI, looksOf(raw).length-1);
+  PLAY=adapt(raw,LOOKI);
+  // the other team is one of his own plays, mirrored across the line
+  var src=DATA.plays.filter(function(q){return q.slug===raw.mirrorOf;})[0];
+  PLAY.them = src ? PE.mirror({ours:PLAY.players,los:PLAY.los},
+    {ours:adapt(src,0).players, los:src.lineOfScrimmage, routes:[]}) : null;
+  fillLooks(raw);
+  render();
+}
+playSel.addEventListener('change',function(){LOOKI=0;choose(+playSel.value);});
+lookSel.addEventListener('change',function(){LOOKI=+lookSel.value;choose(+playSel.value);});
+
+var printBtn=document.getElementById('printBtn');
+printBtn.addEventListener('click',function(){
+  printing=!printing; printBtn.setAttribute('aria-pressed',printing?'true':'false'); render();
+});
+var namesBtn=document.getElementById('namesBtn');
+namesBtn.addEventListener('click',function(){
+  showNames=!showNames; namesBtn.setAttribute('aria-pressed',showNames?'true':'false'); render();
+});
+/* Real printing swaps the palette and redraws, exactly as designer.html does —
+   the diagram is drawn with inline colour attributes, which CSS cannot restyle. */
+function setPrint(on){ printing=on; printBtn.setAttribute('aria-pressed',on?'true':'false'); render(); }
+window.addEventListener('beforeprint',function(){setPrint(true);});
+window.addEventListener('afterprint',function(){setPrint(false);});
+if(window.matchMedia){
+  var mq=window.matchMedia('print');
+  (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(e){setPrint(e.matches);});
+}
+
+/* ---------- boot ----------
+   Inlined data draws immediately; the sibling file wins when it is reachable,
+   which is what gives the picker every unit. */
+function seed(src, where){
+  if(!src||!src.plays||!src.plays.length)return false;
+  DATA=src; NUM={};
+  (DATA.roster||[]).forEach(function(r){NUM[r.last]=r.number;});
+  fillPlays(); choose(0);
+  document.getElementById('srcNote').textContent=where;
+  return true;
+}
+seed(FALLBACK,'inlined play');
+try{
+  fetch('../../special-teams-plays.json').then(function(r){return r.ok?r.json():null;})
+    .then(function(j){ if(j) seed(j,'special-teams-plays.json'); }).catch(function(){});
+}catch(e){}
+
+window.PREVIEW={ brands:BRANDS, panels:PANELS, setPrint:setPrint,
+                 audit:function(id){return Brand.audit(Brand.get(id), printing);} };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+{
+  "schema": "play-designer/brands@1",
+  "note": "Tenant brand records. lehi is the reference: its colours are taken verbatim from designer.html's :root and PAL_SCREEN, so it is the proof that theming cost the existing look nothing. The other two exist to prove range — one light, one loud. Contrast is audited by Brand.audit(); see product/test/test-brand.js.",
+  "brands": [
+    {
+      "id": "lehi",
+      "name": "Lehi Youth Football",
+      "shortName": "Lehi",
+      "scheme": "dark",
+      "colors": {
+        "page": "#13251F",
+        "board": "#1D3A31",
+        "deep": "#0D1B16",
+        "chalk": "#EDEBE0",
+        "soft": "#9AA69C",
+        "accent": "#E3B547",
+        "warm": "#E58A6B"
+      },
+      "field": {
+        "grass": "#1D3A31",
+        "chalk": "#EDEBE0",
+        "line": "#E3B547",
+        "plate": "#13251F",
+        "hot": "#E58A6B",
+        "circleFill": "rgba(19,37,31,.55)",
+        "routeFill": "rgba(227,181,71,.28)",
+        "stroke": 2,
+        "gridOp": 0.09,
+        "hashOp": 0.2,
+        "sideOp": 0.3,
+        "themOp": 0.42,
+        "chipOp": 0.82,
+        "losChipOp": 0.72,
+        "leadOp": 0.42,
+        "aimOp": 0.85
+      },
+      "wordmark": { "text": "Play Designer", "accent": "Designer" },
+      "mark": { "initials": "LHI", "shape": "shield" },
+      "fonts": { "body": "system", "mono": "mono", "display": "condensed" }
+    },
+
+    {
+      "id": "willow-creek",
+      "name": "Willow Creek Junior Football",
+      "shortName": "Willow Creek",
+      "scheme": "light",
+      "colors": {
+        "page": "#F3F1E9",
+        "board": "#FFFFFF",
+        "deep": "#FFFFFF",
+        "chalk": "#17211C",
+        "soft": "#4E5A53",
+        "accent": "#8E1B2E",
+        "warm": "#0F5C74"
+      },
+      "field": {
+        "grass": "#E7EEE2",
+        "chalk": "#1B2A22",
+        "line": "#8E1B2E",
+        "plate": "#FFFFFF",
+        "hot": "#0F5C74",
+        "circleFill": "rgba(255,255,255,.82)",
+        "routeFill": "rgba(142,27,46,.16)",
+        "stroke": 2,
+        "gridOp": 0.16,
+        "hashOp": 0.3,
+        "sideOp": 0.45,
+        "themOp": 0.5,
+        "chipOp": 0.92,
+        "losChipOp": 0.88,
+        "leadOp": 0.5,
+        "aimOp": 0.9
+      },
+      "wordmark": { "text": "Willow Creek Football", "accent": "Football" },
+      "mark": { "initials": "WC", "shape": "disc" },
+      "fonts": { "body": "system", "mono": "mono", "display": "slab" }
+    },
+
+    {
+      "id": "ridgeline",
+      "name": "Ridgeline Raptors",
+      "shortName": "Ridgeline",
+      "scheme": "dark",
+      "colors": {
+        "page": "#0C0716",
+        "board": "#241548",
+        "deep": "#150C2A",
+        "chalk": "#FFFFFF",
+        "soft": "#BFB2E6",
+        "accent": "#D8FF3E",
+        "warm": "#FF4FA3"
+      },
+      "field": {
+        "grass": "#241548",
+        "chalk": "#FFFFFF",
+        "line": "#D8FF3E",
+        "plate": "#0C0716",
+        "hot": "#FF4FA3",
+        "circleFill": "rgba(12,7,22,.62)",
+        "routeFill": "rgba(216,255,62,.3)",
+        "stroke": 2.2,
+        "gridOp": 0.12,
+        "hashOp": 0.24,
+        "sideOp": 0.38,
+        "themOp": 0.46,
+        "chipOp": 0.86,
+        "losChipOp": 0.78,
+        "leadOp": 0.45,
+        "aimOp": 0.9
+      },
+      "wordmark": { "text": "Ridgeline Raptors", "accent": "Raptors" },
+      "mark": { "initials": "RR", "shape": "chevron" },
+      "fonts": { "body": "grotesk", "mono": "mono", "display": "condensed" }
+    }
+  ]
+}
