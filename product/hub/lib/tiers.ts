@@ -14,13 +14,26 @@
  * names, seats, contract dates, and player_count as an INTEGER. Zero of 31
  * surnames appear anywhere in what it can call.
  *
+ * FOUR TIERS, NOT THREE. The player tier was missing from this file while
+ * existing in the database the whole time -- public.player_words, created in
+ * 0004_auth.sql, with app.player_team_id() re-checking the pair on EVERY
+ * statement. It is listed here because a map of the permission model that
+ * leaves out a quarter of it is worse than no map: it is a map somebody trusts.
+ *
+ * It is deliberately not an account, and that is the interesting part. A boy
+ * has no login, no session and no ticket to expire -- the word IS the
+ * credential, verified per statement, which is what makes rotation bite the
+ * moment a coach presses it rather than whenever a token would have run out.
+ * It is also why the boys' page is anonymous (pd_anon) and holds no EXECUTE on
+ * anything that writes.
+ *
  * One correction this file needed: "Invite a league admin" pointed at
  * `app.issue_invite`, which cannot do it — `app.may_staff_league()` is
  * admin-of-that-league, and a brand-new league has no admin to authorise
  * anything. The real function is `app.platform_invite_admin()`. A screen that
  * names the wrong function is the same lie as a button that does nothing.
  */
-export type Tier = "platform" | "league" | "team";
+export type Tier = "platform" | "league" | "team" | "player";
 
 export interface Action {
   label: string;
@@ -43,7 +56,7 @@ export const TIERS: Record<Tier, { name: string; who: string; blurb: string; act
     ],
   },
   league: {
-    name: "League admin",
+    name: "League hub",
     who: "the board",
     blurb: "One league. Its teams, its coaches, its rulebook, and the record of who changed what.",
     actions: [
@@ -55,7 +68,7 @@ export const TIERS: Record<Tier, { name: string; who: string; blurb: string; act
     ],
   },
   team: {
-    name: "Coach",
+    name: "Coach hub",
     who: "a head coach",
     blurb: "One team. His staff, his roster, his book — and the word the boys use to look at it.",
     actions: [
@@ -63,6 +76,17 @@ export const TIERS: Record<Tier, { name: string; who: string; blurb: string; act
       { label: "Manage the roster", detail: "Last name and jersey. No photos, no weights — deliberately.", fn: "players" },
       { label: "Rotate the boys' word", detail: "Read-only, one team, no account. Rotating it cuts the old one off on the next request.", fn: "app.rotate_player_word" },
       { label: "Open the playbook", detail: "The designer, the formations, and the engine that runs them.", fn: "plays" },
+    ],
+  },
+  player: {
+    name: "Player hub",
+    who: "a boy on the team",
+    blurb: "One team's playbook, read only, with no account at all. The word his coach gives him IS the credential \u2014 there is no login to forget and no session to expire.",
+    actions: [
+      { label: "Watch the play run", detail: "Every man walks his own route on one clock, and stops where his block or his tackle happens.", fn: "learn.html" },
+      { label: "Line me up", detail: "Where does this spot stand? Tap the field; it scores the tap in yards.", fn: "learn.html" },
+      { label: "My job", detail: "Multiple choice from the written jobs \u2014 then who he is across from, what that man will try, and how he beats him.", fn: "learn.html" },
+      { label: "Nothing else", detail: "No roster he can edit, no other team he can see, and no way to write anything. pd_anon holds no EXECUTE on any staff function.", fn: "app.player_team_id" },
     ],
   },
 };

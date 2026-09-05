@@ -9,6 +9,7 @@ import {
   Lock,
   Megaphone,
   ShieldCheck,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -52,9 +53,16 @@ const TIER_META: Record<
     boundary: "One team. An assistant cannot staff the team he is on.",
     grants: "grants the boys one read-only word",
   },
+  player: {
+    step: "04",
+    icon: Users,
+    scope: "One team's playbook, read only",
+    boundary: "No account, no session, no ticket to expire. The word is the credential and it is re-checked on every statement, which is why rotating it cuts the old one off immediately.",
+    grants: "grants nothing — this is where the chain ends",
+  },
 };
 
-const ORDER: Tier[] = ["platform", "league", "team"];
+const ORDER: Tier[] = ["platform", "league", "team", "player"];
 
 const ALL = ORDER.flatMap((t) => TIERS[t].actions);
 const TOTAL = ALL.length;
@@ -67,8 +75,11 @@ function Cascade({ label, down }: { label: string; down?: boolean }) {
     <div
       aria-hidden
       className={cn(
+        // Hidden below xl: the arrows read "left to right, one row". In the
+        // two-up layout the row wraps, so an arrow pointing right from the
+        // second card points at nothing.
         "flex items-center justify-center gap-2 py-1 text-muted-foreground",
-        !down && "lg:w-28 lg:flex-col lg:justify-start lg:py-0 lg:pt-28",
+        !down && "hidden xl:flex xl:w-28 xl:flex-col xl:justify-start xl:py-0 xl:pt-28",
       )}
     >
       <ArrowDown className={cn("h-4 w-4 shrink-0", !down && "lg:hidden")} />
@@ -265,6 +276,13 @@ export function MasterHub() {
               <Badge tone="plain" icon={ClipboardList}>
                 Team
               </Badge>
+              <ArrowRight
+                className="h-3.5 w-3.5 text-muted-foreground"
+                aria-hidden
+              />
+              <Badge tone="plain" icon={Users}>
+                Player
+              </Badge>
             </div>
 
             <div className="mt-5 flex items-center gap-3">
@@ -341,37 +359,23 @@ export function MasterHub() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-stretch lg:gap-2">
+          {/* FOUR CARDS, not three. The player tier was drawn as a dashed
+              "not a tier" box at the end of the cascade, and the reasoning was
+              sound -- a boy has no account, so he is not a seat. But the
+              database has held public.player_words since 0004_auth.sql, and a
+              coach asking "where is the player hub" is asking about something
+              that really exists. It is a tier that grants nothing, which is a
+              different statement from a tier that is not there. */}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-stretch xl:gap-2">
             <TierCard tier="platform" />
             <Cascade label={TIER_META.platform.grants} />
             <TierCard tier="league" />
             <Cascade label={TIER_META.league.grants} />
             <TierCard tier="team" />
+            <Cascade label={TIER_META.team.grants} />
+            <TierCard tier="player" />
           </div>
 
-          {/* the end of the cascade: not a tier, no account */}
-          <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-2">
-            <div className="hidden lg:block" />
-            <div className="hidden lg:block lg:w-28" />
-            <div className="hidden lg:block" />
-            <div className="hidden lg:block lg:w-28" />
-            <div className="flex flex-col">
-              <Cascade label={TIER_META.team.grants} down />
-              <div className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/30 p-4">
-                <Megaphone
-                  className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                  aria-hidden
-                />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">The boys</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    One word, read-only, one team, no account. The end of the
-                    cascade holds nothing it can pass on.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </section>
 
         <footer className="mt-12 border-t pt-6">

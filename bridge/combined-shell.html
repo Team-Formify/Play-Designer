@@ -230,6 +230,7 @@ button{font:inherit;cursor:pointer;}
     <a href="#" data-his>Library</a>
     <a href="/designer" id="toDesigner">Special teams</a>
     <a href="/learn" id="toLearn">For the boys</a>
+    <a href="/hub/" id="toHub">Hubs</a>
     <button type="button" class="signout">Staff · out</button>
   </nav>
 </header>
@@ -628,7 +629,7 @@ function assignments(play){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-var BUILD_TAG='9 \u00b7 5 Sep';
+var BUILD_TAG='10 \u00b7 5 Sep';
 var DATA=JSON.parse(document.getElementById('playbook').textContent||'{"plays":[]}');
 var BAKED_OURS=(DATA.plays||[]).filter(function(p){return p.side==='ours';});
 var HIS=(DATA.plays||[]).filter(function(p){return p.side==='his';});
