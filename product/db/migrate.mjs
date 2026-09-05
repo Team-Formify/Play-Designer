@@ -25,7 +25,48 @@ const DIR = join(dirname(fileURLToPath(import.meta.url)), "migrations");
 const arg = (f, d) => { const i = process.argv.indexOf(f); return i > -1 ? process.argv[i + 1] : d; };
 const DB = arg("--db", "pd_dev");
 const STATUS = process.argv.includes("--status");
-const PSQL = ["-h", "/tmp", "-p", "5433", "-U", "app", "-d", DB, "-tAq", "-v", "ON_ERROR_STOP=1"];
+
+/* WHERE TO CONNECT.
+ *
+ * This runner was nailed to the dev cluster -- `-h /tmp -p 5433 -U app` -- so
+ * it could not apply a single migration to a hosted database. Everything the
+ * product has been proved against lives in a container that disappears; the
+ * first time that mattered was the first time somebody tried to deploy.
+ *
+ *   --url postgresql://...        an explicit target
+ *   DATABASE_URL / HUB_DATABASE_URL   the same, from the environment
+ *   --db pd_dev                   the local cluster, unchanged, still default
+ *
+ * A URL is passed to psql as the connection string, so sslmode, channel
+ * binding and everything else Neon or Supabase puts in it travels with it and
+ * this file does not need to know about any of them.
+ */
+const URL_TARGET = arg("--url", process.env.DATABASE_URL || process.env.HUB_DATABASE_URL || null);
+const REMOTE = Boolean(URL_TARGET);
+const PSQL = REMOTE
+  ? [URL_TARGET, "-tAq", "-v", "ON_ERROR_STOP=1"]
+  : ["-h", "/tmp", "-p", "5433", "-U", "app", "-d", DB, "-tAq", "-v", "ON_ERROR_STOP=1"];
+
+/* A connection string is a credential. Print where we are going, never what
+ * gets us there -- this output ends up in terminals, CI logs and screenshots. */
+function targetLabel() {
+  if (!REMOTE) return "local cluster, database " + DB;
+  try {
+    const u = new URL(URL_TARGET.replace(/^postgres(ql)?:\/\//, "http://"));
+    return u.hostname + (u.pathname && u.pathname !== "/" ? u.pathname : "");
+  } catch { return "the URL given"; }
+}
+
+/* Applying migrations to somebody's live season is not the same act as
+ * rebuilding a scratch database, so it does not get the same default. --yes is
+ * how you say you meant it. --status is read-only and needs no such thing. */
+if (REMOTE && !STATUS && !process.argv.includes("--yes")) {
+  console.error("Target: " + targetLabel() + "  (remote)");
+  console.error("Refusing to apply migrations to a remote database without --yes.");
+  console.error("  node product/db/migrate.mjs --url <conn> --status     to look first");
+  console.error("  node product/db/migrate.mjs --url <conn> --yes        to apply");
+  process.exit(1);
+}
 // quiet:true swallows psql's own stderr. Only the ledger probe below uses it —
 // on a first run the ledger genuinely does not exist yet, and psql shouting
 // ERROR about it looked like a failure when it is the expected path.
@@ -193,4 +234,6 @@ commit;`);
   ran++;
 }
 if (drift) { console.error(`\n${drift} migration(s) edited after being applied. They are meant to be written once.`); process.exit(1); }
-console.log(STATUS ? `\n${ran} pending, ${applied.size} already applied.` : `\n${ran} applied, ${applied.size} were already there.`);
+console.log(STATUS
+  ? `\n${ran} pending, ${applied.size} already applied on ${targetLabel()}.`
+  : `\n${ran} applied, ${applied.size} were already there on ${targetLabel()}.`);

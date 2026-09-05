@@ -38,7 +38,11 @@ begin
   end if;
 end $$;
 
+-- Roles are cluster-wide, so on a cluster that already has them this re-grant
+-- is a no-op that shouts twice. The migration is still doing its job.
+set local client_min_messages = warning;
 grant pd_anon, pd_authenticated to pd_app;
+reset client_min_messages;
 
 -- Enough to reach the schemas, and nothing in them. Every table privilege and
 -- every function grant belongs to the two roles it switches into; this role
