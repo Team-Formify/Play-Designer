@@ -41,18 +41,59 @@ The engine and the play format are what they share.
 
 The distinction this table draws is the one that matters before a sale: code
 that loads is not code that works, and a security guard nobody attacked is a
-security guard nobody has tested. Run `node product/db/test.mjs` to reproduce
-the counts; it builds each database from `db/migrations/` and runs the suite.
+security guard nobody has tested. Run `node product/db/test.mjs` to reproduce the counts; it builds each database
+from `db/migrations/` and runs the suite, and it fails if a count moves — so a
+suite that silently shrinks is a red build rather than a quiet one.
+
+**1,052 tests, all passing.** Every suite has been mutation-tested: each guard
+broken on purpose, the red count recorded in that suite's header. No guard sits
+at zero.
 
 | Layer | Tests | State |
 |---|---|---|
 | `db/migrations/0002_schema.sql` + `0003_rls.sql` | **183** | Proven. 21 policies, `force row level security`, attacked from both leagues. |
 | `0004_auth.sql` — invite-only membership | **243** | Proven. `app.accept_invite()` takes no team parameter; tokens are 244-bit and stored only as SHA-256. |
 | `0005_platform.sql` — the vendor's own seat | **252** | Proven. The platform owner sees league size, seasons, seats and billing, and zero plays and zero children. |
-| `0006_brand.sql` — white-label | 169 of 183 | **Partly proven. 14 failing.** The palette resolver and the WCAG guard work; the failures are real and unfixed. |
+| `0006_brand.sql` — white-label | **187** | Proven. The database refuses a palette a human cannot read, and the refusal is whole-record, not clamped. |
 | `0007_consent.sql` — COPPA machinery | **187** | Proven, and see below. |
 | `api/stripe-signature.js` | 11 | Proven for what it is — signature verification only. There is no billing. |
 | `hub/` — the master hub | 0 | **Written, not proven.** It compiles and exports; nothing is wired to a URL and nothing is tested. |
+
+### The 14 brand failures were all in the tests
+
+Every one. The palette guard, the resolver and the fallback chain were correct
+throughout; six root causes in `test-brand.sql` produced fourteen red lines:
+
+- **Two tests were broken SQL** — a function result subscripted without
+  parentheses, and a subquery aliased into nonsense. They had never run.
+- **The check set grew from sixteen to seventeen** and three tests still named
+  the old list. One of them, `its worst check is them-on-grass`, asserted
+  `sideline-on-grass` in its own expectation — the title and the assertion had
+  disagreed with each other and with reality, which is what happens when a
+  check is added twice and nobody re-reads the line.
+- **A fixture colour stopped being a near miss.** `#8FA05A` measured 5.01:1
+  against the composited circle, comfortably over the 4.5 floor, so the palette
+  passed, the guard accepted it — and three tests were asserting a refusal that
+  could not happen. It then sat on the team for the rest of the run and took a
+  fourth test down with it.
+- **A hardcoded play count** of 4 against a seed holding 2, in the one section
+  whose job is "rebranding destroys nothing". Snapshotted now, so it asserts
+  the number did not go *down* rather than what the number is.
+- **One test demanded a leak.** It asked a coach of a different team to resolve
+  Lehi 8's brand and expected `lehi`. `app.team_brand()` is `SECURITY INVOKER`
+  on purpose; another test in the same file forbids exactly that. The two could
+  not both pass.
+- **The vacuity check did not reproduce its own leak.** It opened a permissive
+  policy on `teams` but not `leagues`, so the resolver still fell through to the
+  product default and the "leak" never happened.
+
+One claim in that file was simply false and is now recorded as such: a comment
+said the composited circle is "the check a naive text-on-background audit would
+miss". It is not, on a dark palette — the composite is *darker* than the grass,
+so for light foregrounds it raises the ratio and can only make a check easier.
+Searched exhaustively: no colour, light or dark, clears 4.5 against this grass
+and fails it against the circle. What the composite does is tested elsewhere,
+and passes.
 
 ### The consent suite paid for itself immediately
 

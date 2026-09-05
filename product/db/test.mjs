@@ -34,14 +34,18 @@ const SEEDS = {
 
 // What each suite is expected to report. Without this a suite that silently
 // shrank to three tests would print "all 3 tests passed" and exit 0, which is
-// the shape of a green build that tested nothing. brand is the one known-red
-// suite; its number is its CURRENT failure count, so a fifteenth failure is a
-// regression and a thirteenth is progress -- either way the runner says so.
+// the shape of a green build that tested nothing.
+//
+// brand carried `{ failing: 14 }` while those 14 were open. They are fixed, so
+// it carries a pass count like the rest. If a suite ever goes knowingly red
+// again, put its failure COUNT here rather than deleting the entry -- then a
+// fifteenth failure is a regression and a thirteenth is progress, and either
+// way the runner says so instead of staying quiet.
 const EXPECT = {
   isolation: { pass: 183 },
   auth:      { pass: 243 },
   platform:  { pass: 252 },
-  brand:     { failing: 14 },
+  brand:     { pass: 187 },
   consent:   { pass: 187 },
 };
 

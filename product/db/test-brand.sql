@@ -55,6 +55,32 @@
 --     checked here; whether a 12px label in that colour is actually readable at
 --     arm's length on a phone in July sun is a screenshot, not a query.
 
+-- MUTATION RUN. All 187 pass, and a suite of passes proves nothing on its own,
+-- so each guard was broken on purpose and the red count recorded:
+--
+--   brand_normalize drops the field block ............ 52 tests go red
+--   luminance always reads 1 (white) ................. 47
+--   the alpha composite is skipped ................... 37
+--   the audit's contrast maths always reads 21:1 ..... 31
+--   the reading floor drops from 4.5 to 1 ............ 24
+--   anybody may set any team's brand ................. 21
+--   a permissive SELECT policy on teams .............. 12
+--   team_brand stops falling back to the league ...... 11
+--   the readable guard accepts anything ..............  5
+--   webfont URLs are accepted ........................  5
+--   drop the contrast guard trigger ..................  2
+--
+-- Nothing sits at zero. Two notes from doing it, because both cost time:
+--
+--   * app.brand_contrast() is overloaded. Mutating the (text, text) form kills
+--     only 2, because the audit calls the (double precision[], double
+--     precision[]) form internally. Mutating THAT one kills 31. A mutation run
+--     that picks the wrong overload reports a suite as toothless when it is not.
+--   * Section 11 drops the readable trigger deliberately. It uses `drop trigger
+--     if exists` so that a mutation which already dropped it produces a red
+--     count rather than aborting the whole file -- an aborted suite counts zero
+--     failures and reads exactly like a guard nobody needed.
+
 \set ON_ERROR_STOP on
 \timing off
 \pset pager off
@@ -194,6 +220,38 @@ end $fn$;
 create table t.state (k text primary key, v text);
 grant select, insert, update, delete on t.state to public;
 
+-- Snapshot a value now, assert it is the same later. The other suites carry
+-- these; this one did not, and a test that wanted "the count did not change"
+-- had to hardcode a literal instead -- which then went stale the moment the
+-- seed did, and stayed red.
+create function t.snap(p_key text, p_sql text) returns void
+language plpgsql as $fn$
+declare got text;
+begin
+  execute p_sql into got;
+  insert into t.state (k, v) values (p_key, got)
+    on conflict (k) do update set v = excluded.v;
+exception when others then
+  delete from t.state where k = p_key;
+  perform t.note('SNAPSHOT ' || p_key, false, format('ERROR %s: %s', sqlstate, left(sqlerrm, 100)));
+end $fn$;
+
+create function t.unchanged(p_name text, p_key text, p_sql text) returns void
+language plpgsql as $fn$
+declare got text; was text;
+begin
+  select v into was from t.state where k = p_key;
+  if not exists (select 1 from t.state where k = p_key) then
+    perform t.note(p_name, false, format('NO SNAPSHOT %s was taken -- broken test', p_key));
+    return;
+  end if;
+  execute p_sql into got;
+  perform t.note(p_name, got is not distinct from was,
+    format('was %s, now %s', coalesce(was,'NULL'), coalesce(got,'NULL')));
+exception when others then
+  perform t.note(p_name, false, format('ERROR %s: %s', sqlstate, left(sqlerrm, 100)));
+end $fn$;
+
 create function t.be(p_user uuid, p_email text default null) returns void
 language plpgsql as $fn$
 begin
@@ -302,8 +360,22 @@ $fn$;
 -- Legible everywhere except the one place that matters most: the position
 -- label inside the player circle. Nothing else fails. If the audit only checked
 -- "text on background" and not the composited circle fill, this would pass.
+-- ONE CHECK AWAY. Everything legible except the position label inside the
+-- player circle, which is measured against the circle's COMPOSITED fill rather
+-- than the raw grass.
+--
+-- This was #8FA05A, and it stopped being a near miss: against the composited
+-- circle it is 5.01:1, comfortably over the 4.5 floor, so the palette passed
+-- all seventeen, the guard accepted it, and three tests here were asserting a
+-- refusal that could not happen. Worse, the accepted palette then sat on the
+-- team for the rest of the run and took a fourth test down with it -- the one
+-- checking this file's hand copy of the reference palette against the seed's.
+--
+-- #829650 fails label-on-circle at 4.39 and clears everything else: route and
+-- circle-edge at 3.86 against their 3.0 floor, los-label at 4.58. The margins
+-- are thin because they have to be -- see the note at the refusal tests.
 create function t.brand_label_only() returns jsonb language sql immutable as $fn$
-  select jsonb_set(t.brand_lehi(), '{field,line}', '"#8FA05A"')
+  select jsonb_set(t.brand_lehi(), '{field,line}', '"#829650"')
 $fn$;
 
 -- A font that is a URL. brand.js warns and falls back; the column refuses.
@@ -371,7 +443,7 @@ select t.val('a colour against itself is 1:1',
 -- The parser takes every form brand.js takes.
 select t.val('short hex expands',       $q$select array_to_string(app.brand_rgb('#abc'),',')$q$, '170,187,204,1');
 select t.val('eight-digit hex carries its alpha',
-  $q$select round(app.brand_rgb('#13251F8C')[4]::numeric,3)::text$q$, '0.549');
+  $q$select round((app.brand_rgb('#13251F8C'))[4]::numeric,3)::text$q$, '0.549');
 select t.val('rgba() with a bare decimal',
   $q$select array_to_string(app.brand_rgb('rgba(19,37,31,.55)'),',')$q$, '19,37,31,0.55');
 select t.val('rgb() with the CSS4 slash',
@@ -398,7 +470,7 @@ select t.val('the audit runs seventeen checks',
   $q$select count(*)::text from app.brand_audit(t.brand_lehi(), false)$q$, '17');
 select t.val('and they are the same seventeen brand.js has',
   $q$select string_agg(check_id, ',' order by check_id) from app.brand_audit(t.brand_lehi(), false)$q$,
-  'chalk-on-grass,circle-edge,collision-on-grass,label-on-circle,los-label,name-on-chip,route-on-grass,sideline-on-grass,them-on-grass,ui-accent,ui-accent-button,ui-border,ui-button,ui-muted,ui-text,ui-warm');
+  'chalk-on-grass,circle-edge,collision-on-grass,label-on-circle,los-label,name-on-chip,route-on-grass,sideline-on-grass,them-on-grass,ui-accent,ui-accent-button,ui-border,ui-button,ui-muted,ui-on-board,ui-text,ui-warm');
 
 -- Spot values against node, including the two composited ones.
 select t.val('lehi chalk-on-grass is 10.32:1',
@@ -513,6 +585,10 @@ reset role;
 -- 3. A head coach brands HIS team -- and only his
 -- ===========================================================================
 select set_config('t.sect', '3 head coach', false);
+-- Taken before anything in this section touches a brand, so every later
+-- "removed no play" is measured against the real starting number.
+select t.snap('plays_lehi8',
+  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$);
 \echo '=== 3. A head coach brands his own team and no other ==='
 set role pd_authenticated;
 select t.be('d0000000-0000-4000-8000-000000000002', 'steve@example.com');
@@ -545,8 +621,12 @@ select t.val('clearing his brand returns NULL',
   $q$select coalesce(app.set_team_brand('c0000000-0000-4000-8000-000000000001', null)::text, 'NULL')$q$, 'NULL');
 select t.val('and the team falls back to the product default',
   $q$select app.team_brand('c0000000-0000-4000-8000-000000000001')->>'id'$q$, 'product');
-select t.val('clearing a brand removed no play',
-  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$, '4');
+-- Snapshotted rather than hardcoded. This asserted '4' against a seed that
+-- holds 2, so it had been red since the seed changed -- and the thing it is
+-- actually protecting is "the number did not go DOWN", which a literal cannot
+-- express and a snapshot can.
+select t.unchanged('clearing a brand removed no play', 'plays_lehi8',
+  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$);
 select t.sets('and he can put the reference palette back',
   $q$select app.set_team_brand('c0000000-0000-4000-8000-000000000001', t.brand_lehi())$q$, 'lehi');
 
@@ -556,8 +636,24 @@ select t.sets('the OTHER head coach brands HIS team',
   $q$select app.set_team_brand('c0000000-0000-4000-8000-000000000002', t.brand_ridgeline())$q$, 'ridgeline');
 select t.raises('and cannot touch the first one',
   $q$select app.set_team_brand('c0000000-0000-4000-8000-000000000001', t.brand_ridgeline())$q$, '42501');
-select t.val('the first team''s brand did not move',
-  $q$select app.team_brand('c0000000-0000-4000-8000-000000000001')->>'id'$q$, 'lehi');
+-- This asked Kaye -- head coach of a DIFFERENT team -- to resolve Lehi 8's
+-- brand, and demanded the answer 'lehi'. app.team_brand() is SECURITY INVOKER
+-- on purpose, so a coach who is not on that team gets the product default and
+-- cannot even learn that the team has a brand at all. The test was demanding
+-- the leak that test "a coach cannot resolve the brand of a team he is not on"
+-- exists to forbid; the two could not both pass.
+--
+-- What it meant to check is that his refused write changed nothing, so that is
+-- what it checks now: nothing from HIS seat, and the row itself from the
+-- owner's.
+select t.val('and from his seat Lehi 8 still resolves to the product default',
+  $q$select app.team_brand('c0000000-0000-4000-8000-000000000001')->>'id'$q$, 'product');
+reset role;
+select t.val('while the row itself is untouched: still the reference palette',
+  $q$select brand->>'id' from public.teams
+     where id='c0000000-0000-4000-8000-000000000001'$q$, 'lehi');
+set role pd_authenticated;
+select t.be('d0000000-0000-4000-8000-000000000004', 'kaye@example.com');
 
 -- A head coach in ANOTHER LEAGUE, addressing by literal uuid.
 select t.be('d0000000-0000-4000-8000-000000000007', 'ostler@example.com');
@@ -721,16 +817,35 @@ select t.raises_like('the refusal tells him what to do next',
   $q$select app.set_team_brand('c0000000-0000-4000-8000-000000000001', t.brand_navy())$q$,
   '23514', 'fails contrast');
 
--- (c) One check away. Everything legible except the position label inside the
--- circle -- which is the check a naive "text on background" audit would miss,
--- because the circle fill is translucent and has to be composited first.
-select t.val('the near-miss fails exactly one check',
+-- (c) One check away, to prove the record is refused WHOLE rather than
+-- clamped or partially accepted.
+--
+-- The margin is thin on purpose and cannot be otherwise. los-label measures the
+-- same foreground against #162B24 and label-on-circle against #182E27, and those
+-- two backgrounds differ by two points of luminance -- so a colour that fails
+-- one and passes the other has about a tenth of a ratio point to live in. The
+-- numbers are exact integer arithmetic, so thin is not the same as flaky.
+--
+-- An earlier version of this comment claimed the composite is "the check a
+-- naive text-on-background audit would miss". It is not, on this palette:
+-- the composited circle is DARKER than the grass, so for the light foregrounds
+-- a dark scheme uses, compositing RAISES the ratio and can only make a check
+-- easier. Searched exhaustively -- there is no colour at all, light or dark,
+-- that clears 4.5 against this grass and fails it against the circle. What the
+-- composite actually does is tested, and passes, at "label-on-circle is 7.49:1
+-- over the composited circle #182e27" and at the them-on-grass alpha test.
+select t.val('the near-miss fails exactly one of the seventeen',
   $q$select count(*)::text from app.brand_audit(t.brand_label_only(), false) where not pass$q$, '1');
 select t.val('and it is the label inside the circle',
   $q$select check_id from app.brand_audit(t.brand_label_only(), false) where not pass$q$, 'label-on-circle');
+select t.val('by 0.11 of a ratio point, which is enough',
+  $q$select round((floor_ratio - ratio)::numeric,2)::text
+      from app.brand_audit(t.brand_label_only(), false) where not pass$q$, '0.11');
 select t.raises_like('one failing check is enough to refuse the whole record',
   $q$select app.set_team_brand('c0000000-0000-4000-8000-000000000001', t.brand_label_only())$q$,
   '23514', 'label-on-circle');
+select t.val('and the refused palette did not land -- the team keeps what it had',
+  $q$select app.team_brand('c0000000-0000-4000-8000-000000000001')->>'id'$q$, 'lehi');
 
 -- (d) A league brand is held to the same floor.
 select t.be('d0000000-0000-4000-8000-000000000006', 'whitmore@example.com');
@@ -801,12 +916,21 @@ select t.val('and all seventeen in print',
   $q$select count(*)::text from app.brand_audit(t.brand_lehi(), true) where not pass$q$, '0');
 select t.val('brand_assert accepts it outright',
   $q$select app.brand_assert(t.brand_lehi())::text$q$, 'true');
-select t.val('its worst check is them-on-grass at 3.14:1 against a 1.6 floor',
+-- The lowest ratio of the seventeen, and the lowest of the ones that carry
+-- READING (tier 'text', floor 4.5). Both of these named a different check in
+-- their own titles from the value they asserted -- them-on-grass in the title,
+-- sideline-on-grass in the expectation -- which is what happens when a check
+-- gets added twice and nobody re-reads the line. ui-border and ui-on-board are
+-- the two that arrived after this was written.
+select t.val('its worst check of all seventeen is ui-border, at 2.08 against a 1.6 floor',
   $q$select check_id||' '||ratio::text from app.brand_audit(t.brand_lehi(), false)
-     order by ratio limit 1$q$, 'sideline-on-grass 2.30');
-select t.val('its worst READ check is label-on-circle at 7.49:1 against 4.5',
+     order by ratio limit 1$q$, 'ui-border 2.08');
+select t.val('and its worst READING check is ui-muted at 6.33:1 against 4.5',
   $q$select check_id||' '||ratio::text from app.brand_audit(t.brand_lehi(), false)
-     where tier='text' order by ratio limit 1$q$, 'label-on-circle 7.49');
+     where tier='text' order by ratio limit 1$q$, 'ui-muted 6.33');
+select t.val('every reading check clears the floor with room -- the worst is 1.83 over',
+  $q$select round(min(ratio - floor_ratio)::numeric,2)::text
+      from app.brand_audit(t.brand_lehi(), false) where tier='text'$q$, '1.83');
 -- The hand copy in this file and the hand copy in brand-seed.sql must agree, or
 -- one of them has drifted and the other is testing nothing.
 select t.val('and it is byte-identical to the one brand-seed.sql stored',
@@ -839,10 +963,8 @@ select t.be('d0000000-0000-4000-8000-000000000002', 'steve@example.com');
 select t.sets('and the whole passing record actually goes in',
   $q$select app.set_team_brand('c0000000-0000-4000-8000-000000000001', t.brand_six_codes())$q$, 'harbor');
 select t.val('stored verbatim -- the setter normalises nothing on the way in',
-  $q$select (t.brand_six_codes() = (select app.team_brand_raw from
-       (select brand as app_team_brand_raw from public.teams
-         where id='c0000000-0000-4000-8000-000000000001') s(app_team_brand_raw)
-       ) )::text$q$, 'true');
+  $q$select (t.brand_six_codes() = (select brand from public.teams
+       where id='c0000000-0000-4000-8000-000000000001'))::text$q$, 'true');
 reset role;
 
 -- ===========================================================================
@@ -989,8 +1111,12 @@ select t.val('every membership survived the section 3-7 churn',
   $q$select count(*)::text from public.memberships$q$, '7');
 select t.val('and every team',
   $q$select count(*)::text from public.teams$q$, '5');
-select t.val('the branded team''s playbook is untouched',
-  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$, '4');
+-- Against the snapshot taken in section 3, before any of the churn. These two
+-- asserted a literal '4' against a seed that holds 2 -- so the one section in
+-- the file whose whole job is "rebranding destroys nothing" was red for a
+-- reason that had nothing to do with rebranding.
+select t.unchanged('the branded team''s playbook is untouched', 'plays_lehi8',
+  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$);
 
 -- Clearing a brand is the only removal the feature has, and it removes a
 -- colour. Rule 1 restated: nothing else goes with it.
@@ -999,8 +1125,8 @@ select t.be('d0000000-0000-4000-8000-000000000002', 'steve@example.com');
 select t.val('clearing a team brand returns NULL',
   $q$select coalesce(app.set_team_brand('c0000000-0000-4000-8000-000000000001', null)::text,'NULL')$q$, 'NULL');
 reset role;
-select t.val('and took no play with it',
-  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$, '4');
+select t.unchanged('and took no play with it', 'plays_lehi8',
+  $q$select count(*)::text from public.plays where team_id='c0000000-0000-4000-8000-000000000001'$q$);
 select t.val('and no player',
   $q$select count(*)::text from public.players where team_id='c0000000-0000-4000-8000-000000000001'$q$, '21');
 
@@ -1013,7 +1139,11 @@ select t.val('and no player',
 select set_config('t.sect', '11 vacuity check', false);
 \echo '=== 11. With the guard dropped, navy-on-navy is stored ==='
 
-drop trigger teams_brand_readable on public.teams;
+-- `if exists` so the suite reports a failure instead of dying when the trigger
+-- is already missing -- which is precisely the state a mutation run puts it in,
+-- and a suite that aborts there counts zero red tests and looks like the guard
+-- was never needed.
+drop trigger if exists teams_brand_readable on public.teams;
 select t.allowed('with no trigger, the navy palette lands on the team',
   $q$update public.teams set brand = t.brand_navy()
       where id='c0000000-0000-4000-8000-000000000001'$q$, 1);
@@ -1030,7 +1160,13 @@ select t.raises_like('put back: refused again',
       where id='c0000000-0000-4000-8000-000000000001'$q$, '23514', 'fails contrast');
 
 \echo '=== 11b. With one permissive policy, the vendor reads every club''s colours ==='
+-- BOTH tables. app.team_brand() falls back team -> league -> product, so
+-- opening only `teams` left the league row invisible and the resolver still
+-- answered 'product' -- meaning this vacuity check was not demonstrating the
+-- leak it claimed to. A vacuity check that does not reproduce the leak is
+-- exactly the thing it was written to rule out.
 create policy tmp_leak_team_brand on public.teams for select to pd_authenticated using (true);
+create policy tmp_leak_league_brand on public.leagues for select to pd_authenticated using (true);
 set role pd_authenticated;
 select t.be('10000000-0000-4000-8000-000000000001', 'founder@example.com');
 select t.val('with USING(true): the vendor enumerates all five teams',
@@ -1039,6 +1175,7 @@ select t.val('and app.team_brand() hands him the league''s colours',
   $q$select app.team_brand('c0000000-0000-4000-8000-000000000004')->>'id'$q$, 'willow-creek');
 reset role;
 drop policy tmp_leak_team_brand on public.teams;
+drop policy tmp_leak_league_brand on public.leagues;
 set role pd_authenticated;
 select t.be('10000000-0000-4000-8000-000000000001', 'founder@example.com');
 select t.rows('taken away again: zero teams',  $q$select 1 from public.teams$q$, 0);

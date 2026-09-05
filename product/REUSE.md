@@ -91,10 +91,30 @@ column** — a tombstone that stores the name defeats the deletion).
    Postgres. Nobody has reconciled them, and Supabase is out for 2026 anyway.
 5. **A billing UI.** Stripe work there is all backend.
 
+## Settled by him
+
+**A NEW ENTITY, WITH ITS OWN STRIPE ACCOUNT.** Not Team-Formify's LLC and not
+its Stripe. His words: "The LLC will be something else same as stripe it will
+be its own company."
+
+That resets the launch checklist to zero rather than inheriting a half-done one,
+and it has three consequences worth writing down before anybody assumes
+otherwise:
+
+- **Nothing carries over but the code.** New Utah LLC, new EIN, new bank
+  account, new Stripe account, new tax registration. `LEGAL_CHECKLIST.md` is
+  useful here as a *shape* — same founder, same state, same order of
+  operations — and not as a set of things already done.
+- **A co-founder changes the paperwork.** Team-Formify is his alone; this one is
+  his and Steve's. That means an operating agreement with the split in it, and
+  it wants to exist before there is revenue to argue about, not after.
+- **The Stripe account is the new company's, so test and live keys are both
+  new.** `plan_pricing` with parallel live and test Price IDs (below) matters
+  more, not less, on a fresh account with nobody's muscle memory behind it.
+
+Not code, and not something I can move. It is the gate in front of billing.
+
 ## Open, and not ours to decide
 
-- Is Team-Formify's LLC and Stripe account the same entity as this, or a second
-  one with a co-founder? It decides whether the launch checklist is half done or
-  resets to zero.
 - Is the league billed, or each team? It changes the seat counter and who gets
   chased when a card fails.
