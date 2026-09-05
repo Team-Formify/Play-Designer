@@ -11,7 +11,7 @@
  * team exists or not. The test suite sends a foreign team id from a coach's
  * session and shows that it changes nothing.
  *
- * ACCEPTANCE TAKES THE TOKEN AND NOTHING ELSE. That is auth.sql's design and it
+ * ACCEPTANCE TAKES THE TOKEN AND NOTHING ELSE. That is 0004_auth.sql's design and it
  * is why this handler is four lines: there is no team parameter to tamper with,
  * because the team is a property of the row the token hashes to, and no tenant
  * holds a write privilege on that row.

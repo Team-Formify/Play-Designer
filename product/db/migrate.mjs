@@ -72,22 +72,84 @@ for (let i = 0; i < nums.length; i++) {
   }
 }
 
-// A migration that opens its own transaction commits before the ledger row is
-// written, and the two can then disagree. Catch it here rather than at 2am.
+// Strip comments and every kind of quoted body, so what is left is the file's
+// actual statements. Needed because plpgsql bodies are full of `begin` and
+// `end;`, and a regex run over the raw text either misses real transaction
+// control or rejects every function in the schema.
+function statementsOf(sql) {
+  let out = "", i = 0;
+  while (i < sql.length) {
+    const two = sql.slice(i, i + 2);
+    if (two === "--") { const nl = sql.indexOf("\n", i); i = nl < 0 ? sql.length : nl; continue; }
+    if (two === "/*") { const e = sql.indexOf("*/", i + 2); i = e < 0 ? sql.length : e + 2; continue; }
+    if (sql[i] === "'") {
+      i++;
+      while (i < sql.length) { if (sql[i] === "'" && sql[i + 1] === "'") i += 2; else if (sql[i] === "'") { i++; break; } else i++; }
+      out += " ''"; continue;
+    }
+    if (sql[i] === '"') {
+      i++;
+      while (i < sql.length && sql[i] !== '"') i++;
+      i++; out += ' ""'; continue;
+    }
+    const dollar = /^\$[A-Za-z_0-9]*\$/.exec(sql.slice(i));
+    if (dollar) {
+      const tag = dollar[0];
+      const end = sql.indexOf(tag, i + tag.length);
+      i = end < 0 ? sql.length : end + tag.length;
+      out += " $$body$$"; continue;
+    }
+    out += sql[i]; i++;
+  }
+  return out.split(";").map((x) => x.trim()).filter(Boolean);
+}
+
+// A migration that opens or closes its own transaction commits before the
+// ledger row is written, and the two can then disagree. Catch it here rather
+// than at 2am.
+//
+// The first version of this check tested /^\s*(begin|commit|rollback)\s*;/ and
+// let `begin transaction;`, `start transaction;`, `end;`, `commit work;` and
+// `commit transaction;` straight through — so the runner printed "rolled back,
+// nothing was applied" while the migration's table sat permanently in the
+// schema and no ledger row recorded it. Exactly the divergence the design
+// exists to prevent, triggered by words a person writing SQL reaches for
+// naturally. Matched on the first word of a real statement now, not on a line.
+const TXN = /^(begin|start|commit|end|rollback|abort|savepoint|release|prepare\s+transaction|set\s+transaction|set\s+constraints)\b/i;
 for (const f of files) {
-  const body = readFileSync(join(DIR, f), "utf8");
-  if (/^\s*(begin|commit|rollback)\s*;/im.test(body)) {
-    console.error(`${f} controls its own transaction. The runner supplies it — remove the begin/commit.`);
+  const raw = readFileSync(join(DIR, f), "utf8");
+  const bad = statementsOf(raw).filter((st) => TXN.test(st));
+  if (bad.length) {
+    console.error(`${f} controls its own transaction. The runner supplies it — remove:`);
+    bad.slice(0, 5).forEach((st) => console.error("  " + st.replace(/\s+/g, " ").slice(0, 70)));
+    process.exit(1);
+  }
+  if (!/^--\s*WHY/im.test(raw)) {
+    console.error(`${f} has no "-- WHY" header. Say why the shape had to change; the SQL already says what it does.`);
     process.exit(1);
   }
 }
 
-// the ledger has to exist before it can be consulted; 0001 creates it
+// The ledger has to exist before it can be consulted; 0001 creates it. The
+// ONLY error that means "first run" is the ledger table being absent. Every
+// other one -- a misspelled --db, a server that is down, a permission failure
+// -- previously came back as an empty map, so the runner reported all seven
+// migrations pending and exited 0 against a database it could not read. That
+// lies in the worst direction: it says nothing is deployed.
 let applied = new Map();
 try {
   const rows = psql("select version || '\t' || coalesce(checksum,'') from public._schema_migrations", false, true);
   applied = new Map(rows.trim().split("\n").filter(Boolean).map((r) => r.split("\t")));
-} catch { /* first run: the ledger does not exist yet */ }
+} catch (e) {
+  const why = String(e.stderr || e.message || "");
+  const ledgerAbsent = /relation "public\._schema_migrations" does not exist|relation "_schema_migrations" does not exist/i.test(why);
+  if (!ledgerAbsent) {
+    console.error("cannot read the migration ledger, and the reason is not that it is missing:");
+    console.error("  " + why.trim().split("\n")[0]);
+    console.error("Refusing to guess. Check --db and that the server is up.");
+    process.exit(1);
+  }
+}
 
 let ran = 0, drift = 0;
 for (const f of files) {
@@ -95,8 +157,15 @@ for (const f of files) {
   const body = readFileSync(join(DIR, f), "utf8");
   const sum = createHash("sha256").update(body).digest("hex").slice(0, 16);
   if (applied.has(version)) {
-    if (applied.get(version) && applied.get(version) !== sum) {
-      console.error(`DRIFT  ${f} was edited after it was applied (ledger ${applied.get(version)}, file ${sum})`);
+    const ledgerSum = applied.get(version);
+    if (!ledgerSum) {
+      // A blank checksum used to mean "nothing to compare", which turned drift
+      // detection off for that row without saying so. A ledger that lost its
+      // checksum is a ledger that can no longer do its one job.
+      console.error(`DRIFT  ${f} has no checksum in the ledger, so an edit to it cannot be detected`);
+      drift++;
+    } else if (ledgerSum !== sum) {
+      console.error(`DRIFT  ${f} was edited after it was applied (ledger ${ledgerSum}, file ${sum})`);
       drift++;
     } else if (STATUS) console.log(`  applied  ${f}`);
     continue;

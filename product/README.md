@@ -50,7 +50,7 @@ the counts; it builds each database from `db/migrations/` and runs the suite.
 | `0004_auth.sql` — invite-only membership | **243** | Proven. `app.accept_invite()` takes no team parameter; tokens are 244-bit and stored only as SHA-256. |
 | `0005_platform.sql` — the vendor's own seat | **252** | Proven. The platform owner sees league size, seasons, seats and billing, and zero plays and zero children. |
 | `0006_brand.sql` — white-label | 169 of 183 | **Partly proven. 14 failing.** The palette resolver and the WCAG guard work; the failures are real and unfixed. |
-| `0007_consent.sql` — COPPA machinery | **172** | Proven, and see below. |
+| `0007_consent.sql` — COPPA machinery | **187** | Proven, and see below. |
 | `api/stripe-signature.js` | 11 | Proven for what it is — signature verification only. There is no billing. |
 | `hub/` — the master hub | 0 | **Written, not proven.** It compiles and exports; nothing is wired to a URL and nothing is tested. |
 
@@ -65,7 +65,15 @@ the file that exists to hold children's data lawfully.
 too, so **both guards were no-ops**: a coach could write a child's full name
 into the database with no consent anywhere behind it.
 
-All three are `SECURITY INVOKER` now. Section 10 of the suite puts the bug back
+All three are `SECURITY INVOKER` now, and fixing it turned out to unlock a
+second fix: four of the consent tables carried `FOR ALL TO public USING (true)`
+write policies — the exact shape `REUSE.md` says we deliberately did not copy
+from the other codebase — held back only by the absence of a `GRANT`. There had
+been nothing to scope them to, because the one predicate that could do it did
+not work. They are gated on `app.is_privileged_session()` now, and a stray
+`grant insert` turns the suite red instead of opening a door.
+
+Section 10 of the suite puts the original bug back
 with `ALTER FUNCTION ... SECURITY DEFINER`, shows the identical insert
 succeeding, and then puts it right — so the 172 zeroes above it cannot be
 passing vacuously.

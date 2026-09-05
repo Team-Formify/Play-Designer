@@ -70,7 +70,30 @@
 --   make evidence rewritable .........................  1
 --   give player_tombstones a `last` column ...........  1
 --
--- Nothing here goes red at zero. Reproduce with:
+-- Five mutants SURVIVED the first version of this file and are killed now.
+-- Recorded because each one is a lesson about what a passing test can hide:
+--
+--   remove grant_consent's EXPIRY check ..............  was 0, now 1
+--   grant insert on player_consents to a coach .......  was 0, now 1
+--   add a permissive SELECT policy to consent_requests  was 0, now 2
+--   add a permissive SELECT policy to guardians ......  was 0, now 2
+--   revert a write policy to using(true) .............  was 0, now 2
+--
+-- The expiry one is the instructive one. app.grant_consent() raises 22023 from
+-- seven different paths, and the test matched only the SQLSTATE -- so with the
+-- expiry check deleted the SINGLE-USE check caught the same call and raised the
+-- same code, and 172/172 stayed green. t.raises_like() matches the message too
+-- now, and expiry gets its own request that is still `pending` so nothing else
+-- can answer for it.
+--
+-- One mutant is NOT killed and cannot be, from here: removing the single-use
+-- re-check in the claiming UPDATE. That clause is a RACE guard, and this suite
+-- is one transaction. The status check catches the second sequential call on
+-- its own, so every behavioural test stays green. Asserted on the function
+-- source instead, which is weak -- but the difference between a weak assertion
+-- and no assertion is whether anybody notices.
+--
+-- Nothing else here goes red at zero. Reproduce with:
 --   psql ... -c '<mutation>' ; psql ... -f product/db/test-consent.sql
 
 \set ON_ERROR_STOP on
@@ -166,6 +189,24 @@ exception when others then
     format('SQLSTATE %s (want %s): %s', sqlstate, p_state, left(sqlerrm, 90)));
 end $fn$;
 
+-- Assert BOTH the SQLSTATE and which guard answered. app.grant_consent() raises
+-- 22023 from seven different paths, so a test that matches only the state
+-- passes for whichever guard happens to fire -- and a mutation run proved
+-- exactly that: deleting the expiry check left 172/172 green, because the
+-- single-use check caught the same call and raised the same state.
+create function t.raises_like(p_name text, p_sql text, p_state text, p_msg text) returns void
+language plpgsql as $fn$
+begin
+  execute p_sql;
+  perform t.note(p_name, false, format('LEAK: statement succeeded, expected %s / "%s"', p_state, p_msg));
+exception when others then
+  perform t.note(p_name, sqlstate = p_state and position(lower(p_msg) in lower(sqlerrm)) > 0,
+    format('%s / %s', sqlstate,
+      case when position(lower(p_msg) in lower(sqlerrm)) > 0
+           then 'named the right guard: ' || left(sqlerrm, 60)
+           else 'WRONG GUARD ANSWERED: ' || left(sqlerrm, 60) || ' (wanted "' || p_msg || '")' end));
+end $fn$;
+
 create function t.allowed(p_name text, p_sql text, p_want bigint) returns void
 language plpgsql as $fn$
 declare n bigint;
@@ -256,6 +297,71 @@ select t.val('and every one of them carries at least one policy',
         and c.relname in ('consent_notices','guardians','guardian_children',
                           'consent_requests','consent_evidence','consent_events')
         and exists (select 1 from pg_policy p where p.polrelid=c.oid)$q$, '6');
+
+-- POLICY AND GRANT INVENTORY. Everything else in this file asks "can this seat
+-- do that", which a new permissive policy would answer the same way as long as
+-- the table happens to be empty -- and these six tables ARE empty at rest,
+-- because the suite builds its own fixtures inside its rolled-back transaction.
+-- So the exact policy list and the exact grant list are pinned here. A policy
+-- or a grant nobody wrote on purpose turns this red before it can turn anything
+-- else green.
+-- Every non-SELECT policy must be gated on app.is_privileged_session(). These
+-- were `using (true) with check (true)` -- the exact shape REUSE.md says we did
+-- not copy -- and nothing failed, because the tables are empty at rest and no
+-- tenant held a write verb. "No grant behind it" is one `grant insert` from
+-- being wrong, so the predicate is pinned here rather than the consequence.
+select t.val('no write policy on a consent table is unconditional',
+  $q$select count(*)::text from pg_policies
+     where schemaname='public'
+       and tablename in ('consent_notices','guardians','guardian_children',
+                         'consent_requests','consent_evidence','consent_events')
+       and cmd <> 'SELECT'
+       and (coalesce(qual,'') in ('true','(true)')
+         or coalesce(with_check,'') in ('true','(true)'))$q$, '0');
+select t.val('every write policy is gated on is_privileged_session()',
+  $q$select count(*)::text from pg_policies
+     where schemaname='public'
+       and tablename in ('consent_notices','guardians','guardian_children',
+                         'consent_requests','consent_evidence','consent_events')
+       and cmd <> 'SELECT'
+       and coalesce(qual,'') || coalesce(with_check,'') not like '%is_privileged_session%'$q$, '0');
+select t.val('and there are exactly thirteen policies in all',
+  $q$select count(*)::text from pg_policies
+     where schemaname='public'
+       and tablename in ('consent_notices','guardians','guardian_children',
+                         'consent_requests','consent_evidence','consent_events')$q$, '13');
+select t.val('no SELECT policy on them is unconditional either',
+  $q$select count(*)::text from pg_policies
+     where schemaname='public'
+       and tablename in ('consent_notices','guardians','guardian_children',
+                         'consent_requests','consent_evidence','consent_events')
+       and cmd = 'SELECT' and coalesce(qual,'') in ('true','(true)')$q$, '0');
+
+-- player_consents is the table a coach would most like to write. The suite
+-- proves elsewhere that he cannot; this pins WHY -- there is no grant behind
+-- the policy. Adding one used to leave all five suites green.
+select t.val('no tenant role holds a write grant on player_consents',
+  $q$select count(*)::text from (
+       select 1 from unnest(array['pd_anon','pd_authenticated']) rol,
+                     unnest(array['insert','update','delete']) verb
+        where has_table_privilege(rol, 'public.player_consents', verb)) _$q$, '0');
+select t.val('nor on the tombstones',
+  $q$select count(*)::text from (
+       select 1 from unnest(array['pd_anon','pd_authenticated']) rol,
+                     unnest(array['insert','update','delete']) verb
+        where has_table_privilege(rol, 'public.player_tombstones', verb)) _$q$, '0');
+
+-- The single-use claim is a WHERE clause on the UPDATE that takes the request,
+-- and its value only shows when two sessions race the same token. This suite
+-- runs in ONE transaction and cannot produce that race, so removing the clause
+-- leaves every behavioural test green -- the status check catches the second
+-- call on its own. Asserted on the source instead, which is weak but honest,
+-- and is the difference between "we tested it" and "we did not notice".
+select t.val('grant_consent re-checks status and expiry in its claiming UPDATE',
+  $q$select (p.prosrc like '%and status = ''pending''%'
+         and p.prosrc like '%and expires_at > now()%')::text
+      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname='app' and p.proname='grant_consent'$q$, 'true');
 
 -- The scopes list is duplicated between a CHECK constraint and a function, and
 -- the file's own comment says this test is the thing keeping them honest.
@@ -695,15 +801,80 @@ select t.val('and the same address under a different request digests differently
 
 -- SINGLE USE.
 set role pd_anon; select t.be(null);
-select t.raises('the same token cannot be used twice',
+select t.raises_like('the same token cannot be used twice',
   $q$select app.grant_consent(t.tok('token'),
-      'I am this child''s parent or legal guardian and I agree to the above.')$q$, '22023');
+      'I am this child''s parent or legal guardian and I agree to the above.')$q$,
+  '22023', 'already answered');
 select t.raises('and cannot be turned into a refusal after the fact',
   $q$select app.refuse_consent(t.tok('token'), 'changed my mind')$q$, '22023');
 select t.raises('nor does it still open the view''s notice for a fresh answer',
   $q$select app.grant_consent(t.tok('token'),
       'I am this child''s parent or legal guardian and I agree to the above.',
       null, array['roster'])$q$, '22023');
+
+-- EXPIRY, tested on its own request so the single-use guard cannot answer for
+-- it. This pair is here because a mutation run showed the suite staying green
+-- with the expiry check deleted: every call that should have died of age was
+-- being caught by the status check first.
+reset role; set role pd_authenticated;
+select t.be('d0000000-0000-4000-8000-000000000001');
+select t.snap('g_dalley', $q$select app.add_guardian(
+    'c0000000-0000-4000-8000-000000000001', 'dalley.parent@example.com')::text$q$);
+select t.val('linked to Dalley',
+  $q$select app.link_guardian(t.tok('g_dalley')::uuid,
+      'e0000000-0000-4000-8000-000000000006')::text$q$, 'true');
+select t.snap('req_old', $q$select app.request_consent(
+    'e0000000-0000-4000-8000-000000000006', t.tok('g_dalley')::uuid, array['roster'])::text$q$);
+
+reset role; set role pd_mailer;
+select t.snap('token_old', $q$select token from app.consent_dispatch(t.tok('req_old')::uuid)$q$);
+
+-- Age it. Two things get in the way, and both are worth recording.
+--
+-- First, the request row is fixed at issue -- the OWNER cannot move the expiry.
+-- That is a real guard and gets asserted here rather than worked around
+-- silently.
+reset role;
+select t.raises('not even the owner can move a request''s expiry',
+  $q$update public.consent_requests set expires_at = now() - interval '1 day'
+      where id = t.tok('req_old')::uuid$q$, '42501');
+
+-- Second, a short p_valid_for would not help: now() is the TRANSACTION
+-- timestamp and this whole suite is one transaction, so now() + anything is
+-- always in the future here. So the trigger comes off for exactly one
+-- statement, the row is aged, and it goes straight back on -- and the next test
+-- proves it is back on.
+-- Both timestamps move, not just the expiry: there is a CHECK that expires_at
+-- is after requested_at, and honouring it is what makes this row realistic --
+-- an ask sent out a month ago that the guardian never answered.
+alter table public.consent_requests disable trigger consent_requests_guard;
+update public.consent_requests
+   set requested_at = now() - interval '30 days',
+       expires_at   = now() - interval '1 day'
+ where id = t.tok('req_old')::uuid;
+alter table public.consent_requests enable trigger consent_requests_guard;
+
+select t.raises('the guard is back on after aging the row',
+  $q$update public.consent_requests set expires_at = now() + interval '1 day'
+      where id = t.tok('req_old')::uuid$q$, '42501');
+select t.val('the aged request is still pending, so only expiry can stop it',
+  $q$select status from public.consent_requests where id = t.tok('req_old')::uuid$q$, 'pending');
+
+set role pd_anon; select t.be(null);
+select t.raises_like('an expired token cannot grant, and says so',
+  $q$select app.grant_consent(t.tok('token_old'),
+      'I am this child''s parent or legal guardian and I agree to the above.')$q$,
+  '22023', 'expired');
+select t.raises_like('nor refuse',
+  $q$select app.refuse_consent(t.tok('token_old'), 'too late')$q$, '22023', 'expired');
+reset role; set role pd_mailer;
+select t.raises_like('and even the mailer cannot re-send an expired request',
+  $q$select * from app.consent_dispatch(t.tok('req_old')::uuid)$q$, '22023', 'expired');
+
+reset role;
+select t.val('the expired request wrote no consent',
+  $q$select count(*)::text from public.player_consents
+     where player_id = 'e0000000-0000-4000-8000-000000000006' and revoked_at is null$q$, '0');
 
 reset role;
 select t.val('still exactly one consent, after the replay attempts',

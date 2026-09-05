@@ -6,16 +6,16 @@
 -- row is written by the credential that runs migrations, which is already the
 -- credential that could drop the database, so it hands out nothing new. There
 -- is no claim endpoint, no env-gated function reachable from the network, no
--- "first account to sign up wins", and no default row shipped in schema.sql.
+-- "first account to sign up wins", and no default row shipped in migrations/0002_schema.sql.
 --
--- Even here the insert has to say what it is doing. platform.sql's guard
+-- Even here the insert has to say what it is doing. migrations/0005_platform.sql's guard
 -- trigger refuses any INSERT on public.platform_owners unless the session is
 -- already a platform owner or is holding the tx-local flag set below -- the
--- same explicit-intent pattern schema.sql uses to stop a play being deleted by
+-- same explicit-intent pattern migrations/0002_schema.sql uses to stop a play being deleted by
 -- something that did not mean it. The flag binds the table owner too, so a
 -- migration cannot create a vendor seat by accident either.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> platform.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> migrations/0005_platform.sql
 --             -> seed.sql -> auth-seed.sql -> platform-seed.sql
 --
 -- WHAT THIS FILE DELIBERATELY DOES NOT DO
@@ -24,7 +24,7 @@
 -- 6 plays, 7 memberships, 3 board seats, 23 visible to Dom, 26 to the board)
 -- and test-auth.sql asserts the invitation and audit counts on top; all 426 of
 -- those tests have to keep passing with this file loaded. Everything here lives
--- in the two tables platform.sql adds that hold no tenant data.
+-- in the two tables migrations/0005_platform.sql adds that hold no tenant data.
 --
 -- AND THE TWO OWNERS BELOW HOLD NO MEMBERSHIP, which is not a convenience: the
 -- guard trigger would refuse them if they did. The vendor seat is a separate

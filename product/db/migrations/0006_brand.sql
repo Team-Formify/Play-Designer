@@ -33,14 +33,14 @@
 --                  other team's marks. Visible without competing with the
 --                  eleven men who matter.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> platform.sql -> brand.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> migrations/0005_platform.sql -> migrations/0006_brand.sql
 --             -> seed.sql -> auth-seed.sql -> platform-seed.sql -> brand-seed.sql
 -- Tests:      test-isolation.sql (183, unchanged), test-auth.sql (243,
 --             unchanged), test-platform.sql (252, unchanged), test-brand.sql.
 --
--- ADDITIVE, like auth.sql and platform.sql. Two nullable columns, their check
+-- ADDITIVE, like migrations/0004_auth.sql and migrations/0005_platform.sql. Two nullable columns, their check
 -- constraints, one guard trigger apiece, and a set of functions in app. Nothing
--- in schema.sql, rls.sql, auth.sql or platform.sql is edited or replaced. Every
+-- in migrations/0002_schema.sql, migrations/0003_rls.sql, migrations/0004_auth.sql or migrations/0005_platform.sql is edited or replaced. Every
 -- guard added here is inert for a row whose brand is NULL, and every existing
 -- row's brand is NULL, which is why the 678 tests that came before it do not
 -- move.
@@ -66,7 +66,7 @@
 --   3. IT DOES NOT INVENT AN AUTHORITY. "A league admin brands the league, a
 --      head coach brands his team, an assistant cannot" is not a new rule --
 --      it is app.may_staff_league() and app.may_staff_team() exactly as
---      auth.sql already defines them. If who-is-in-charge ever changes, it
+--      migrations/0004_auth.sql already defines them. If who-is-in-charge ever changes, it
 --      changes in one place and this file follows.
 --
 --   4. IT DOES NOT LET A BRAND FETCH ANYTHING. brand.js takes a font stack by
@@ -812,7 +812,7 @@ as $$
 $$;
 
 -- ===========================================================================
--- 7. The setters -- authority from auth.sql, not from a new idea
+-- 7. The setters -- authority from migrations/0004_auth.sql, not from a new idea
 -- ===========================================================================
 -- A league admin sets the league brand. A head coach sets his own team's. An
 -- assistant cannot, because app.may_staff_team() does not list him, which is
@@ -887,7 +887,7 @@ comment on function app.set_team_brand(uuid, jsonb) is
 -- ===========================================================================
 -- 8. Privileges
 -- ===========================================================================
--- Same discipline as auth.sql and platform.sql: SECURITY DEFINER functions are
+-- Same discipline as migrations/0004_auth.sql and migrations/0005_platform.sql: SECURITY DEFINER functions are
 -- EXECUTE-to-PUBLIC by default, which would hand an anonymous session a
 -- function running as the owner. Take it all back first, then hand out exactly
 -- what is meant.
@@ -923,7 +923,7 @@ to pd_anon, pd_authenticated;
 -- column on two tables whose policies already say who may read the row, so it
 -- is visible to exactly those people and to nobody else. In particular nothing
 -- here gives a platform owner a row it did not already have: it holds no
--- membership by construction (platform.sql's separation rule), so
+-- membership by construction (migrations/0005_platform.sql's separation rule), so
 -- app.visible_league_ids() is empty for it, leagues_select and teams_select
 -- return nothing, and app.team_brand() -- being INVOKER -- answers the product
 -- default for every team in the database.

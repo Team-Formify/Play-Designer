@@ -1,14 +1,14 @@
 -- product/db/auth-seed.sql
 -- Fixtures for the auth layer: invitations in every state, and player words.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> seed.sql -> auth-seed.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> seed.sql -> auth-seed.sql
 --
 -- WHAT THIS FILE DELIBERATELY DOES NOT DO
 -- It adds no league, no season, no team, no player, no play and NO MEMBERSHIP.
 -- test-isolation.sql asserts exact counts of all six (31 players, 6 plays, 7
 -- memberships, 3 board seats, 23 visible to Dom, 26 to the board), and those
 -- 183 tests have to keep passing with this file loaded. Everything here lives
--- in the three tables auth.sql adds. An invitation is not a membership until
+-- in the three tables migrations/0004_auth.sql adds. An invitation is not a membership until
 -- somebody accepts it, which is the entire point of the feature and is also
 -- what makes it safe to seed.
 --

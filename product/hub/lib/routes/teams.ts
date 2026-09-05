@@ -22,7 +22,7 @@
  * membership check anywhere in this file; the absence of a row IS the answer.
  *
  * ONE ASYMMETRY, STATED RATHER THAN HIDDEN. A league board member can see the
- * teams row (teams_select covers their league) but rls.sql deliberately keeps
+ * teams row (teams_select covers their league) but 0003_rls.sql deliberately keeps
  * them out of plays -- a play is the coach's IP. So a board member reading
  * /plays gets 200 with an empty list rather than a refusal. That is RLS's
  * answer, unedited: they may know the team exists and may not know its book.

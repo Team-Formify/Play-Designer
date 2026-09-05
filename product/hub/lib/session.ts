@@ -11,7 +11,7 @@
  * arrive in a Supabase JWT and PostgREST puts them in request.jwt.claims; here
  * they arrive in a cookie this file signed. Either way the API's job is the
  * same: verify, then hand `sub` and `email` to the database as app.user_id and
- * app.user_email. schema.sql and auth.sql already say those two GUCs map 1:1 to
+ * app.user_email. 0002_schema.sql and 0004_auth.sql already say those two GUCs map 1:1 to
  * auth.uid() and auth.email(), so swapping this file for a JWT verifier changes
  * nothing above it.
  *

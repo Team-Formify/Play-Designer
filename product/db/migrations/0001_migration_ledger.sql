@@ -18,13 +18,23 @@ create table if not exists public._schema_migrations (
   applied_at  timestamptz not null default now(),
   description text,
   applied_by  text default current_user,
-  checksum    text
+  checksum    text not null
 );
 
 comment on table public._schema_migrations is
   'One row per applied migration. version is the 4-digit file prefix; checksum is a digest of the file as applied, so an edited-after-the-fact migration is detectable.';
 
 alter table public._schema_migrations enable row level security;
-alter table public._schema_migrations force row level security;
 -- No policy at all: no tenant, and no platform owner, has any business reading
--- the deployment ledger. The migration runner connects as the owner.
+-- the deployment ledger. With RLS enabled and zero policies, every role except
+-- the table's owner is refused.
+--
+-- Deliberately NOT `force row level security`, which the first version of this
+-- file had. `force` subjects the OWNER to RLS as well, and with no policies
+-- that locks out the deploying role itself -- invisible and unwritable. It
+-- happened to work only because the dev runner connects as a superuser, who
+-- bypasses RLS regardless; on Supabase or any sane production posture the
+-- deploy role is not a superuser, and `--status` would have reported every
+-- migration pending against a fully migrated production database. `force` is
+-- right for tenant tables, where the owner must not be a way around isolation.
+-- It is wrong here, where the owner IS the only legitimate reader.

@@ -1,7 +1,7 @@
 -- product/db/brand-seed.sql
 -- Two real brand records, and the three states of the fallback chain.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> platform.sql -> brand.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> migrations/0005_platform.sql -> migrations/0006_brand.sql
 --             -> seed.sql -> auth-seed.sql -> platform-seed.sql -> brand-seed.sql
 --
 -- WHAT IS IN HERE, AND WHY EXACTLY THIS
@@ -10,7 +10,7 @@
 --                 product/brand/brands.json, VERBATIM. Its colours are taken
 --                 from designer.html's own :root and PAL_SCREEN, so it is the
 --                 proof that theming cost the existing look nothing -- and,
---                 loaded through the trigger in brand.sql, it is also the proof
+--                 loaded through the trigger in migrations/0006_brand.sql, it is also the proof
 --                 that our own reference palette clears the WCAG floors we are
 --                 about to hold customers to. If this file ever fails to load,
 --                 that is a finding about our theme, not a reason to lower a

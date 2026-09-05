@@ -1,6 +1,13 @@
 -- product/db/migrations/0007_consent.sql
+-- WHY: a league product covers under-13s, which brings COPPA in, and the
+-- schema already had player_consents and player_tombstones with nothing to
+-- fill them. This is the flow: a guardian is asked in writing before a
+-- child's name is collected, only the guardian can answer, the answer is
+-- recorded against the version of the notice they were shown, and a
+-- withdrawal removes the name while every play he was in survives as a
+-- jersey number. Without it the product cannot be sold to a league at all.
 -- Verifiable parental consent: the flow that public.player_consents and
--- public.player_tombstones have been waiting for since schema.sql was written.
+-- public.player_tombstones have been waiting for since migrations/0002_schema.sql was written.
 --
 -- WHAT THIS IS, AND WHAT IT IS NOT -- READ THIS BEFORE QUOTING IT AT ANYBODY
 --
@@ -43,7 +50,7 @@
 --                 audit trail that makes a forged address expensive to hide.
 --
 -- THE SECURITY CRUX. A coach must never be able to grant consent on a parent's
--- behalf. Invite-only was the crux of auth.sql; this is its equivalent, and it
+-- behalf. Invite-only was the crux of migrations/0004_auth.sql; this is its equivalent, and it
 -- is built out of the same parts:
 --
 --   * A coach REQUESTS. Only a guardian GRANTS.
@@ -59,10 +66,10 @@
 --     app.accept_invite() takes no team. There is no player parameter to
 --     re-point and no scope parameter that can widen (it can only narrow).
 --   * No tenant role holds INSERT, UPDATE or DELETE on public.player_consents
---     any more -- see section 9. rls.sql's player_consents_insert and
+--     any more -- see section 9. migrations/0003_rls.sql's player_consents_insert and
 --     player_consents_update policies are left exactly as they are and are now
 --     unreachable: the privilege check fails before RLS is consulted. That file
---     is not edited. A reader of rls.sql should know those two policies are
+--     is not edited. A reader of migrations/0003_rls.sql should know those two policies are
 --     dead letters kept for the day a consent is written some other way.
 --   * A guard trigger on public.player_consents refuses tenant writes even if
 --     the grant were ever restored, refuses any UPDATE that changes who
@@ -74,7 +81,7 @@
 --     public.players. A roster slot may be created and carried as a jersey
 --     number with no consent at all: '#22', first null. Writing a real name
 --     into it requires a live 'roster' consent for that row. That is the only
---     scope that maps onto a column in this schema, because schema.sql
+--     scope that maps onto a column in this schema, because migrations/0002_schema.sql
 --     deliberately holds nothing else -- no photo, no weight, no birthdate.
 --   * The other four scopes ('film','photo','share_league','share_public')
 --     gate features that are not in this database. They are enforced by
@@ -107,16 +114,16 @@
 --     guards on players and player_consents cannot, because seed.sql -- which
 --     this file may not edit and which loads after it -- writes both directly.
 --     A superuser can drop any trigger in this file anyway; the same assumption
---     platform.sql already records in its header.
+--     migrations/0005_platform.sql already records in its header.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> platform.sql -> consent.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> migrations/0005_platform.sql -> migrations/0007_consent.sql
 --             -> seed.sql -> auth-seed.sql -> platform-seed.sql -> consent-seed.sql
 -- Tests:      test-isolation.sql (183, unchanged), test-auth.sql (243,
 --             unchanged), test-platform.sql (252, unchanged), test-consent.sql.
 --
 -- ADDITIVE. Six new tables, one new role, a set of functions, guard triggers on
--- the two existing tables this flow has to bind, and no edit to schema.sql,
--- rls.sql, auth.sql, platform.sql or any seed. Two accommodations were forced
+-- the two existing tables this flow has to bind, and no edit to migrations/0002_schema.sql,
+-- migrations/0003_rls.sql, migrations/0004_auth.sql, migrations/0005_platform.sql or any seed. Two accommodations were forced
 -- by tests this file may not edit, and both are recorded rather than hidden:
 --
 --   1. NO ON DELETE CASCADE ANYWHERE BELOW. test-isolation.sql asserts that the
@@ -138,7 +145,7 @@
 --
 -- PORTABILITY. Stock PostgreSQL 16 and Supabase, no extensions. sha256() and
 -- gen_random_uuid() are core; app.hash_secret() and app.new_invite_token() from
--- auth.sql are reused rather than reinvented, so there is one token generator
+-- migrations/0004_auth.sql are reused rather than reinvented, so there is one token generator
 -- and one digest function in this schema, not three.
 
 \set ON_ERROR_STOP on
@@ -211,7 +218,7 @@ comment on function app.is_privileged_session() is
 
 -- Who may ASK a guardian for consent, and who may see the answers: the team's
 -- coaches (head or assistant -- Dom's seat is assistant), or the league's board
--- and admin. Exactly the set rls.sql's player_consents_insert allowed to write
+-- and admin. Exactly the set migrations/0003_rls.sql's player_consents_insert allowed to write
 -- a consent, which is the point: they keep the ability to ASK and lose the
 -- ability to ANSWER.
 create or replace function app.may_manage_consent(p_team uuid)
@@ -234,7 +241,7 @@ $$;
 comment on function app.may_manage_consent(uuid) is
   'May request consent and read the answers: head or assistant of the team, or board or admin of its league. A helper may not. Nobody on this list may grant.';
 
--- The five scopes, from schema.sql's player_consents_scope check. Repeated here
+-- The five scopes, from migrations/0002_schema.sql's player_consents_scope check. Repeated here
 -- because a check constraint cannot be read back as a list; if that constraint
 -- ever gains a sixth scope this function is the other place to change, and
 -- test-consent.sql asserts the two lists agree.
@@ -317,7 +324,7 @@ create index consent_notices_league_idx on public.consent_notices (league_id, ve
 -- ---------------------------------------------------------------------------
 -- 3. guardians -- a person, not an account
 -- ---------------------------------------------------------------------------
--- No user_id, no password, no invite, no login. auth.sql's position on the boys
+-- No user_id, no password, no invite, no login. migrations/0004_auth.sql's position on the boys
 -- is that making 13-year-olds create accounts is the fastest way to trigger
 -- COPPA at its strictest; the same argument applies to their parents, who would
 -- get an account they use twice a season. A guardian is an address and a name.
@@ -374,7 +381,7 @@ create index guardian_children_player_idx on public.guardian_children (player_id
 -- ---------------------------------------------------------------------------
 -- One child, one guardian, the scopes asked for, the notice version they will
 -- be shown, an expiry, and a token stored only as a digest -- the invites
--- discipline from auth.sql, with one difference that is the whole point of this
+-- discipline from migrations/0004_auth.sql, with one difference that is the whole point of this
 -- file: THE TOKEN IS NOT MINTED HERE. token_digest is null until
 -- app.consent_dispatch() mints one, and only the mailer may call that.
 --
@@ -718,13 +725,13 @@ create trigger consent_evidence_guard
 -- ---------------------------------------------------------------------------
 -- 8. The guard on public.player_consents
 -- ---------------------------------------------------------------------------
--- The table schema.sql created is now written by exactly one thing:
+-- The table migrations/0002_schema.sql created is now written by exactly one thing:
 -- app.grant_consent(), running as the owner, holding the tx-local intent flag.
 --
 -- FOUR LAYERS, independent, in the order an attacker meets them:
 --   privilege  -- section 12 revokes INSERT, UPDATE and DELETE from pd_anon and
 --                 pd_authenticated. A coach gets 42501 from the privilege check
---                 before RLS is consulted, and rls.sql's two write policies are
+--                 before RLS is consulted, and migrations/0003_rls.sql's two write policies are
 --                 never reached.
 --   trigger    -- this function refuses a tenant session outright, so restoring
 --                 the grant by accident restores nothing.
@@ -1324,7 +1331,7 @@ begin
     raise exception 'request % expired on %', p_request, v_r.expires_at using errcode = '22023';
   end if;
 
-  -- The same 244-bit generator auth.sql already uses. One CSPRNG helper in this
+  -- The same 244-bit generator migrations/0004_auth.sql already uses. One CSPRNG helper in this
   -- schema, not three.
   v_token := app.new_invite_token();
 
@@ -1681,7 +1688,7 @@ comment on function app.revoke_consent(text, text[], text) is
   'A guardian withdraws. Revokes the consent, and if the roster scope is among it, deletes the player row -- which runs the existing tombstone trigger, so the name goes and every play survives as a jersey number.';
 
 -- The staff path, for the phone call that reaches the board rather than the
--- app. It is not a new power: rls.sql already lets a coach or a board member
+-- app. It is not a new power: migrations/0003_rls.sql already lets a coach or a board member
 -- delete a player outright. What it adds is that the revocation is recorded
 -- with an actor, and that the tombstone reason says parent_request.
 create or replace function app.revoke_consent_for(
@@ -1808,7 +1815,7 @@ comment on function app.consent_provenance(uuid) is
 -- ---------------------------------------------------------------------------
 -- 21. Privileges and policies
 -- ---------------------------------------------------------------------------
--- Same discipline as rls.sql, auth.sql and platform.sql: privileges say which
+-- Same discipline as migrations/0003_rls.sql, migrations/0004_auth.sql and migrations/0005_platform.sql: privileges say which
 -- verbs exist, policies say which rows, and both have to pass.
 
 -- SECURITY DEFINER functions are EXECUTE-to-PUBLIC by default, which would hand
@@ -1890,7 +1897,7 @@ revoke insert, update, delete on
   public.consent_requests, public.consent_evidence, public.consent_events
 from pd_anon, pd_authenticated;
 
--- AND THE CRUX, ONE LINE. rls.sql granted these to pd_authenticated and wrote
+-- AND THE CRUX, ONE LINE. migrations/0003_rls.sql granted these to pd_authenticated and wrote
 -- two policies for them. Both policies stay exactly where they are and neither
 -- is reached again: a coach, an assistant, a league admin, a board member and a
 -- platform owner now all fail the privilege check before RLS is consulted.
@@ -1911,7 +1918,7 @@ alter table public.consent_evidence   force row level security;
 alter table public.consent_events     force row level security;
 
 -- A notice is the league's public text: anybody in the league may read it,
--- which is the same reach rls.sql gives the rulebook itself.
+-- which is the same reach migrations/0003_rls.sql gives the rulebook itself.
 create policy consent_notices_select on public.consent_notices
   for select to pd_anon, pd_authenticated
   using (league_id in (select app.visible_league_ids()));
@@ -1946,21 +1953,34 @@ create policy consent_events_select on public.consent_events
 
 -- FORCE binds the owner, and the owner is who the definer functions run as, so
 -- the writes above need policies of their own or the flow could not write at
--- all. They are scoped rather than `true` wherever there is anything to scope
--- to; the real guard on forgery is that no tenant holds the verb.
+-- all.
+--
+-- These were `using (true) with check (true)`, with a comment claiming they
+-- were "scoped wherever there is anything to scope to" -- and none of them was.
+-- That is the exact `FOR ALL TO anon USING (true)` shape product/REUSE.md says
+-- we deliberately did not copy from the other codebase, sitting in our own
+-- file. It was not exploitable, because no tenant role holds a write verb on
+-- any of these tables, but "no grant behind it" is one `grant insert` away from
+-- being wrong and nothing would have failed when it went.
+--
+-- app.is_privileged_session() is the predicate there was always something to
+-- scope to; it just did not work until it stopped being SECURITY DEFINER. As
+-- INVOKER it is true inside the definer functions that legitimately write here
+-- (they run as the owner) and false for any tenant statement, grant or no
+-- grant. So the policy now says what the comment always claimed.
 create policy consent_notices_write on public.consent_notices
-  for insert with check (true);
+  for insert with check (app.is_privileged_session());
 create policy consent_notices_retire on public.consent_notices
-  for update using (true) with check (true);
+  for update using (app.is_privileged_session()) with check (app.is_privileged_session());
 create policy guardians_write on public.guardians
-  for all using (true) with check (true);
+  for all using (app.is_privileged_session()) with check (app.is_privileged_session());
 create policy guardian_children_write on public.guardian_children
-  for all using (true) with check (true);
+  for all using (app.is_privileged_session()) with check (app.is_privileged_session());
 create policy consent_requests_write on public.consent_requests
-  for all using (true) with check (true);
+  for all using (app.is_privileged_session()) with check (app.is_privileged_session());
 create policy consent_evidence_write on public.consent_evidence
-  for all using (true) with check (true);
+  for all using (app.is_privileged_session()) with check (app.is_privileged_session());
 create policy consent_events_append on public.consent_events
-  for insert with check (true);
+  for insert with check (app.is_privileged_session());
 
 -- (no commit; the runner commits)

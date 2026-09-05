@@ -6,13 +6,13 @@
 -- RUN:
 --   node product/db/test.mjs auth
 --
--- That builds pd_auth from product/db/migrations/ via the migration runner and
+-- That builds pd_t_auth from product/db/migrations/ via the migration runner and
 -- applies the seeds in order, then runs this file. The hand-ordered list of
 -- -f flags that used to live here was wrong twice and is now in test.mjs,
 -- executed rather than described.
 --
 -- Against a database you have already built:
---   psql -h /tmp -p 5433 -U app -d pd_auth -f product/db/test-auth.sql
+--   psql -h /tmp -p 5433 -U app -d pd_t_auth -f product/db/test-auth.sql
 --
 -- Everything runs inside one transaction and ROLLS BACK, so the suite is
 -- rerunnable and leaves the seed untouched. There are deliberately no

@@ -20,7 +20,7 @@
 --      looks and its jobs. That is rules 1 and 2 of CLAUDE.md in a new domain.
 --   4. Retention hangs off the season. Roster rows age out. Plays never do.
 --
--- Load order: schema.sql -> rls.sql -> seed.sql -> test-isolation.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> seed.sql -> test-isolation.sql
 --
 -- PORTABILITY. This file targets stock PostgreSQL 16 and Supabase unchanged.
 -- On Supabase, auth.uid() and the anon/authenticated roles already exist and the
@@ -74,7 +74,7 @@ grant usage on schema public, app, auth to pd_anon, pd_authenticated;
 -- Supabase means deleting the guarded shim below and changing nothing else.
 --
 -- Fail closed: a malformed identity is not an identity, it is NULL, and every
--- policy in rls.sql is false for NULL.
+-- policy in migrations/0003_rls.sql is false for NULL.
 create or replace function app.current_user_id()
 returns uuid
 language plpgsql

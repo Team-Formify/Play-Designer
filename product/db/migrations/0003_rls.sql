@@ -1,4 +1,9 @@
 -- product/db/migrations/0003_rls.sql
+-- WHY: isolation has to live in Postgres, not in route handlers. An
+-- application filter is one forgotten WHERE clause away from a cross-team
+-- leak, and nobody can prove the absence of that mistake by reading code.
+-- A policy is checked by the database on every row, every time, including on
+-- the queries nobody thought to review.
 -- Isolation. All of it. There is no tenant filter in application code, because
 -- an application filter is one forgotten WHERE clause from a cross-team leak and
 -- nobody can prove the absence of that mistake by reading route handlers.
@@ -343,7 +348,7 @@ create policy plays_update_coach on public.plays
   with check (team_id in (select app.coach_team_ids()));
 
 -- Deleting a play needs the policy AND the explicit-intent trigger from
--- schema.sql. Policy alone would let a bulk UPDATE-shaped mistake through.
+-- migrations/0002_schema.sql. Policy alone would let a bulk UPDATE-shaped mistake through.
 create policy plays_delete_coach on public.plays
   for delete to pd_authenticated
   using (team_id in (select app.coach_team_ids()));

@@ -13,7 +13,7 @@
  * unlocks. There is no route in this API that takes a team from the boys and
  * trusts it.
  *
- * IT REACHES EXACTLY TWO TABLES, because auth.sql grants it exactly two
+ * IT REACHES EXACTLY TWO TABLES, because 0004_auth.sql grants it exactly two
  * policies: this team's plays and this team's players. Not the team row, not
  * the league, not consents, not tombstones, not memberships, and not another
  * team's anything. This handler does not enforce that -- it could not, and does

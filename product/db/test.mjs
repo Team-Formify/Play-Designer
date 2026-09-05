@@ -32,16 +32,39 @@ const SEEDS = {
   consent:   ["seed.sql"],
 };
 
+// What each suite is expected to report. Without this a suite that silently
+// shrank to three tests would print "all 3 tests passed" and exit 0, which is
+// the shape of a green build that tested nothing. brand is the one known-red
+// suite; its number is its CURRENT failure count, so a fifteenth failure is a
+// regression and a thirteenth is progress -- either way the runner says so.
+const EXPECT = {
+  isolation: { pass: 183 },
+  auth:      { pass: 243 },
+  platform:  { pass: 252 },
+  brand:     { failing: 14 },
+  consent:   { pass: 187 },
+};
+
 const want = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+// A typo'd suite name used to run nothing and exit 0. A CI line with a typo in
+// it is a green build that tested nothing, which is worse than a red one.
+const unknown = want.filter((w) => !(w in SEEDS));
+if (unknown.length) {
+  console.error("no such suite: " + unknown.join(", "));
+  console.error("known suites: " + Object.keys(SEEDS).join(", "));
+  process.exit(1);
+}
 const suites = Object.keys(SEEDS).filter((s) => !want.length || want.includes(s));
 
 let bad = 0;
 for (const s of suites) {
   const db = "pd_t_" + s;
   try { execFileSync("dropdb", ["-h", "/tmp", "-p", "5433", "-U", "app", "--if-exists", db], { stdio: "ignore" }); } catch {}
-  execFileSync("createdb", ["-h", "/tmp", "-p", "5433", "-U", "app", db], { stdio: "inherit" });
 
   try {
+    // createdb was outside this try, so a failure to create the database came
+    // out as an uncaught stack trace instead of "COULD NOT BUILD".
+    execFileSync("createdb", ["-h", "/tmp", "-p", "5433", "-U", "app", db], { stdio: ["ignore", "ignore", "inherit"] });
     execFileSync("node", [join(DIR, "migrate.mjs"), "--db", db], { stdio: ["ignore", "ignore", "inherit"] });
     for (const seed of SEEDS[s]) {
       execFileSync("psql", [...P(db), "-v", "ON_ERROR_STOP=1", "-f", join(DIR, seed)], { stdio: ["ignore", "ignore", "inherit"] });
@@ -67,12 +90,29 @@ for (const s of suites) {
   const failed = lines.filter((l) => l.includes("*** FAIL ***"));
   const verdict = lines.filter((l) => /\d+ .*tests? (passed|failed)|TEST\(S\) FAILED/i.test(l)).at(-1);
 
+  const exp = EXPECT[s] || {};
   if (failed.length) {
-    console.log(`${s.padEnd(10)} ${failed.length} FAILING`);
+    const expected = exp.failing === failed.length;
+    console.log(`${s.padEnd(10)} ${failed.length} FAILING${expected ? " (the known " + exp.failing + ", unchanged)" : ""}`);
     failed.slice(0, 20).forEach((l) => console.log("           " + l.trim().slice(0, 150)));
-    bad++;
+    if (!expected) {
+      if (exp.failing !== undefined) console.log(`           EXPECTED ${exp.failing} FAILING, GOT ${failed.length}`);
+      bad++;
+    }
   } else if (verdict) {
-    console.log(`${s.padEnd(10)} ${verdict.replace(/^.*?(NOTICE|ERROR):\s*/, "").trim()}`);
+    const line = verdict.replace(/^.*?(NOTICE|ERROR):\s*/, "").trim();
+    const n = Number((line.match(/(\d+)\s+\S+\s+tests?\s+passed/) || [])[1]);
+    if (exp.failing !== undefined) {
+      console.log(`${s.padEnd(10)} ${line}   <== EXPECTED ${exp.failing} FAILING, NONE FAILED`);
+      bad++;                        // a known-red suite going green is news, not silence
+    } else if (exp.pass !== undefined && n !== exp.pass) {
+      // A shrinking suite still reports "all N tests passed" and exits 0. The
+      // count is the only thing that notices tests going missing.
+      console.log(`${s.padEnd(10)} ${line}   <== EXPECTED ${exp.pass}. Update EXPECT if you added tests.`);
+      bad++;
+    } else {
+      console.log(`${s.padEnd(10)} ${line}`);
+    }
   } else {
     console.log(`${s.padEnd(10)} NO VERDICT LINE -- the suite did not report a count`);
     bad++;

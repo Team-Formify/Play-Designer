@@ -5,7 +5,7 @@
  * through RLS. There is no service-role key here, no BYPASSRLS connection and
  * no `where team_id = $1 and user_is_allowed(...)` anywhere above it. The 21
  * policies in product/db/migrations/0003_rls.sql and the 43 security definer functions in
- * auth.sql / platform.sql ARE the authorization. This file's whole job is to
+ * 0004_auth.sql / 0005_platform.sql ARE the authorization. This file's whole job is to
  * carry identity to them and get out of the way.
  *
  * The other product in this org got that backwards -- permissive policies, a
@@ -21,7 +21,7 @@
  * choice. A pool hands the same physical connection to the next request; a
  * session-level GUC (is_local = false) would still be sitting on it, and the
  * next caller -- possibly anonymous, possibly a coach in another league --
- * would execute under the previous caller's identity. Every policy in rls.sql
+ * would execute under the previous caller's identity. Every policy in 0003_rls.sql
  * resolves `auth.uid()` live, so that is a complete tenancy bypass with no
  * code change anywhere. test/api.test.mjs interleaves two requests over one
  * connection and proves neither sees the other's GUC.

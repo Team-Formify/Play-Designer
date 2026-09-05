@@ -10,29 +10,29 @@
 --
 --   1. Coaches are real accounts. Identity arrives as auth.uid() -- Supabase
 --      Auth, email magic link, in production -- and nothing here re-plumbs that.
---      schema.sql already made auth.uid() the single door; this file walks
+--      migrations/0002_schema.sql already made auth.uid() the single door; this file walks
 --      through it and adds one more claim off the same token, auth.email(),
 --      because an invitation is addressed to an email.
 --   2. INVITE ONLY. There is no self-signup path into an existing team or
 --      league anywhere in this schema. A membership row is created by exactly
---      two things: a head/admin writing one directly (rls.sql already governs
+--      two things: a head/admin writing one directly (migrations/0003_rls.sql already governs
 --      that), or app.accept_invite() redeeming a token that was minted by a
 --      head/admin and emailed to one address. Nothing else can mint one --
 --      pd_authenticated has no INSERT policy on memberships except through
 --      memberships_write_head.
 --   3. Revocation is a DELETE and it bites on the next statement. There is no
 --      cached tier, no session table, and no cookie: every policy resolves
---      membership live, through the security definer helpers in rls.sql.
+--      membership live, through the security definer helpers in migrations/0003_rls.sql.
 --   4. Players get no account. A per-team, rotating, read-only word, deliberately
 --      -- making 13-year-olds create accounts is the fastest way to trigger
 --      COPPA at its strictest. The word is scoped to ONE team by primary key,
 --      rotates without touching anything else, and grants SELECT on that team's
 --      plays and roster and nothing else anywhere.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> seed.sql -> auth-seed.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> seed.sql -> auth-seed.sql
 -- Tests:     test-isolation.sql (183, unchanged by this file) and test-auth.sql
 --
--- COMPOSES WITH rls.sql, DOES NOT EDIT IT. Everything here is additive: two new
+-- COMPOSES WITH migrations/0003_rls.sql, DOES NOT EDIT IT. Everything here is additive: two new
 -- permissive SELECT policies (the player word), three new tables with their own
 -- policies, and one trigger apiece on memberships and league_memberships. Every
 -- policy added here is false when its credential is absent, so a session that
@@ -382,7 +382,7 @@ create trigger league_memberships_audit
 -- not the roster, not the plays, not a membership, not another team's word.
 --
 -- It is a READ credential and there is no policy anywhere in this file or in
--- rls.sql that lets it write. It reaches exactly two tables: this team's plays
+-- migrations/0003_rls.sql that lets it write. It reaches exactly two tables: this team's plays
 -- and this team's players. Not consents, not tombstones, not memberships, not
 -- the team row, not the league.
 --
@@ -460,10 +460,10 @@ comment on function app.player_team_id() is
 -- 4. Issuing, accepting and withdrawing an invitation
 -- ---------------------------------------------------------------------------
 
--- Who may staff what, in one place, so the invite path and rls.sql's
+-- Who may staff what, in one place, so the invite path and migrations/0003_rls.sql's
 -- memberships_write_head cannot drift apart. Head of the team, or admin of the
 -- team's league -- exactly the pair in memberships_write_head (head_team_ids
--- union admin_team_ids). An ASSISTANT IS NOT ON THIS LIST: rls.sql already says
+-- union admin_team_ids). An ASSISTANT IS NOT ON THIS LIST: migrations/0003_rls.sql already says
 -- an assistant cannot staff a team, and an assistant who could mint invitations
 -- would be staffing a team through a side door.
 create or replace function app.may_staff_team(p_team uuid)
@@ -483,9 +483,9 @@ as $$
 $$;
 
 comment on function app.may_staff_team(uuid) is
-  'Head of this team, or admin of its league. The same pair rls.sql''s memberships_write_head allows, expressed once so the invite path cannot drift from the direct path.';
+  'Head of this team, or admin of its league. The same pair migrations/0003_rls.sql''s memberships_write_head allows, expressed once so the invite path cannot drift from the direct path.';
 
--- Appointing a league board is an admin's job, per rls.sql's
+-- Appointing a league board is an admin's job, per migrations/0003_rls.sql's
 -- league_memberships_write_admin. A board member is oversight, not staffing.
 create or replace function app.may_staff_league(p_league uuid)
 returns boolean
@@ -656,7 +656,7 @@ begin
     -- ON CONFLICT DO NOTHING is the no-escalation rule: already a member means
     -- the row you already have, at the role you already have. An invitation
     -- never promotes anybody. Promotion is a head updating memberships.role,
-    -- which rls.sql governs and the audit trigger records as a role change.
+    -- which migrations/0003_rls.sql governs and the audit trigger records as a role change.
     insert into public.memberships (user_id, team_id, role, invited_by)
     values (v_uid, v_inv.team_id, v_inv.role, v_inv.issued_by)
     on conflict (user_id, team_id) do nothing;
@@ -813,7 +813,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 6. Privileges and policies
 -- ---------------------------------------------------------------------------
--- Same discipline as rls.sql: privileges say which verbs exist, policies say
+-- Same discipline as migrations/0003_rls.sql: privileges say which verbs exist, policies say
 -- which rows, and both have to pass.
 
 -- SECURITY DEFINER functions are EXECUTE-to-PUBLIC by default, which would hand
@@ -913,7 +913,7 @@ create policy auth_events_append on public.auth_events
 -- 7. The player word reaches exactly two tables
 -- ---------------------------------------------------------------------------
 -- Additive, permissive policies. They OR with the membership policies already
--- in rls.sql and they are FALSE whenever no valid word is presented, because
+-- in migrations/0003_rls.sql and they are FALSE whenever no valid word is presented, because
 -- `team_id = NULL` is NULL and never true. A session with no word sees exactly
 -- what it saw before this file was loaded -- which is why the 183 tests in
 -- test-isolation.sql are untouched by it.

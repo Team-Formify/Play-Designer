@@ -3,7 +3,7 @@
 -- everything else in this schema, and therefore the narrowest thing in it.
 --
 -- WHY THIS IS THE DANGEROUS FILE
--- schema.sql and rls.sql exist to stop one tenant seeing another. auth.sql
+-- migrations/0002_schema.sql and migrations/0003_rls.sql exist to stop one tenant seeing another. migrations/0004_auth.sql
 -- exists to stop anybody becoming a tenant they were not invited to be. This
 -- file adds a seat that sits outside all of it, because a business that sells
 -- to leagues has to be able to answer "how many leagues, how many teams, how
@@ -44,14 +44,14 @@
 --      season and no membership; it hides nothing from the people already in
 --      the league; and unsuspending is one function call.
 --
--- Load order: schema.sql -> rls.sql -> auth.sql -> platform.sql
+-- Load order: migrations/0002_schema.sql -> migrations/0003_rls.sql -> migrations/0004_auth.sql -> migrations/0005_platform.sql
 --             -> seed.sql -> auth-seed.sql -> platform-seed.sql
 -- Tests:      test-isolation.sql (183, unchanged), test-auth.sql (243,
 --             unchanged), test-platform.sql (this file's own attack suite).
 --
--- ADDITIVE, LIKE auth.sql. Three new tables, their own policies, one guard
+-- ADDITIVE, LIKE migrations/0004_auth.sql. Three new tables, their own policies, one guard
 -- trigger apiece on memberships / league_memberships / invites, and a set of
--- functions. Nothing in schema.sql, rls.sql or auth.sql is edited or replaced.
+-- functions. Nothing in migrations/0002_schema.sql, migrations/0003_rls.sql or migrations/0004_auth.sql is edited or replaced.
 -- Every guard added here is inert for a session that holds no platform
 -- credential and belongs to no suspended league, which is why the 426 tests
 -- that came before it do not move.
@@ -59,7 +59,7 @@
 -- ONE INHERITED ASSUMPTION, STATED. The SECURITY DEFINER functions below read
 -- and write across tenants with the rights of the role that owns them, which is
 -- the migration role. That is the same assumption app.tombstone_player() in
--- schema.sql already makes (it rewrites plays on behalf of a board member who
+-- migrations/0002_schema.sql already makes (it rewrites plays on behalf of a board member who
 -- has no write policy on plays), and the same one Supabase makes for functions
 -- owned by `postgres`. If you ever run this schema with a table owner that
 -- neither is a superuser nor holds BYPASSRLS, the definer functions here and
@@ -308,7 +308,7 @@ end $$;
 -- unless either the session is already a platform owner (that is how the SECOND
 -- owner is made, by app.grant_platform_owner) or the tx-local flag
 --     select set_config('app.platform_bootstrap', 'on', true);
--- is set -- the same explicit-intent pattern schema.sql uses to stop a play
+-- is set -- the same explicit-intent pattern migrations/0002_schema.sql uses to stop a play
 -- being deleted by accident. A tenant may set that GUC all day; they hold no
 -- INSERT privilege on the table, so it buys them nothing.
 --
@@ -652,7 +652,7 @@ end $$;
 -- 8. What the platform owner may DO: sell, staff the first seat, suspend
 -- ---------------------------------------------------------------------------
 
--- Provisioning a league is a sale. rls.sql says so already by giving nobody an
+-- Provisioning a league is a sale. migrations/0003_rls.sql says so already by giving nobody an
 -- INSERT policy on public.leagues; this is the sale, and it is the only way in.
 create or replace function app.create_league(
   p_name    text,
@@ -693,7 +693,7 @@ comment on function app.create_league(text, jsonb, text, integer) is
 -- This is NOT a widening of app.issue_invite(). It is a second, narrower door
 -- to the same table: role is fixed to 'admin', scope is fixed to a league, and
 -- the redemption path is app.accept_invite() unchanged -- same token hashing,
--- same single use, same expiry, same email-claim check. auth.sql is not edited,
+-- same single use, same expiry, same email-claim check. migrations/0004_auth.sql is not edited,
 -- so its 243 tests do not move; the extra event goes to the platform trail so
 -- the league can see that we opened the seat.
 create or replace function app.platform_invite_admin(
@@ -828,7 +828,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 9. Privileges and policies
 -- ---------------------------------------------------------------------------
--- Same discipline as rls.sql and auth.sql: privileges say which verbs exist,
+-- Same discipline as migrations/0003_rls.sql and migrations/0004_auth.sql: privileges say which verbs exist,
 -- policies say which rows, and both have to pass.
 
 -- SECURITY DEFINER functions are EXECUTE-to-PUBLIC by default, which would hand
