@@ -40,6 +40,7 @@ const SEEDS = {
   // runs from here anyway so that "did I break anything" is one command rather
   // than two, and the loop below skips the build for it.
   learn:     [],
+  feedback:  [],
 };
 
 // What each suite is expected to report. Without this a suite that silently
@@ -60,6 +61,7 @@ const EXPECT = {
   clubs:     { pass: 72 },
   hub:       { pass: 67 },
   learn:     { pass: 58 },
+  feedback:  { pass: 59 },
 };
 
 const want = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -77,16 +79,19 @@ let bad = 0;
 for (const s of suites) {
   const db = "pd_t_" + s;
 
-  if (s === "learn") {
+  if (s === "learn" || s === "feedback") {
+    const file = s === "learn" ? "test-learn.mjs" : "test-feedback.mjs";
+    const word = s === "learn" ? "learn" : "feedback";
     // A browser suite. No database, and it SKIPS rather than fails when
     // playwright is absent, because playwright is deliberately not a dependency
     // of this repo -- the no-build property is why the app works on a phone on
     // a practice field.
-    const r = spawnSync(process.execPath, [join(DIR, "..", "test", "test-learn.mjs")], { encoding: "utf8" });
+    const r = spawnSync(process.execPath, [join(DIR, "..", "test", file)], { encoding: "utf8" });
     const out = (r.stdout || "") + "\n" + (r.stderr || "");
     if (/^SKIPPED:/m.test(out)) { console.log(`${s.padEnd(10)} SKIPPED (playwright not installed)`); continue; }
     const failed = out.split("\n").filter((l) => l.includes("*** FAIL ***"));
-    const verdict = out.split("\n").filter((l) => /all \d+ learn tests passed|LEARN TEST\(S\) FAILED/.test(l)).at(-1);
+    const rx = new RegExp("all \\d+ " + word + " tests passed|" + word.toUpperCase() + " TEST\\(S\\) FAILED");
+    const verdict = out.split("\n").filter((l) => rx.test(l)).at(-1);
     const exp = EXPECT[s] || {};
     if (failed.length || !verdict || /FAILED/.test(verdict)) {
       console.log(`${s.padEnd(10)} ${failed.length || "?"} FAILING`);
@@ -94,7 +99,7 @@ for (const s of suites) {
       if (!verdict) console.log("           " + out.trim().split("\n").slice(-6).join("\n           "));
       bad++;
     } else {
-      const n = Number((verdict.match(/all (\d+) learn tests passed/) || [])[1]);
+      const n = Number((verdict.match(new RegExp("all (\\d+) " + word + " tests passed")) || [])[1]);
       if (exp.pass !== undefined && n !== exp.pass) {
         console.log(`${s.padEnd(10)} ${verdict.trim()}   <== EXPECTED ${exp.pass}. Update EXPECT if you added tests.`);
         bad++;
