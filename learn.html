@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="color-scheme" content="dark">
+<!-- Inline, as a data URI, for the same reason there are no webfonts:
+     this gets opened on a sideline with no signal and nothing may block on
+     the network. Without it the browser asks for /favicon.ico on every load,
+     gets a 404, and a boy who adds the page to his home screen gets a blank
+     square. designer.html already had one; these two did not. -->
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFEM0EzMSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iODIiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIvPjxwYXRoIGQ9Ik00MCAxMzhoMTEyIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWRhc2hhcnJheT0iMTYgMTEiLz48L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFEM0EzMSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iODIiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIvPjxwYXRoIGQ9Ik00MCAxMzhoMTEyIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWRhc2hhcnJheT0iMTYgMTEiLz48L3N2Zz4=">
+
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1D3A31">
 <title>Learn the Plays — Lehi Special Teams</title>
@@ -101,7 +109,7 @@
   <h1>Learn <span>the Plays</span></h1>
   <select id="playSel" aria-label="Pick a play"></select>
   <a class="back" href="/designer" id="backLink">&#8592; Designer</a>
-  <span class="bld" id="buildNote">b19</span>
+  <span class="bld" id="buildNote">b20</span>
 </header>
 
 <div id="lookBar" role="group" aria-label="Which kick" hidden></div>

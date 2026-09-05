@@ -45,7 +45,7 @@ security guard nobody has tested. Run `node product/db/test.mjs` to reproduce th
 from `db/migrations/` and runs the suite, and it fails if a count moves — so a
 suite that silently shrinks is a red build rather than a quiet one.
 
-**1,118 tests, all passing.** Every suite has been mutation-tested: each guard
+**1,176 tests, all passing.** Every suite has been mutation-tested: each guard
 broken on purpose, the red count recorded in that suite's header. No guard sits
 at zero.
 
@@ -58,7 +58,42 @@ at zero.
 | `0007_consent.sql` — COPPA machinery | **187** | Proven, and see below. |
 | `api/stripe-signature.js` | 11 | Proven for what it is — signature verification only. There is no billing. |
 | `hub/lib` — the desk client's data layer | **66** | Proven. Identity is bound per transaction and cannot reach the next request over a reused connection. |
-| `hub/` UI and routing | 0 | **Written, not proven.** It compiles and exports as a static site; no route handler is wired to a URL, because that needs a Node runtime this Vercel project does not have. |
+| `hub/` UI and routing | 0 | **Written, not proven.** It compiles and exports as a static site; no route handler is wired to a URL yet. |
+| `learn.html` — the boys' page | **58** | Proven, in a real browser at 390px. All three modes, every play, the collision marks, and the phone layout. |
+
+### Vercel is not the blocker for the hub API, and I said it was
+
+Recorded because it was wrong twice in one sentence. This Vercel project DOES
+run Node functions — `api/save-playbook.js` is live and answers 501/405 today.
+What it cannot run is a *Next.js route handler*, because the hub is statically
+exported. The hub does not need one: its `lib/routes/*` can be exposed as plain
+Vercel functions under `/api/`, exactly like `save-playbook.js`, with no new
+project. **The real blocker is a Postgres that Vercel can reach** — everything
+so far is tested against one inside a dev container.
+
+### The boys' page, driven at last
+
+`learn.html` is what a twelve-year-old opens on his own phone with nobody next
+to him, and it had never been driven at all. 58 tests now, in a real browser at
+390px: every play draws, the scrub bar moves men and puts them back, the
+collision rings are dashed from the first frame and fill in as men arrive, Line
+me up scores an exact tap and a corner tap differently, My job grades an answer
+and then names the man you are across from — and no mode's controls leak into
+another, which is the same class of bug as the game-day bar leaking.
+
+It also turned up one real gap: `designer.html` carried an inline home-screen
+icon and `learn.html` and `index.html` carried none, so the live site 404s on
+`/favicon.ico` and a boy who adds the page to his home screen gets a blank
+square. All three now declare both icons inline as data URIs — no request, same
+rule as the absent webfonts.
+
+Three of that suite's own first-draft assertions could not fail, and the file
+records each one. The instructive one: "tapping the field scores in yards"
+tapped the middle of the field and required the word "yards", and failed about
+half the time — not randomly, but whenever the man it asked about was the
+SNAPPER, who stands in the middle, so the tap was CORRECT and the page says
+"That is the spot." with no yardage in it. The suite was flaky because it was
+wrong about the feature.
 
 ### The hub suite found its own blind spot before it found anything else
 
