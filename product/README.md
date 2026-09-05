@@ -16,6 +16,35 @@ bundles stay gitignored.
 | `brand/` | white-label. One codebase, a look per league and per team. |
 | `formations/` | what a new team's empty playbook starts with. **Formations, not plays** — parametric generators for the alignments everybody already knows, so nothing anybody owns is ever shipped to a customer. `node product/formations/validate.js` proves every one of them legal. |
 
+## A team can buy this without its league
+
+**A solo team is a CLUB, and a club is a league of one.** It gets its own
+private league row, its own season, and its head coach is the admin of it.
+
+The obvious design — make `teams.league_id` nullable — is the dangerous one, and
+the reason is not the composite foreign keys or the null branches it would put
+in every policy. It is **consent**. A consent notice is published *by a league*,
+and `app.issue_consent_notice()` is league-admin only. A team with no league has
+nobody who can publish one, so `app.request_consent()` never finds a live notice,
+and the collection gate in `0007` stays shut forever — an independent team could
+not write a single child's name. It holds children's data exactly like a league
+team does, and COPPA does not care that nobody sold them a league.
+
+Making it a league of one means **not one line of RLS, consent, branding or
+platform code changes**, because nothing downstream can tell the difference.
+
+**The one new rule is that a club holds exactly one team**, enforced by a trigger
+that binds the owner too. That rule is the entire price boundary: without it, a
+club is a free league — sign up as one team, then add the other twenty-nine.
+Growing up is `app.convert_club_to_league()`, which is the *vendor's* call
+because it is the moment the rate changes, and it is recorded in the platform
+trail. Nothing moves when it happens: same ids, same plays, same children, same
+consent.
+
+`app.billable_units()` is the seam an invoice is built from — kind, plan, teams,
+seats, children — and it contains no money at all, asserted. **What a club is
+charged is the founders' decision and is not in the schema.**
+
 ## Two positions that are already settled
 
 **`players` carries last name, first name and jersey in v1 — nothing else.** No
@@ -45,7 +74,7 @@ security guard nobody has tested. Run `node product/db/test.mjs` to reproduce th
 from `db/migrations/` and runs the suite, and it fails if a count moves — so a
 suite that silently shrinks is a red build rather than a quiet one.
 
-**1,176 tests, all passing.** Every suite has been mutation-tested: each guard
+**1,249 tests, all passing.** Every suite has been mutation-tested: each guard
 broken on purpose, the red count recorded in that suite's header. No guard sits
 at zero.
 
@@ -56,6 +85,7 @@ at zero.
 | `0005_platform.sql` — the vendor's own seat | **252** | Proven. The platform owner sees league size, seasons, seats and billing, and zero plays and zero children. |
 | `0006_brand.sql` — white-label | **187** | Proven. The database refuses a palette a human cannot read, and the refusal is whole-record, not clamped. |
 | `0007_consent.sql` — COPPA machinery | **187** | Proven, and see below. |
+| `0009_clubs.sql` — a team that signs up alone | **72** | Proven. The signup, the isolation, and the one-team cap that makes the cheaper rate honest. |
 | `api/stripe-signature.js` | 11 | Proven for what it is — signature verification only. There is no billing. |
 | `hub/lib` — the desk client's data layer | **66** | Proven. Identity is bound per transaction and cannot reach the next request over a reused connection. |
 | `hub/` UI and routing | 0 | **Written, not proven.** It compiles and exports as a static site; no route handler is wired to a URL yet. |

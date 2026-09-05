@@ -30,6 +30,7 @@ const SEEDS = {
   platform:  ["seed.sql", "auth-seed.sql", "platform-seed.sql"],
   brand:     ["seed.sql", "auth-seed.sql", "platform-seed.sql", "brand-seed.sql"],
   consent:   ["seed.sql"],
+  clubs:     ["seed.sql", "auth-seed.sql", "platform-seed.sql"],
   // The hub's data layer is not SQL, but it is the same claim one level up --
   // that a statement reaches Postgres as the caller and no further -- so it
   // builds the same way and runs from the same command. Its assertions live in
@@ -56,7 +57,8 @@ const EXPECT = {
   platform:  { pass: 252 },
   brand:     { pass: 187 },
   consent:   { pass: 187 },
-  hub:       { pass: 66 },
+  clubs:     { pass: 72 },
+  hub:       { pass: 67 },
   learn:     { pass: 58 },
 };
 

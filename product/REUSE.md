@@ -116,5 +116,13 @@ Not code, and not something I can move. It is the gate in front of billing.
 
 ## Open, and not ours to decide
 
-- Is the league billed, or each team? It changes the seat counter and who gets
-  chased when a card fails.
+- **What a club pays, and what a league pays per team.** Settled in shape, not in
+  numbers: a league is billed for the teams inside it, a club is billed as one
+  team at a lower rate. `app.billable_units()` returns kind, plan, teams, seats
+  and children, and deliberately no money. The two numbers — the per-team rate
+  and the club rate — are the founders' and nothing can be invoiced until they
+  exist.
+- **Whether one account may create unlimited clubs.** Nothing caps it today.
+  They all start on `trial` and the platform can suspend, but a rate limit
+  belongs in front of the signup endpoint before launch. Recorded in
+  test-clubs.sql as something that file cannot prove.

@@ -124,7 +124,14 @@ async function main() {
   // -------------------------------------------------------------------------
   sect("0. CONTROL -- the database really has something to steal");
   // -------------------------------------------------------------------------
-  eq("the schema is built to 0008", psql("select count(*)::text from public._schema_migrations"), "8");
+  // Not an exact migration count: that pins the suite to a moment in the
+  // schema's life and breaks on the next migration for no reason. What this
+  // suite actually needs is that the role it connects as exists, which is 0008.
+  eq("the migration that creates this suite's login role has been applied",
+     psql("select count(*)::text from public._schema_migrations where version='0008'"), "1");
+  ok("and the ledger is at 0008 or later",
+     Number(psql("select max(version)::int from public._schema_migrations")) >= 8,
+     psql("select max(version) from public._schema_migrations"));
   eq("pd_app exists and is NOINHERIT",
      psql("select (not rolinherit)::text from pg_roles where rolname='pd_app'"), "true");
   eq("pd_app holds no table privilege of its own",
