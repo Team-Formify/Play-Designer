@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Coach hub — Play Designer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D3A31">
+<meta name="robots" content="noindex">
+<!-- Inline, as a data URI: this gets opened on a sideline with no signal and
+     nothing may block on the network. -->
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFEM0EzMSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iODIiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIvPjxwYXRoIGQ9Ik00MCAxMzhoMTEyIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWRhc2hhcnJheT0iMTYgMTEiLz48L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFEM0EzMSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iODIiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIvPjxwYXRoIGQ9Ik00MCAxMzhoMTEyIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWRhc2hhcnJheT0iMTYgMTEiLz48L3N2Zz4=">
+<style>
+  :root{
+    --page:#13251F; --board:#1D3A31; --deep:#0D1B16;
+    --chalk:#EDEBE0; --soft:#9AA69C; --gold:#E3B547; --warm:#E58A6B;
+    --line:rgba(237,235,224,.18);
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--chalk);font-family:var(--body);
+    font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  header{background:var(--board);padding:12px 16px;display:flex;align-items:center;
+    gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+  header h1{margin:0;font-size:16px;font-weight:700}
+  header h1 span{color:var(--gold)}
+  header a,header button{color:var(--chalk);font-size:13px;text-decoration:none;font-family:inherit;
+    border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:transparent;cursor:pointer}
+  header a:hover,header button:hover{background:var(--deep)}
+  .sp{flex:1}
+  main{max-width:720px;margin:0 auto;padding:16px 16px 72px}
+  .card{background:var(--board);border:1px solid var(--line);border-radius:12px;
+    padding:16px;margin:0 0 14px}
+  h2{margin:0 0 4px;font-size:15px}
+  .sub{font-size:12px;color:var(--soft);margin:0 0 12px}
+  label{display:block;font-size:11px;color:var(--soft);margin:10px 0 4px;
+    text-transform:uppercase;letter-spacing:.08em}
+  input,select{width:100%;background:var(--deep);color:var(--chalk);font-family:inherit;
+    font-size:16px;border:1px solid var(--line);border-radius:8px;padding:10px}
+  button.b{font-family:inherit;font-size:14px;border-radius:8px;padding:10px 14px;
+    cursor:pointer;border:1px solid var(--line);background:var(--deep);color:var(--chalk)}
+  button.b.go{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:700}
+  button.b[disabled]{opacity:.4;cursor:not-allowed}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .msg{font-size:13px;margin-top:10px;min-height:1.2em}
+  .msg.bad{color:var(--warm)} .msg.good{color:var(--gold)}
+  .note{font-size:12px;color:var(--soft);line-height:1.5}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.08em}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;
+    border-radius:10px;border:1px solid var(--line);color:var(--soft);white-space:nowrap}
+  .pill.ok{color:var(--gold);border-color:rgba(227,181,71,.55)}
+  .pill.wait{color:var(--warm);border-color:rgba(229,138,107,.55)}
+  .word{font-family:var(--mono);font-size:20px;letter-spacing:.06em;color:var(--gold);
+    background:var(--deep);border:1px dashed rgba(227,181,71,.5);border-radius:8px;
+    padding:12px;margin-top:10px;word-break:break-all}
+  .hide{display:none!important}
+  .stat{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 0}
+  .stat div{background:var(--deep);border:1px solid var(--line);border-radius:8px;
+    padding:8px 12px;min-width:84px}
+  .stat b{display:block;font-size:19px}
+  .stat span{font-size:10.5px;color:var(--soft);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<header>
+  <h1>Coach <span>hub</span></h1>
+  <span class="pill" id="build"></span>
+  <span class="sp"></span>
+  <a href="/designer">Playbook</a>
+  <a href="/signin">Account</a>
+</header>
+
+<main>
+  <div class="card hide" id="gate">
+    <h2>Not signed in</h2>
+    <p class="note" id="gateWhy">Sign in to see your team.</p>
+    <div class="row"><a class="b go" href="/signin" style="text-decoration:none">Go to sign in</a></div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="card">
+      <label for="teamSel">Team</label>
+      <select id="teamSel"></select>
+      <div class="stat" id="stats"></div>
+      <p class="sub" id="teamSub" style="margin-top:10px"></p>
+    </div>
+
+    <!-- ROSTER ------------------------------------------------------------->
+    <div class="card">
+      <h2>Roster</h2>
+      <p class="sub" id="rosterSub"></p>
+      <div id="roster"></div>
+
+      <label for="jersey">Add a spot</label>
+      <p class="note" style="margin:0 0 6px">
+        A new spot is a <b>jersey number and nothing else</b>. His name goes on
+        once a guardian has agreed &mdash; the database refuses to hold it
+        before then, which is the point rather than a limitation.
+      </p>
+      <div class="row">
+        <input id="jersey" inputmode="numeric" placeholder="e.g. 81" style="max-width:120px">
+        <button class="b go" id="addBtn">Add spot</button>
+      </div>
+      <p class="msg" id="mRoster"></p>
+    </div>
+
+    <!-- THE BOYS' WORD ----------------------------------------------------->
+    <div class="card">
+      <h2>The boys' word</h2>
+      <p class="sub" id="wordSub"></p>
+      <p class="note">
+        Read-only, one team, no account. Only its digest is stored, so this is
+        the only moment a new one can be read &mdash; write it down before you
+        leave this screen. Rotating it cuts the old one off on the next request,
+        with no session to expire.
+      </p>
+      <div class="row"><button class="b" id="wordBtn">Rotate the word</button></div>
+      <div class="word hide" id="wordOut"></div>
+      <p class="msg" id="mWord"></p>
+    </div>
+
+    <!-- STAFF -------------------------------------------------------------->
+    <div class="card">
+      <h2>Staff</h2>
+      <p class="sub" id="staffSub"></p>
+      <div id="staff"></div>
+      <label for="inviteEmail">Invite a coach</label>
+      <input id="inviteEmail" type="email" placeholder="their email" autocomplete="off">
+      <label for="inviteRole">As</label>
+      <select id="inviteRole">
+        <option value="assistant">Assistant</option>
+        <option value="helper">Helper (read only)</option>
+        <option value="head">Head coach</option>
+      </select>
+      <div class="row"><button class="b" id="inviteBtn">Send an invitation</button></div>
+      <div class="word hide" id="inviteOut"></div>
+      <p class="msg" id="mStaff"></p>
+    </div>
+
+    <!-- PLAYBOOK ----------------------------------------------------------->
+    <div class="card">
+      <h2>Playbook</h2>
+      <p class="sub" id="playSub"></p>
+      <div id="plays"></div>
+      <div class="row">
+        <a class="b go" href="/designer" style="text-decoration:none">Open the designer</a>
+        <a class="b" href="/learn" style="text-decoration:none">The boys' page</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+var BUILD = 'b1 · 5 Sep';
+document.getElementById('build').textContent = BUILD;
+
+var TEAMS = [], CUR = null, DATA = null;
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function say(id,msg,cls){ var e=$(id); e.textContent=msg||''; e.className='msg'+(cls?' '+cls:''); }
+function show(el,on){ $(el).classList.toggle('hide',!on); }
+
+function get(url){
+  return fetch(url,{headers:{Accept:'application/json'}}).then(function(r){
+    return r.json().catch(function(){return {};}).then(function(j){return {s:r.status,j:j};});
+  });
+}
+function post(url,body){
+  return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body||{})}).then(function(r){
+    return r.json().catch(function(){return {};}).then(function(j){return {s:r.status,j:j};});
+  });
+}
+
+/* One place that turns a refusal into a sentence. The database's own message is
+   often the clearest thing available -- "you do not run that team" says more
+   than "Forbidden" -- so it is used when there is one. */
+function refusal(r, fallback){
+  if (r.s === 501) return (r.j.error || 'Not configured yet') + ' — see product/DEPLOY.md.';
+  if (r.s === 401 || r.s === 403) return r.j.error || 'The database refused that for this seat.';
+  if (r.s === 404) return 'Not found — or not yours, which reads the same on purpose.';
+  /* A bare "conflict" is what the API says and is no use standing on a field.
+     There is exactly one thing that conflicts on this screen: two boys cannot
+     wear the same number on the same team. */
+  if (r.s === 409) return 'That number is already on this roster.';
+  return r.j.error || fallback || ('Something went wrong (' + r.s + ').');
+}
+
+function boot(){
+  get('/api/me').then(function(r){
+    if (r.s === 501){ show('gate',true); $('gateWhy').textContent = refusal(r); return; }
+    var d = r.j || {};
+    if (!d.signed_in){ show('gate',true); return; }
+    TEAMS = d.teams || [];
+    if (!TEAMS.length){
+      show('gate',true);
+      $('gateWhy').textContent = 'You are signed in, but you are not on a team. A coach joins a team by invitation.';
+      return;
+    }
+    var sel = $('teamSel'); sel.innerHTML='';
+    TEAMS.forEach(function(t){
+      var o=document.createElement('option'); o.value=t.id;
+      o.textContent = t.name+' '+t.grade+(t.season?' — '+t.season:'')+' ('+t.role+')';
+      sel.appendChild(o);
+    });
+    sel.onchange = function(){ load(sel.value); };
+    show('app',true);
+    load(TEAMS[0].id);
+  }).catch(function(e){ show('gate',true); $('gateWhy').textContent='Could not reach the server: '+e.message; });
+}
+
+/* `quiet` keeps the messages and the shown-once boxes alone. Without it, every
+   success message was written and then wiped a moment later by the reload it
+   triggered -- press Rotate, watch a word appear, and be told nothing. */
+function load(teamId, quiet){
+  CUR = teamId;
+  if (!quiet){
+    show('wordOut',false); show('inviteOut',false);
+    say('mRoster',''); say('mWord',''); say('mStaff','');
+  }
+  return get('/api/team?team='+encodeURIComponent(teamId)).then(function(r){
+    if (r.s !== 200){ say('mRoster', refusal(r), 'bad'); return; }
+    DATA = r.j; paint();
+  });
+}
+
+function paint(){
+  var d = DATA, t = d.team;
+  $('teamSub').textContent = (t.league||'—') + (t.league_kind==='club'?' (club)':'')
+    + (t.season_ends?' · season ends '+t.season_ends:'');
+
+  /* COUNT THE RIGHT THING. The first version counted `named` and called
+     everything else "awaiting consent", which made a roster of 21 names with 2
+     consents behind them report "0 awaiting consent" and print "every name here
+     has a consent behind it". That is the save-badge lie in a different shirt:
+     a screen telling a coach he is compliant because it measured the easy
+     number. What matters is NAMED WITHOUT A LIVE CONSENT. */
+  var named    = d.roster.filter(function(p){ return p.named; }).length;
+  var ok       = d.roster.filter(function(p){ return p.roster_ok; }).length;
+  var atRisk   = d.roster.filter(function(p){ return p.named && !p.roster_ok; }).length;
+  var blank    = d.roster.filter(function(p){ return !p.named; }).length;
+  $('stats').innerHTML =
+    '<div><b>'+d.roster.length+'</b><span>on the roster</span></div>' +
+    '<div><b>'+ok+'</b><span>consented</span></div>' +
+    '<div><b>'+atRisk+'</b><span>named, no consent</span></div>' +
+    '<div><b>'+blank+'</b><span>spots, no name</span></div>' +
+    '<div><b>'+d.plays.length+'</b><span>plays</span></div>';
+
+  /* THE ROSTER IS THE CONSENT AUDIT. A coach's roster that cannot show him
+     which boys he is allowed to hold a name for is a roster that lets him
+     believe he is compliant. */
+  $('rosterSub').textContent =
+    atRisk ? atRisk + ' of ' + named + ' names have no live consent behind them.'
+    : blank ? blank + ' spot(s) still waiting on a guardian; every name here is consented.'
+    : named ? 'Every name here has a live consent behind it.'
+            : 'No names held yet.';
+  $('roster').innerHTML = d.roster.length
+    ? '<table><tr><th>#</th><th>Name</th><th>Consent</th><th></th></tr>' +
+      d.roster.map(function(p){
+        var name = p.named ? esc(p.last)+(p.first?', '+esc(p.first):'')
+                           : '<span class="note">a spot, no name yet</span>';
+        var cls = p.roster_ok ? 'ok' : (p.named ? 'wait' : '');
+        return '<tr><td>'+esc(p.jersey||'—')+'</td><td>'+name+'</td>'+
+          '<td><span class="pill '+cls+'">'+esc(p.consent_state||'—')+'</span></td>'+
+          '<td><button class="b rm" data-p="'+esc(p.player_id)+'" '+
+          (d.may.consent?'':'disabled title="A coach of this team does this."')+
+          '>Remove</button></td></tr>';
+      }).join('') + '</table>'
+    : '<p class="note">No spots yet.</p>';
+
+  [].forEach.call($('roster').querySelectorAll('.rm'), function(b){
+    b.onclick = function(){ removePlayer(b.getAttribute('data-p')); };
+  });
+
+  $('wordSub').textContent = d.boys_word.set
+    ? 'A word is set' + (d.boys_word.expires ? ' — until ' + d.boys_word.expires.slice(0,10) : '') + '.'
+    : 'No word set yet. The boys cannot open the page until there is one.';
+  /* may.word, NOT may.staff. An assistant coaches the boys, so the word is his;
+     invitations are the head's. Wiring both to the same flag disabled the one
+     button this app's only user actually needs. */
+  $('wordBtn').disabled = !d.may.word;
+  $('wordBtn').title = d.may.word ? '' : 'You coach this team to rotate its word.';
+
+  $('staffSub').textContent = d.staff.length + ' on this team.';
+  $('staff').innerHTML = '<table><tr><th>Seat</th><th>Account</th></tr>' +
+    d.staff.map(function(s){
+      return '<tr><td><span class="pill'+(s.role==='head'?' ok':'')+'">'+esc(s.role)+'</span></td>'+
+        '<td><span class="note">'+esc(s.user_id)+'</span></td></tr>';
+    }).join('') + '</table>';
+  $('inviteBtn').disabled = !d.may.staff;
+  $('inviteBtn').title = d.may.staff ? '' : 'Head coaches and league admins invite. An assistant cannot staff the team he is on.';
+  $('addBtn').disabled = !d.may.consent;
+  $('addBtn').title = d.may.consent ? '' : 'A coach of this team adds a spot.';
+
+  $('playSub').textContent = d.plays.length + ' in this team’s book.';
+  $('plays').innerHTML = d.plays.length
+    ? '<table><tr><th>Play</th><th>Changed</th></tr>' + d.plays.map(function(p){
+        return '<tr><td>'+esc(p.slug)+'</td><td class="note">'+esc((p.updated_at||'').slice(0,10))+'</td></tr>';
+      }).join('') + '</table>'
+    : '<p class="note">Nothing saved to this team yet. The designer keeps its book on this device until it is pushed.</p>';
+}
+
+$('addBtn').onclick = function(){
+  var j = $('jersey').value.trim();
+  say('mRoster','Adding…');
+  post('/api/team?team='+encodeURIComponent(CUR)+'&do=player', { jersey: j }).then(function(r){
+    if (r.s === 201){
+      $('jersey').value='';
+      load(CUR, true).then(function(){
+        say('mRoster','Added as '+(r.j.player.last)+'. A name needs a guardian first.','good');
+      });
+    }
+    else say('mRoster', refusal(r), 'bad');
+  });
+};
+
+$('wordBtn').onclick = function(){
+  say('mWord','Rotating…');
+  post('/api/team?team='+encodeURIComponent(CUR)+'&do=word').then(function(r){
+    if (r.s === 200){
+      $('wordOut').textContent = r.j.word;
+      show('wordOut',true);
+      load(CUR, true).then(function(){
+        say('mWord','Written down? This is the only time it can be read.','good');
+      });
+    } else say('mWord', refusal(r), 'bad');
+  });
+};
+
+$('inviteBtn').onclick = function(){
+  var email = $('inviteEmail').value.trim(), role = $('inviteRole').value;
+  if (!email){ say('mStaff','An email, please.','bad'); return; }
+  say('mStaff','Sending…');
+  post('/api/team?team='+encodeURIComponent(CUR)+'&do=staff', { email: email, role: role }).then(function(r){
+    if (r.s === 201){
+      $('inviteEmail').value='';
+      $('inviteOut').textContent = r.j.token;
+      show('inviteOut',true);
+      say('mStaff','Give them this. It is shown once and works for fourteen days.','good');
+    } else say('mStaff', refusal(r), 'bad');
+  });
+};
+
+function removePlayer(pid){
+  if (!window.confirm('Remove this player? His name goes; every play he was in keeps its shape and reads a jersey number.')) return;
+  say('mRoster','Removing…');
+  fetch('/api/player?team='+encodeURIComponent(CUR)+'&player='+encodeURIComponent(pid)+'&reason=parent_request',
+        {method:'DELETE'})
+    .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){return {s:r.status,j:j};}); })
+    .then(function(r){
+      if (r.s === 200){
+        var tb = r.j.tombstone || {};
+        load(CUR, true).then(function(){
+          say('mRoster','Removed. '+(tb.plays_redacted||0)+' play(s) now read his jersey number.','good');
+        });
+      } else say('mRoster', refusal(r), 'bad');
+    });
+}
+
+boot();
+</script>
+</body>
+</html>

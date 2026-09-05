@@ -85,6 +85,8 @@ const ROUTES = {
   "/api/signout": require_(join(ROOT, "api/signout.js")),
   "/api/roster": require_(join(ROOT, "api/roster.js")),
   "/api/plays": require_(join(ROOT, "api/plays.js")),
+  "/api/team": require_(join(ROOT, "api/team.js")),
+  "/api/player": require_(join(ROOT, "api/player.js")),
 };
 const server = createServer((req, res) => {
   const u = new URL(req.url, "http://localhost");
@@ -232,6 +234,74 @@ try {
   ok("and Lehi's roster is nothing to him",
      r.status === 404 || (r.json && (r.json.players || []).length === 0), r.status + " " + r.text.slice(0, 80));
   ok("no Lehi surname reaches him", !/Bagley|Archuletta/.test(r.text), r.text.slice(0, 120));
+
+  // -----------------------------------------------------------------------
+  sect("6b. The coach hub's one round trip");
+  // -----------------------------------------------------------------------
+  // Still signed in as Ostler from section 6.
+  r = await call("/api/team?team=" + LOGAN8);
+  eq("a coach can pull his own team in one request", r.status, 200);
+  eq("with the team on it", r.json.team.name, "Logan");
+  ok("its staff", r.json.staff.length >= 1, JSON.stringify(r.json.staff));
+  ok("its roster", r.json.roster.length >= 1, String(r.json.roster.length));
+  ok("and what the database would let him do", typeof r.json.may.staff === "boolean");
+  eq("he is head, so he may staff it", r.json.may.staff, true);
+
+  r = await call("/api/team?team=" + LEHI8);
+  ok("and the other league's team is 404, not a partial answer",
+     r.status === 404, r.status + " " + r.text.slice(0, 90));
+  ok("with no Lehi surname anywhere in it", !/Bagley|Archuletta/.test(r.text), r.text.slice(0, 100));
+
+  r = await call("/api/team?team=" + LOGAN8 + "&do=word", { method: "POST" });
+  eq("he can rotate his own boys' word", r.status, 200);
+  ok("and it is shown exactly once", r.json.shown_once === true && typeof r.json.word === "string"
+     && r.json.word.length > 4, JSON.stringify(r.json).slice(0, 80));
+  const word1 = r.json.word;
+  r = await call("/api/team?team=" + LOGAN8 + "&do=word", { method: "POST" });
+  ok("rotating again gives a different word", r.json.word !== word1);
+
+  r = await call("/api/team?team=" + LEHI8 + "&do=word", { method: "POST" });
+  ok("but he cannot rotate the other league's", r.status >= 400, String(r.status));
+
+  // A new spot is a jersey and nothing else -- 0007's gate, through the API.
+  const before = (await call("/api/team?team=" + LOGAN8)).json.roster.length;
+  r = await call("/api/team?team=" + LOGAN8 + "&do=player", { method: "POST", body: { jersey: "88" } });
+  eq("he can add a roster spot", r.status, 201);
+  eq("and it arrives unnamed", r.json.named, false);
+  eq("as a jersey placeholder", r.json.player.last, "#88");
+  const after = (await call("/api/team?team=" + LOGAN8)).json.roster;
+  eq("the roster grew by one", after.length, before + 1);
+  ok("and the new one is not named", after.some((p) => p.jersey === "88" && p.named === false));
+
+  r = await call("/api/team?team=" + LOGAN8 + "&do=staff", { method: "POST", body: { email: "newcoach@example.com", role: "assistant" } });
+  eq("a head coach can invite an assistant", r.status, 201);
+  ok("and the token is shown once", r.json.shown_once === true && r.json.token.length > 20);
+
+  r = await call("/api/team?team=" + LOGAN8 + "&do=nonsense", { method: "POST" });
+  eq("an unknown action is refused", r.status, 400);
+
+  // -----------------------------------------------------------------------
+  sect("6c. An assistant coaches. He does not staff.");
+  // -----------------------------------------------------------------------
+  cookie = null;
+  r = await call("/api/signin", { method: "POST", body: { passphrase: SECRET, user_id: DOM, email: "dom@example.com" } });
+  cookie = (r.setCookie[0] || "").split(";")[0];
+
+  r = await call("/api/team?team=" + LEHI8);
+  eq("Dom pulls his own team", r.status, 200);
+  eq("and the screen is told he may not staff it", r.json.may.staff, false);
+  eq("but that he may manage its consent", r.json.may.consent, true);
+  // NOT a staffing action, and the first draft of this suite got it wrong the
+  // same way the screen did. 0004_auth.sql: "Dom's seat is assistant and the
+  // boys' page is his ... which is why it is not restricted to the head."
+  eq("and that he MAY rotate the boys' word", r.json.may.word, true);
+
+  r = await call("/api/team?team=" + LEHI8 + "&do=staff", { method: "POST", body: { email: "x@example.com", role: "assistant" } });
+  ok("and the database refuses the invitation anyway", r.status >= 400, String(r.status));
+  r = await call("/api/team?team=" + LEHI8 + "&do=word", { method: "POST" });
+  eq("and he can: the word is the assistant's, not the head's", r.status, 200);
+  r = await call("/api/team?team=" + LOGAN8 + "&do=word", { method: "POST" });
+  ok("though not for a team he does not coach", r.status >= 400, String(r.status));
 
   // -----------------------------------------------------------------------
   sect("7. Signing out");

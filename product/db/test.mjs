@@ -65,7 +65,7 @@ const EXPECT = {
   hub:       { pass: 67 },
   learn:     { pass: 58 },
   feedback:  { pass: 59 },
-  api:       { pass: 52 },
+  api:       { pass: 79 },
 };
 
 const want = process.argv.slice(2).filter((a) => !a.startsWith("--"));
