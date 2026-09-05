@@ -57,6 +57,25 @@ it was broken once and cost him hours of re-entry. Treat them as hard constraint
 
 ---
 
+## End every reply with what to do next
+
+**His standing instruction.** He is building this to sell after the season and
+cannot always tell where the work stopped, what is finished, and what the next
+move is. So: every time you finish something, say plainly what you would do
+next and why — one recommendation, not a menu, unless the choice is genuinely
+his to make.
+
+Three things that make it useful rather than noise:
+
+- **Say what is DONE versus what is PROVEN.** Written and loading is not the
+  same as attacked. This project's whole standard is that a thing counts when
+  its guard has been broken on purpose and the tests went red.
+- **Name the blocker if it is not code.** The LLC, who gets billed, whether
+  Steve has agreed something — those stop progress harder than any bug and he
+  is the only one who can move them.
+- **Recommend, do not survey.** He has been handed enough option lists. Pick
+  the one you would do, say why, and note what it costs.
+
 ## Working with Dom
 
 He talks, you change the repo. He is on a phone, usually mid-thought, and writes short.
