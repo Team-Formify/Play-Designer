@@ -452,8 +452,16 @@ select t.val('a team with no brand inherits its league''s',
   $q$select app.team_brand('c0000000-0000-4000-8000-000000000004')->>'id'$q$, 'willow-creek');
 select t.val('and says so',
   $q$select app.team_brand_source('c0000000-0000-4000-8000-000000000004')$q$, 'league');
-select t.val('its sibling in the same league resolves identically',
-  $q$select app.team_brand('c0000000-0000-4000-8000-000000000005')->>'id'$q$, 'willow-creek');
+-- The sibling is the interesting case, and the original expectation here was
+-- written without asking WHO is looking. app.team_brand() is SECURITY INVOKER
+-- on purpose — its own comment says a team you cannot see must resolve to the
+-- default rather than leak another tenant's colours. This seat is a coach of
+-- team 0004 and is NOT a member of 0005, so the default is the CORRECT answer
+-- and 'willow-creek' would have been the bug. Assert the security property.
+select t.val('a coach cannot resolve the brand of a team he is not on',
+  $q$select app.team_brand('c0000000-0000-4000-8000-000000000005')->>'id'$q$, 'product');
+select t.val('and it does not even tell him a league answered',
+  $q$select app.team_brand_source('c0000000-0000-4000-8000-000000000005')$q$, 'default');
 
 -- (c) Neither has one.
 select t.be('d0000000-0000-4000-8000-000000000004', 'kaye@example.com');
