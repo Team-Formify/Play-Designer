@@ -14,3 +14,4 @@ product/hub/node_modules/
 product/hub/.next/
 product/hub/next-env.d.ts
 product/hub/tsconfig.tsbuildinfo
+product/hub/out/
