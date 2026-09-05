@@ -5,13 +5,15 @@
 -- this is the one seat that is allowed to look across tenants at all.
 --
 -- RUN:
+--   node product/db/test.mjs platform
+--
+-- That builds pd_plat from product/db/migrations/ via the migration runner and
+-- applies the seeds in order, then runs this file. The hand-ordered list of
+-- -f flags that used to live here was wrong twice and is now in test.mjs,
+-- executed rather than described.
+--
+-- Against a database you have already built:
 --   psql -h /tmp -p 5433 -U app -d pd_plat -f product/db/test-platform.sql
--- FROM EMPTY:
---   createdb pd_plat
---   psql ... -f product/db/schema.sql   -f product/db/rls.sql \
---            -f product/db/auth.sql     -f product/db/platform.sql \
---            -f product/db/seed.sql     -f product/db/auth-seed.sql \
---            -f product/db/platform-seed.sql
 --
 -- Everything runs inside one transaction and ROLLS BACK, so the suite is
 -- rerunnable and leaves the seed untouched. No SAVEPOINTs, for the same reason

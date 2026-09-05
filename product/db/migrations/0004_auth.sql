@@ -1,4 +1,4 @@
--- product/db/auth.sql
+-- product/db/migrations/0004_auth.sql
 -- Accounts, invitations, revocation, the player word, and the audit log.
 --
 -- WHY THIS EXISTS
@@ -45,7 +45,10 @@
 
 \set ON_ERROR_STOP on
 
-begin;
+-- The transaction is supplied by the runner (product/db/migrate.mjs), which
+-- wraps this file and its ledger row in ONE transaction. A migration that
+-- committed itself could succeed while its ledger row failed, and the next run
+-- would replay it. Do not add begin/commit here.
 
 -- ---------------------------------------------------------------------------
 -- 0. The second claim: the email the magic link was sent to
@@ -928,4 +931,4 @@ create policy players_select_player_word on public.players
   for select to pd_anon, pd_authenticated
   using (team_id = (select app.player_team_id()));
 
-commit;
+-- (no commit; the runner commits)

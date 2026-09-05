@@ -1,4 +1,4 @@
--- product/db/schema.sql
+-- product/db/migrations/0002_schema.sql
 -- Play Designer, the product: multi-tenant schema for leagues -> teams.
 --
 -- WHY THIS EXISTS
@@ -28,7 +28,10 @@
 
 \set ON_ERROR_STOP on
 
-begin;
+-- The transaction is supplied by the runner (product/db/migrate.mjs), which
+-- wraps this file and its ledger row in ONE transaction. A migration that
+-- committed itself could succeed while its ledger row failed, and the next run
+-- would replay it. Do not add begin/commit here.
 
 -- ---------------------------------------------------------------------------
 -- 0. Schemas, roles, and the auth.uid() stand-in
@@ -575,4 +578,4 @@ end $$;
 comment on function app.expire_season_rosters(date, uuid) is
   'Roster retention. Touches players only. Plays are never deleted by retention -- they degrade to jersey numbers via the tombstone trigger and stay.';
 
-commit;
+-- (no commit; the runner commits)

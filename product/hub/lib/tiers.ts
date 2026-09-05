@@ -3,10 +3,10 @@
  *
  * This mirrors what the database already enforces — it does not invent a new
  * permission model. Every action named here maps to a function in
- * `product/db/auth.sql` that has already been attacked in `test-auth.sql`, so
+ * `product/db/migrations/0004_auth.sql` that has already been attacked in `test-auth.sql`, so
  * the screen is a face on a capability that refuses to misbehave on its own.
  *
- * PLATFORM now exists (`product/db/platform.sql`, 252 tests). The seat holds no
+ * PLATFORM now exists (`product/db/migrations/0005_platform.sql`, 252 tests). The seat holds no
  * row-level reach at all — a platform owner reading `plays` or `players`
  * directly gets ZERO rows, verified against a database where 6 plays and 31
  * children were sitting there. Everything it sees comes through SECURITY

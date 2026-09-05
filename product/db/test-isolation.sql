@@ -2,14 +2,15 @@
 -- The adversarial suite. A policy that has not been attacked is not a policy.
 --
 -- RUN:
+--   node product/db/test.mjs isolation
+--
+-- That builds pd_test from product/db/migrations/ via the migration runner and
+-- applies the seeds in order, then runs this file. The hand-ordered list of
+-- -f flags that used to live here was wrong twice and is now in test.mjs,
+-- executed rather than described.
+--
+-- Against a database you have already built:
 --   psql -h /tmp -p 5433 -U app -d pd_test -f product/db/test-isolation.sql
--- FROM EMPTY:
---   psql ... -c 'drop schema if exists app cascade; drop schema if exists t cascade;
---                drop table if exists public.player_consents, public.player_tombstones,
---                  public.plays, public.players, public.memberships,
---                  public.league_memberships, public.teams, public.seasons,
---                  public.leagues cascade; drop function if exists auth.uid();'
---   psql ... -f product/db/schema.sql -f product/db/rls.sql -f product/db/seed.sql
 --
 -- Everything runs inside one transaction and ROLLS BACK, so the suite is
 -- rerunnable and leaves the seed untouched.

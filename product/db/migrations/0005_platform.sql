@@ -1,4 +1,4 @@
--- product/db/platform.sql
+-- product/db/migrations/0005_platform.sql
 -- The platform owner: the vendor's seat. The one deliberate exception to
 -- everything else in this schema, and therefore the narrowest thing in it.
 --
@@ -67,7 +67,10 @@
 
 \set ON_ERROR_STOP on
 
-begin;
+-- The transaction is supplied by the runner (product/db/migrate.mjs), which
+-- wraps this file and its ledger row in ONE transaction. A migration that
+-- committed itself could succeed while its ledger row failed, and the next run
+-- would replay it. Do not add begin/commit here.
 
 -- ---------------------------------------------------------------------------
 -- 1. platform_owners -- the seat itself
@@ -910,4 +913,4 @@ create policy platform_events_append on public.platform_events
   for insert
   with check (actor is not distinct from (select auth.uid()));
 
-commit;
+-- (no commit; the runner commits)

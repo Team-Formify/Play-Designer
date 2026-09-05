@@ -1,4 +1,4 @@
--- product/db/consent.sql
+-- product/db/migrations/0007_consent.sql
 -- Verifiable parental consent: the flow that public.player_consents and
 -- public.player_tombstones have been waiting for since schema.sql was written.
 --
@@ -143,7 +143,10 @@
 
 \set ON_ERROR_STOP on
 
-begin;
+-- The transaction is supplied by the runner (product/db/migrate.mjs), which
+-- wraps this file and its ledger row in ONE transaction. A migration that
+-- committed itself could succeed while its ledger row failed, and the next run
+-- would replay it. Do not add begin/commit here.
 
 -- ---------------------------------------------------------------------------
 -- 0. The mailer role -- the reason a coach never holds a consent token
@@ -179,10 +182,18 @@ grant usage on schema public, app, auth to pd_mailer;
 -- Deliberately not "current_user in ('pd_anon','pd_authenticated')": on Supabase
 -- those roles are called anon and authenticated, and a name list is a guard that
 -- fails open the first time somebody adds a role.
+-- SECURITY INVOKER, and it has to be. This function asks "is the session
+-- running this statement the owner/migration role, or a tenant?" -- and
+-- current_user inside a SECURITY DEFINER function is the function's OWNER, not
+-- the caller. Written as DEFINER it therefore answered "yes, privileged" to
+-- everybody, and since the two callers below are themselves definer triggers,
+-- BOTH guards became no-ops: a coach could insert a child's full name with no
+-- consent anywhere in the database. Found by test-consent.sql section 6, which
+-- is the entire reason that file was written.
 create or replace function app.is_privileged_session()
 returns boolean
 language sql
-stable security definer parallel safe
+stable security invoker parallel safe
 set search_path = ''
 as $$
   select coalesce(
@@ -723,10 +734,12 @@ create trigger consent_evidence_guard
 --   cascade    -- DELETE is refused unless the child's row has already gone,
 --                 which is the schema's one legitimate cascade, or the forget
 --                 path announced itself.
+-- SECURITY INVOKER, for the reason given at app.is_privileged_session(): a
+-- guard that asks who is running must not first become somebody else.
 create or replace function app.player_consents_guard()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin
@@ -861,10 +874,14 @@ end $$;
 --
 -- It does not bind the owner: seed.sql loads after this file and writes named
 -- players directly. It binds every tenant session absolutely.
+-- SECURITY INVOKER. This is THE collection gate, and as DEFINER it let every
+-- caller through -- see app.is_privileged_session(). It needs no elevated
+-- rights of its own: app.consent_ok() is the definer function that reads the
+-- consent record, and this one only has to decide whether to raise.
 create or replace function app.consent_gate_players()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin
@@ -1847,10 +1864,17 @@ to pd_anon, pd_authenticated;
 -- THE ONE THAT MATTERS: dispatch is the mailer's and nobody else's.
 grant execute on function app.consent_dispatch(uuid) to pd_mailer;
 
--- Deliberately granted to NOBODY: app.is_privileged_session(),
--- app.consent_note() and app.revoke_consent_rows(). The first is a guard's own
--- question; the other two write the trail and the consent rows and are only
--- ever called from inside the functions above.
+-- app.is_privileged_session() is granted to PUBLIC, and that is not a widening.
+-- It is now SECURITY INVOKER, so it reports on the caller's own session and
+-- tells them nothing they could not learn from current_user. It has to be
+-- callable, because the two guard triggers run as the caller and ask it on
+-- every write to public.players and public.player_consents; granted to nobody,
+-- an honest gate would refuse every insert with "permission denied".
+grant execute on function app.is_privileged_session() to pd_anon, pd_authenticated;
+
+-- Deliberately granted to NOBODY: app.consent_note() and
+-- app.revoke_consent_rows(). Both write the trail and the consent rows and are
+-- only ever called from inside the functions above.
 
 -- Read: staff read their own team's consent record. No write verb on any of
 -- these six tables for anybody -- every row is written by a definer function or
@@ -1939,4 +1963,4 @@ create policy consent_evidence_write on public.consent_evidence
 create policy consent_events_append on public.consent_events
   for insert with check (true);
 
-commit;
+-- (no commit; the runner commits)

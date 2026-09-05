@@ -4,7 +4,7 @@
  * THE RULE THIS FILE EXISTS TO ENFORCE: every statement runs AS THE CALLER,
  * through RLS. There is no service-role key here, no BYPASSRLS connection and
  * no `where team_id = $1 and user_is_allowed(...)` anywhere above it. The 21
- * policies in product/db/rls.sql and the 43 security definer functions in
+ * policies in product/db/migrations/0003_rls.sql and the 43 security definer functions in
  * auth.sql / platform.sql ARE the authorization. This file's whole job is to
  * carry identity to them and get out of the way.
  *

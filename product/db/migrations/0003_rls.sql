@@ -1,4 +1,4 @@
--- product/db/rls.sql
+-- product/db/migrations/0003_rls.sql
 -- Isolation. All of it. There is no tenant filter in application code, because
 -- an application filter is one forgotten WHERE clause from a cross-team leak and
 -- nobody can prove the absence of that mistake by reading route handlers.
@@ -41,7 +41,10 @@
 
 \set ON_ERROR_STOP on
 
-begin;
+-- The transaction is supplied by the runner (product/db/migrate.mjs), which
+-- wraps this file and its ledger row in ONE transaction. A migration that
+-- committed itself could succeed while its ledger row failed, and the next run
+-- would replay it. Do not add begin/commit here.
 
 -- ---------------------------------------------------------------------------
 -- Membership helpers. Security definer, stable, empty search_path.
@@ -388,4 +391,4 @@ create policy player_tombstones_select on public.player_tombstones
     or team_id in (select app.board_team_ids())
   );
 
-commit;
+-- (no commit; the runner commits)

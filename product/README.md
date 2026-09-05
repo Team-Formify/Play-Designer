@@ -36,3 +36,53 @@ it once served a page to somebody with no password. So it cannot run offline by
 construction, and that is why there are two clients rather than one: the static
 field client for a practice field, the React desk client for everything else.
 The engine and the play format are what they share.
+
+## What is PROVEN, and what is merely WRITTEN
+
+The distinction this table draws is the one that matters before a sale: code
+that loads is not code that works, and a security guard nobody attacked is a
+security guard nobody has tested. Run `node product/db/test.mjs` to reproduce
+the counts; it builds each database from `db/migrations/` and runs the suite.
+
+| Layer | Tests | State |
+|---|---|---|
+| `db/migrations/0002_schema.sql` + `0003_rls.sql` | **183** | Proven. 21 policies, `force row level security`, attacked from both leagues. |
+| `0004_auth.sql` — invite-only membership | **243** | Proven. `app.accept_invite()` takes no team parameter; tokens are 244-bit and stored only as SHA-256. |
+| `0005_platform.sql` — the vendor's own seat | **252** | Proven. The platform owner sees league size, seasons, seats and billing, and zero plays and zero children. |
+| `0006_brand.sql` — white-label | 169 of 183 | **Partly proven. 14 failing.** The palette resolver and the WCAG guard work; the failures are real and unfixed. |
+| `0007_consent.sql` — COPPA machinery | **172** | Proven, and see below. |
+| `api/stripe-signature.js` | 11 | Proven for what it is — signature verification only. There is no billing. |
+| `hub/` — the master hub | 0 | **Written, not proven.** It compiles and exports; nothing is wired to a URL and nothing is tested. |
+
+### The consent suite paid for itself immediately
+
+Writing `db/test-consent.sql` found a live hole in `0007_consent.sql`, which is
+the file that exists to hold children's data lawfully.
+`app.is_privileged_session()` was `SECURITY DEFINER`. Inside a definer function
+`current_user` is the function's OWNER, not the caller — so it answered
+"privileged" to everybody. Its only two callers are the guard triggers on
+`public.players` and `public.player_consents`, and those are definer functions
+too, so **both guards were no-ops**: a coach could write a child's full name
+into the database with no consent anywhere behind it.
+
+All three are `SECURITY INVOKER` now. Section 10 of the suite puts the bug back
+with `ALTER FUNCTION ... SECURITY DEFINER`, shows the identical insert
+succeeding, and then puts it right — so the 172 zeroes above it cannot be
+passing vacuously.
+
+Two things to take from that beyond the fix. First, this is the same class of
+bug as the one `0006_brand.sql` had (`app.league_rule()` as DEFINER leaking
+every league's rulebook): **`security definer` on anything that asks "who is
+calling" is a bug by construction.** Second, it sat in a file that loaded
+cleanly, read well, and had 1,900 lines of careful comments. Reading did not
+find it and was never going to.
+
+### What no amount of SQL closes
+
+- **Verifiable parental consent.** The database records who was asked, at what
+  address, what they were shown, what they affirmed and when. Proving the human
+  at that address is the child's guardian is a flow that does not exist.
+- **The mailer role.** `app.consent_dispatch()` is safe from a coach because a
+  coach is not `pd_mailer`. Whoever holds `pd_mailer` holds every pending token.
+  That is a deployment property, not a schema one.
+- **A pilot.** Nobody outside Lehi has touched any of this.

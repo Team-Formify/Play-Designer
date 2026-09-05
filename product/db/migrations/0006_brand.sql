@@ -1,4 +1,4 @@
--- product/db/brand.sql
+-- product/db/migrations/0006_brand.sql
 -- Per-tenant branding, and the contrast floor that makes it safe to hand out.
 --
 -- WHY THIS EXISTS
@@ -79,7 +79,10 @@
 
 \set ON_ERROR_STOP on
 
-begin;
+-- The transaction is supplied by the runner (product/db/migrate.mjs), which
+-- wraps this file and its ledger row in ONE transaction. A migration that
+-- committed itself could succeed while its ledger row failed, and the next run
+-- would replay it. Do not add begin/commit here.
 
 -- ===========================================================================
 -- 1. Colour arithmetic -- the same functions brand.js has, in plpgsql
@@ -925,4 +928,4 @@ to pd_anon, pd_authenticated;
 -- return nothing, and app.team_brand() -- being INVOKER -- answers the product
 -- default for every team in the database.
 
-commit;
+-- (no commit; the runner commits)

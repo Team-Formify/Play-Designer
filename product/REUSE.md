@@ -7,18 +7,45 @@ product has not, and this records what to lift rather than rebuild.
 **A separate security review of that repo was delivered privately and is
 deliberately NOT written down here — this repo is public and that one is live.
 Read that before treating any of its patterns as a model.** In particular, do
-not copy its tenancy approach; ours (`product/db/rls.sql`, 21 policies, 183
+not copy its tenancy approach; ours (`product/db/migrations/0003_rls.sql`, 21 policies, 183
 attack tests) is the one to keep.
 
 ## Take as-is
 
+**DONE** marks what has actually landed, with the commit's evidence beside it.
+Everything else on this table is still a plan.
+
 | From | To | Why |
 |---|---|---|
-| `migrations/README.md`, `_schema_migrations` | `product/db/migrations/` | Numbered, ordered, idempotent, mandatory `-- WHY:` header, "no schema change without a migration in the same commit". |
+| **DONE** `migrations/README.md`, `_schema_migrations` | `product/db/migrations/` | Numbered, ordered, idempotent, mandatory `-- WHY:` header, "no schema change without a migration in the same commit". |
 | `LEGAL_CHECKLIST.md` | `product/` | Utah LLC → bank → Stripe on the LLC. Same founder, same state, costs on every line. |
 | `LAUNCH_CHECKLIST.md` phase 1 | `product/` | Five items, none over two hours. |
-| `verifyStripeSignature()` + `readRawBody()` | `product/api/` | ~35 lines of raw-body webhook crypto, no SDK dependency. |
+| **DONE** `verifyStripeSignature()` + `readRawBody()` | `product/api/` | ~35 lines of raw-body webhook crypto, no SDK dependency. |
 | the ToS-acceptance audit migration | a `product/db` migration | `accepted_at`, `ip_hash`, `by_email`, and a **version stamp** so a revised policy can demand re-acceptance. An HTML `required` checkbox is not a legal record. |
+
+### What landed, and what was changed on the way
+
+The migration ledger is theirs; the isolation on it is not. Their tables carry
+`FOR ALL TO anon USING (true)` — ours is force-RLS with **no policy at all**,
+because what schema version is deployed is not a tenant's business.
+
+Two things the runner does that theirs does not, both because this is a schema
+a season depends on:
+
+- **A file and its ledger row commit together.** The migration is pulled in with
+  `\i` between the runner's own `begin` and `commit`. A migration that failed
+  halfway used to leave the schema changed and the ledger silent; proven now by
+  applying a deliberately broken migration and finding neither the table nor the
+  row afterwards.
+- **An applied migration that is later edited is refused.** The ledger stores a
+  checksum of the file as applied. Editing one after the fact exits non-zero
+  rather than silently diverging from what is running in production.
+
+`verifyStripeSignature()` came over essentially verbatim — it was already right.
+What it did not have was a test; `product/api/test-stripe-signature.mjs` is 11
+assertions covering an altered body, the wrong secret, the replay window at both
+edges, a malformed header, a truncated signature, and the two-signature window
+Stripe opens during a secret rotation.
 
 ## Take the idea, rewrite
 
