@@ -169,7 +169,6 @@ language plpgsql as $fn$
 declare n bigint;
 begin
   execute p_sql;
-  get diagnostics n = p_want; -- placeholder, overwritten below
   get diagnostics n = row_count;
   perform t.note(p_name, n = p_want, format('%s row(s) affected, want %s', n, p_want));
 exception when others then
