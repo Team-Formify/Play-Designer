@@ -41,6 +41,9 @@ const SEEDS = {
   // than two, and the loop below skips the build for it.
   learn:     [],
   feedback:  [],
+  // The Vercel functions, over real HTTP against a real database. It builds
+  // its own, so no seeds here.
+  api:       [],
 };
 
 // What each suite is expected to report. Without this a suite that silently
@@ -62,6 +65,7 @@ const EXPECT = {
   hub:       { pass: 67 },
   learn:     { pass: 58 },
   feedback:  { pass: 59 },
+  api:       { pass: 52 },
 };
 
 const want = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -79,9 +83,9 @@ let bad = 0;
 for (const s of suites) {
   const db = "pd_t_" + s;
 
-  if (s === "learn" || s === "feedback") {
-    const file = s === "learn" ? "test-learn.mjs" : "test-feedback.mjs";
-    const word = s === "learn" ? "learn" : "feedback";
+  if (s === "learn" || s === "feedback" || s === "api") {
+    const file = "test-" + s + ".mjs";
+    const word = s;
     // A browser suite. No database, and it SKIPS rather than fails when
     // playwright is absent, because playwright is deliberately not a dependency
     // of this repo -- the no-build property is why the app works on a phone on

@@ -129,7 +129,7 @@
     /* #lookBar belongs here, not left to inherit: a new element outside this list
        prints, which is exactly how the game-day bar once leaked onto the screen.
        The book names the look in its page title instead. */
-    header,.bar,.hint,.row,.panel,.chips,#lookBar,#animBar,#bookNews,#schedLink,#learnLink,#hubLink,.sec{display:none!important}
+    header,.bar,.hint,.row,.panel,.chips,#lookBar,#animBar,#bookNews,#schedLink,#learnLink,#hubLink,#signinLink,.sec{display:none!important}
     html,body{background:#fff!important;color:#000!important}
     .wrap{max-width:none;padding:0}
     #printTitle{display:block!important;font-family:var(--display);font-weight:800;
@@ -320,6 +320,7 @@
   <button class="btn gold" id="gdOn">Game day</button>
   <a class="btn" href="learn" id="learnLink">For the boys &#8599;</a>
   <a class="btn" href="/hub/" id="hubLink">Hubs &#8599;</a>
+  <a class="btn" href="/signin" id="signinLink">Sign in &#8599;</a>
   <!-- Home is the app now. This page is the special teams EDITOR, reached from
        there; the repo was rebuilt so the front door is the practice planner's
        app running on this engine. Relative, so it survives the domain. -->
@@ -1399,7 +1400,7 @@ var BUILD=18;
 /* Bumped by hand whenever something ships. It is printed under the export buttons
    so "is it actually updating" can be answered by reading a number off the screen
    instead of guessing — which cost this project most of a session. */
-var BUILD_TAG='25 \u00b7 5 Sep';
+var BUILD_TAG='26 \u00b7 5 Sep';
 /* Dropdown order comes from the data's `order` field, resolved by slug. Renaming
    a play no longer moves it, and custom plays fall to the end. */
 function rank(pl){

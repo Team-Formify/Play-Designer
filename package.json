@@ -1,0 +1,28 @@
+{
+  "name": "play-designer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Lehi special teams play designer. The PAGES have no dependencies and no build step -- that is why they work on a phone on a practice field with no signal, and it is not negotiable. This file exists for the serverless functions in api/ only.",
+  "//": [
+    "WHY THIS FILE EXISTS, since the repo deliberately did not have one.",
+    "",
+    "api/save-playbook.js and api/feedback.js use nothing but global fetch. The",
+    "hub's data layer cannot: its whole security model is BEGIN, set local role,",
+    "bind four transaction-local GUCs, run, COMMIT -- one transaction on one",
+    "connection. An HTTP-per-statement driver cannot express that, and losing it",
+    "means losing the isolation that 1,308 tests exist to prove.",
+    "",
+    "So: one dependency, pg, for api/ only.",
+    "",
+    "THERE IS NO BUILD SCRIPT, ON PURPOSE. Vercel serves this repo as a static",
+    "site plus functions. A `build` script here would make it try to build the",
+    "site, and the site is index.html. If a build ever becomes necessary, the",
+    "static pages must keep working without it."
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}

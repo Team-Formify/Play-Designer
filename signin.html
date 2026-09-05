@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in — Play Designer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D3A31">
+<meta name="robots" content="noindex">
+<!-- Inline, as a data URI, for the same reason there are no webfonts: this gets
+     opened on a sideline with no signal and nothing may block on the network. -->
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFEM0EzMSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iODIiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIvPjxwYXRoIGQ9Ik00MCAxMzhoMTEyIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWRhc2hhcnJheT0iMTYgMTEiLz48L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzFEM0EzMSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iODIiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIvPjxwYXRoIGQ9Ik00MCAxMzhoMTEyIiBzdHJva2U9IiNFM0I1NDciIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWRhc2hhcnJheT0iMTYgMTEiLz48L3N2Zz4=">
+<style>
+  :root{
+    --page:#13251F; --board:#1D3A31; --deep:#0D1B16;
+    --chalk:#EDEBE0; --soft:#9AA69C; --gold:#E3B547; --warm:#E58A6B;
+    --line:rgba(237,235,224,.18);
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--chalk);font-family:var(--body);
+    font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  header{background:var(--board);padding:14px 16px;display:flex;align-items:center;
+    gap:10px;flex-wrap:wrap}
+  header h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.01em}
+  header h1 span{color:var(--gold)}
+  header a{color:var(--chalk);font-size:13px;text-decoration:none;
+    border:1px solid var(--line);border-radius:4px;padding:6px 10px}
+  header a:hover{background:var(--deep)}
+  .sp{flex:1}
+  main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+  .card{background:var(--board);border:1px solid var(--line);border-radius:12px;
+    padding:16px;margin:0 0 14px}
+  h2{margin:0 0 10px;font-size:15px}
+  label{display:block;font-size:12px;color:var(--soft);margin:10px 0 4px;
+    text-transform:uppercase;letter-spacing:.08em}
+  input,select{width:100%;background:var(--deep);color:var(--chalk);font-family:inherit;
+    font-size:15px;border:1px solid var(--line);border-radius:8px;padding:10px}
+  button{font-family:inherit;font-size:14px;border-radius:8px;padding:10px 14px;
+    cursor:pointer;border:1px solid var(--line);background:var(--deep);color:var(--chalk)}
+  button.go{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:700}
+  .row{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  .msg{font-size:13px;margin-top:10px;min-height:1.2em}
+  .msg.bad{color:var(--warm)} .msg.good{color:var(--gold)}
+  .note{font-size:12px;color:var(--soft);line-height:1.5}
+  .warn{border-color:rgba(229,138,107,.5);background:rgba(229,138,107,.08)}
+  .warn b{color:var(--warm)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.08em}
+  code{font-family:var(--mono);font-size:12px;color:var(--soft)}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;
+    border-radius:10px;border:1px solid var(--line);color:var(--soft)}
+  .pill.on{color:var(--gold);border-color:var(--gold)}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>Play <span>Designer</span></h1>
+  <span class="pill" id="build">b1</span>
+  <span class="sp"></span>
+  <a href="/designer">Special teams</a>
+  <a href="/hub/">Hubs</a>
+</header>
+
+<main>
+  <!-- SIGNED OUT ---------------------------------------------------------->
+  <section id="out">
+    <div class="card warn">
+      <h2>This is a <b>preview</b> door, not a login</h2>
+      <p class="note">
+        The database knows four tiers and refuses across them &mdash; that part is
+        real and has 1,300 tests behind it. What does not exist yet is an
+        identity provider: no passwords, no magic links, no account table.
+        <br><br>
+        So this signs you in <b>as an account the database already knows</b>,
+        proved by a shared passphrase rather than by you. Everything after that
+        is genuine: real rows, real policies, real refusals. Before anybody
+        outside sees this, the passphrase comes off the deployment and this door
+        turns itself off.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Sign in</h2>
+      <label for="pass">Passphrase</label>
+      <input id="pass" type="password" autocomplete="current-password"
+             placeholder="the one set as HUB_SIGNIN_SECRET">
+      <label for="who">Sign in as</label>
+      <select id="who"></select>
+      <label for="uid">Or an account id</label>
+      <input id="uid" placeholder="uuid — overrides the list above" autocomplete="off">
+      <div class="row">
+        <button class="go" id="go">Sign in</button>
+      </div>
+      <p class="msg" id="m1"></p>
+    </div>
+  </section>
+
+  <!-- SIGNED IN ----------------------------------------------------------->
+  <section id="in" class="hide">
+    <div class="card">
+      <h2>You are signed in</h2>
+      <table>
+        <tr><th>Account</th><td><code id="uidOut"></code></td></tr>
+        <tr><th>Email</th><td id="emailOut"></td></tr>
+        <tr><th>Database role</th><td><code id="roleOut"></code></td></tr>
+        <tr><th>Platform seat</th><td id="platOut"></td></tr>
+      </table>
+      <div class="row">
+        <button id="out1">Sign out</button>
+        <button id="refresh">Refresh</button>
+      </div>
+      <p class="msg" id="m2"></p>
+    </div>
+
+    <div class="card">
+      <h2>Your leagues</h2>
+      <div id="leagues"></div>
+    </div>
+
+    <div class="card">
+      <h2>Your teams</h2>
+      <div id="teams"></div>
+      <p class="note" style="margin-top:10px">
+        Nothing on this page filters by tenant. These are the rows the database
+        hands this session; a team you do not coach is not hidden here, it is
+        never sent.
+      </p>
+    </div>
+
+    <div class="card" id="rosterCard">
+      <h2>Roster</h2>
+      <div id="roster"><p class="note">Pick a team above.</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+var BUILD = 'b1 · 5 Sep';
+document.getElementById('build').textContent = BUILD;
+
+/* The seeded accounts, so he does not have to remember uuids. These are the
+   fixture identities from product/db/seed.sql; on a database that does not
+   have them, sign-in refuses with "that account holds no seat", which is the
+   correct answer rather than a broken page. */
+var KNOWN = [
+  ['d0000000-0000-4000-8000-000000000001', 'Dom — assistant, Lehi 8'],
+  ['d0000000-0000-4000-8000-000000000002', 'Steve — head coach, Lehi 8'],
+  ['d0000000-0000-4000-8000-000000000006', 'Whitmore — UYFC league admin'],
+  ['d0000000-0000-4000-8000-000000000005', 'Reeves — UYFC board'],
+  ['d0000000-0000-4000-8000-000000000007', 'Ostler — head coach, Logan 8 (other league)'],
+  ['10000000-0000-4000-8000-000000000001', 'Founder — the platform seat']
+];
+var sel = document.getElementById('who');
+KNOWN.forEach(function (k) {
+  var o = document.createElement('option');
+  o.value = k[0]; o.textContent = k[1]; sel.appendChild(o);
+});
+
+function say(el, msg, cls) {
+  var e = document.getElementById(el);
+  e.textContent = msg || '';
+  e.className = 'msg' + (cls ? ' ' + cls : '');
+}
+function show(signedIn) {
+  document.getElementById('in').classList.toggle('hide', !signedIn);
+  document.getElementById('out').classList.toggle('hide', signedIn);
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+document.getElementById('go').onclick = function () {
+  var pass = document.getElementById('pass').value;
+  var uid = document.getElementById('uid').value.trim() || sel.value;
+  say('m1', 'Signing in…');
+  fetch('/api/signin', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passphrase: pass, user_id: uid })
+  }).then(function (r) {
+    return r.json().catch(function () { return {}; }).then(function (j) { return { s: r.status, j: j }; });
+  }).then(function (r) {
+    if (r.s === 200) { say('m1', ''); document.getElementById('pass').value = ''; return me(); }
+    if (r.s === 501) return say('m1', (r.j.error || 'Not configured') + ' — see product/DEPLOY.md.', 'bad');
+    say('m1', r.j.error || ('Refused (' + r.s + ')'), 'bad');
+  }).catch(function (e) { say('m1', 'Could not reach the server: ' + e.message, 'bad'); });
+};
+
+document.getElementById('out1').onclick = function () {
+  fetch('/api/signout', { method: 'POST' }).then(function () { show(false); say('m1', 'Signed out.', 'good'); });
+};
+document.getElementById('refresh').onclick = function () { me(); };
+
+function me() {
+  return fetch('/api/me', { headers: { 'Accept': 'application/json' } })
+    .then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) { return { s: r.status, j: j }; });
+    })
+    .then(function (r) {
+      if (r.s === 501) { show(false); return say('m1', (r.j.error || 'Not configured') + ' — see product/DEPLOY.md.', 'bad'); }
+      var d = r.j || {};
+      if (!d.signed_in) { show(false); return; }
+      show(true);
+      document.getElementById('uidOut').textContent = d.user_id || '';
+      document.getElementById('emailOut').textContent = d.email || '—';
+      document.getElementById('roleOut').textContent = d.db_role || '';
+      document.getElementById('platOut').innerHTML = d.is_platform_owner
+        ? '<span class="pill on">yes</span>' : '<span class="pill">no</span>';
+
+      var L = document.getElementById('leagues');
+      L.innerHTML = (d.leagues && d.leagues.length)
+        ? '<table><tr><th>League</th><th>Kind</th><th>Seat</th></tr>' +
+          d.leagues.map(function (l) {
+            return '<tr><td>' + esc(l.name) + '</td><td><span class="pill">' + esc(l.kind) +
+                   '</span></td><td>' + esc(l.role) + '</td></tr>';
+          }).join('') + '</table>'
+        : '<p class="note">None. A coach with no league seat is the normal case.</p>';
+
+      var T = document.getElementById('teams');
+      if (!d.teams || !d.teams.length) {
+        T.innerHTML = '<p class="note">None.</p>';
+      } else {
+        T.innerHTML = '<table><tr><th>Team</th><th>Season</th><th>League</th><th>Seat</th><th></th></tr>' +
+          d.teams.map(function (t) {
+            return '<tr><td>' + esc(t.name) + ' ' + esc(t.grade) + '</td><td>' +
+              esc(t.season || '—') + '</td><td>' + esc(t.league || '—') + '</td><td>' +
+              esc(t.role) + '</td><td><button data-team="' + esc(t.id) +
+              '" class="rost">Roster</button></td></tr>';
+          }).join('') + '</table>';
+        [].forEach.call(T.querySelectorAll('.rost'), function (b) {
+          b.onclick = function () { roster(b.getAttribute('data-team')); };
+        });
+      }
+      say('m2', '');
+    })
+    .catch(function (e) { say('m2', 'Could not reach the server: ' + e.message, 'bad'); });
+}
+
+function roster(teamId) {
+  var box = document.getElementById('roster');
+  box.innerHTML = '<p class="note">Loading…</p>';
+  fetch('/api/roster?team=' + encodeURIComponent(teamId))
+    .then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) { return { s: r.status, j: j }; });
+    })
+    .then(function (r) {
+      if (r.s !== 200) { box.innerHTML = '<p class="note">Nothing came back (' + r.s + ').</p>'; return; }
+      var p = (r.j && r.j.players) || [];
+      if (!p.length) { box.innerHTML = '<p class="note">No players on this team.</p>'; return; }
+      box.innerHTML = '<p class="note">' + p.length + ' from the database, read as this account.</p>' +
+        '<table><tr><th>#</th><th>Name</th></tr>' +
+        p.map(function (x) {
+          return '<tr><td>' + esc(x.jersey || '—') + '</td><td>' +
+            esc(x.last) + (x.first ? ', ' + esc(x.first) : '') + '</td></tr>';
+        }).join('') + '</table>';
+    })
+    .catch(function (e) { box.innerHTML = '<p class="note">' + esc(e.message) + '</p>'; });
+}
+
+me();
+</script>
+</body>
+</html>

@@ -41,7 +41,14 @@ const STATUS = process.argv.includes("--status");
  * binding and everything else Neon or Supabase puts in it travels with it and
  * this file does not need to know about any of them.
  */
-const URL_TARGET = arg("--url", process.env.DATABASE_URL || process.env.HUB_DATABASE_URL || null);
+// An EXPLICIT --db beats an ambient env var. Otherwise a DATABASE_URL sitting
+// in a shell silently redirects `--db pd_dev` at production, and the only thing
+// standing between that and a very bad afternoon is the --yes prompt. A flag
+// somebody typed is a stronger statement of intent than a variable they forgot.
+const EXPLICIT_DB = process.argv.includes("--db");
+const URL_TARGET =
+  arg("--url", null) ||
+  (EXPLICIT_DB ? null : process.env.DATABASE_URL || process.env.HUB_DATABASE_URL || null);
 const REMOTE = Boolean(URL_TARGET);
 const PSQL = REMOTE
   ? [URL_TARGET, "-tAq", "-v", "ON_ERROR_STOP=1"]
