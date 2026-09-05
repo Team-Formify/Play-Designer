@@ -23,17 +23,27 @@
  * next caller -- possibly anonymous, possibly a coach in another league --
  * would execute under the previous caller's identity. Every policy in 0003_rls.sql
  * resolves `auth.uid()` live, so that is a complete tenancy bypass with no
- * code change anywhere. test/api.test.mjs interleaves two requests over one
- * connection and proves neither sees the other's GUC.
+ * code change anywhere. product/hub/test/api.test.mjs interleaves two requests
+ * over one connection, and -- the part that actually catches it -- inspects a
+ * RAW client from the same pool after a request finishes. That second probe is
+ * the load-bearing one: a check made from inside a later asCaller() cannot see
+ * the leak, because asCaller() rebinds all four GUCs on entry and overwrites
+ * the stale value before anything reads it. Flipping this `true` to `false`
+ * leaves such a suite entirely green.
  *
  * All four GUCs are bound on every transaction, to '' when absent, so a stale
  * value cannot survive even if some future edit dropped the tx-local flag by
  * accident. The database reads '' as NULL (`nullif(current_setting(...), '')`)
  * and every policy is false for NULL.
  *
- * THE ROLE. The connection logs in as an ordinary role (pd_app in the test
- * harness) that is a NOINHERIT member of pd_anon and pd_authenticated and holds
- * nothing itself. Each transaction does `set local role` down into exactly one
+ * THE ROLE. The connection logs in as pd_app, an ordinary role that is a
+ * NOINHERIT member of pd_anon and pd_authenticated and holds nothing itself.
+ * It is created by product/db/migrations/0008_app_role.sql -- which was written
+ * because this paragraph described it for a while before any migration made it,
+ * so the desk client could not be run against a database built from these files
+ * at all. NOINHERIT is the load-bearing word: an INHERIT member would carry the
+ * union of both roles' privileges on every connection, without SET ROLE, and
+ * the paragraph below would be false. Each transaction does `set local role` down into exactly one
  * of them: pd_authenticated for a signed-in account, pd_anon for everybody
  * else, including a boys'-word session -- the boys' page is anonymous, which is
  * the whole point of the word. The privilege half of the design does real work

@@ -275,9 +275,18 @@ What the measurement says, so nobody re-derives it:
   request degrades a play to a jersey number and never destroys the play. Rules 1 and 2 of
   this file, restated for a new domain. The existing "last name and number" convention is
   already data minimisation, which is a head start.
-- **Do not build multi-tenant first.** Prove it on a second team by hand — empty book,
-  formations, print, no backend — and find out whether a coach who is not Dom finds it
-  useful without Dom next to him.
+- **Nobody outside Lehi touches this until he says so.** Settled by him, and it closes
+  the "get a pilot team on it" recommendation for good — it has been put to him twice
+  and the answer is the same: *"Nobody will touch this tell we are ready for people to
+  touch it I want it honed in."* Do not raise a pilot, a beta, a second team, a design
+  partner or a friendly league again. He will say when.
+
+  What that changes about the work: **honing is the task, and there is no user feedback
+  coming to prioritise it.** So the ordering has to come from the code itself — what is
+  unproven, what is unfinished, what would embarrass him in front of a buyer — and the
+  standard is the one this project already uses everywhere else: a thing counts when its
+  guard has been broken on purpose and the tests went red. Depth over surface. Finish
+  and prove a layer before starting another.
 
 **Co-founder does not mean his artwork can be published here.** This repo is PUBLIC and
 his `diagramArt.ts` says the offense is password-protected. Joint ownership settles who

@@ -1,0 +1,18 @@
+{
+  "//": "Compile lib/ to runnable ESM so test/api.test.mjs can import it.",
+  "//2": "The app's own tsconfig is noEmit with moduleResolution 'bundler', because Next does the resolving. Node does not: it needs real file extensions on relative imports. Rather than write '.js' extensions into source that Next would then have to tolerate, the test build rewrites them -- see test/build.mjs.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "declaration": false,
+    "outDir": "test/.build",
+    "rootDir": "lib"
+  },
+  "include": ["lib/**/*.ts"]
+}

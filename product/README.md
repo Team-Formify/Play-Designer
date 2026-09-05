@@ -45,7 +45,7 @@ security guard nobody has tested. Run `node product/db/test.mjs` to reproduce th
 from `db/migrations/` and runs the suite, and it fails if a count moves — so a
 suite that silently shrinks is a red build rather than a quiet one.
 
-**1,052 tests, all passing.** Every suite has been mutation-tested: each guard
+**1,118 tests, all passing.** Every suite has been mutation-tested: each guard
 broken on purpose, the red count recorded in that suite's header. No guard sits
 at zero.
 
@@ -57,7 +57,32 @@ at zero.
 | `0006_brand.sql` — white-label | **187** | Proven. The database refuses a palette a human cannot read, and the refusal is whole-record, not clamped. |
 | `0007_consent.sql` — COPPA machinery | **187** | Proven, and see below. |
 | `api/stripe-signature.js` | 11 | Proven for what it is — signature verification only. There is no billing. |
-| `hub/` — the master hub | 0 | **Written, not proven.** It compiles and exports; nothing is wired to a URL and nothing is tested. |
+| `hub/lib` — the desk client's data layer | **66** | Proven. Identity is bound per transaction and cannot reach the next request over a reused connection. |
+| `hub/` UI and routing | 0 | **Written, not proven.** It compiles and exports as a static site; no route handler is wired to a URL, because that needs a Node runtime this Vercel project does not have. |
+
+### The hub suite found its own blind spot before it found anything else
+
+`lib/db.ts` had a header describing, in detail, a test that had never been
+written — and a `pd_app` connection role that no migration created, so the desk
+client could not be run against a database built from these files at all.
+`0008_app_role.sql` creates it: `NOINHERIT`, a member of `pd_anon` and
+`pd_authenticated`, holding nothing of its own.
+
+The suite that followed is worth reading for one reason. Its central claim is
+that identity is bound per transaction and cannot survive onto the next request
+over a pooled connection. **Flipping `set_config`'s `is_local` from `true` to
+`false` — the exact edit the file warns about — left all 60 tests green.** Every
+assertion read the GUC from inside a *later* `asCaller()`, and `asCaller()`
+rebinds all four GUCs on entry, so the stale value was overwritten a microsecond
+before anything looked at it.
+
+A suite can be pointed straight at the thing it is named after and still not see
+it. The fix was to observe from *outside* `asCaller()`, on a raw client from the
+same pool — which is where the leak actually shows, because any statement that
+reaches that connection without going through `asCaller()` runs as the last
+caller. The same probe also kills a second surviving mutant: dropping the
+rollback leaves the previous transaction *open*, so its `set local` values are
+still live.
 
 ### The 14 brand failures were all in the tests
 
@@ -134,4 +159,7 @@ find it and was never going to.
 - **The mailer role.** `app.consent_dispatch()` is safe from a coach because a
   coach is not `pd_mailer`. Whoever holds `pd_mailer` holds every pending token.
   That is a deployment property, not a schema one.
-- **A pilot.** Nobody outside Lehi has touched any of this.
+- **A pilot** — and that is deliberate, not a gap. His decision: nobody outside
+  Lehi touches this until he says it is ready. So nothing here is waiting on
+  outside feedback, and nothing should be shaped around getting some. The
+  ordering comes from what is unproven in the code.

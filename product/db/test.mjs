@@ -30,6 +30,11 @@ const SEEDS = {
   platform:  ["seed.sql", "auth-seed.sql", "platform-seed.sql"],
   brand:     ["seed.sql", "auth-seed.sql", "platform-seed.sql", "brand-seed.sql"],
   consent:   ["seed.sql"],
+  // The hub's data layer is not SQL, but it is the same claim one level up --
+  // that a statement reaches Postgres as the caller and no further -- so it
+  // builds the same way and runs from the same command. Its assertions live in
+  // product/hub/test/api.test.mjs.
+  hub:       ["seed.sql"],
 };
 
 // What each suite is expected to report. Without this a suite that silently
@@ -47,6 +52,7 @@ const EXPECT = {
   platform:  { pass: 252 },
   brand:     { pass: 187 },
   consent:   { pass: 187 },
+  hub:       { pass: 66 },
 };
 
 const want = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -84,6 +90,30 @@ for (const s of suites) {
   // NOTE: match the marker `*** FAIL ***`, never the bare word — several test
   // NAMES contain "fails closed", and grepping for /fail/ counted those as
   // failures. The runner reporting phantom failures is worse than no runner.
+  if (s === "hub") {
+    // Not a psql suite: it is Node, it compiles lib/ first, and it needs the
+    // database this loop just built.
+    const r = spawnSync(process.execPath, [join(DIR, "..", "hub", "test", "api.test.mjs"), "--db", db],
+      { encoding: "utf8" });
+    const out = (r.stdout || "") + "\n" + (r.stderr || "");
+    const failed = out.split("\n").filter((l) => l.includes("*** FAIL ***"));
+    const verdict = out.split("\n").filter((l) => /all \d+ hub tests passed|HUB TEST\(S\) FAILED/.test(l)).at(-1);
+    const exp = EXPECT[s] || {};
+    if (failed.length || !verdict || /FAILED/.test(verdict)) {
+      console.log(`${s.padEnd(10)} ${failed.length || "?"} FAILING`);
+      failed.slice(0, 20).forEach((l) => console.log("           " + l.trim().slice(0, 150)));
+      if (!verdict) console.log("           " + out.trim().split("\n").slice(-6).join("\n           "));
+      bad++;
+    } else {
+      const n = Number((verdict.match(/all (\d+) hub tests passed/) || [])[1]);
+      if (exp.pass !== undefined && n !== exp.pass) {
+        console.log(`${s.padEnd(10)} ${verdict.trim()}   <== EXPECTED ${exp.pass}. Update EXPECT if you added tests.`);
+        bad++;
+      } else console.log(`${s.padEnd(10)} ${verdict.trim()}`);
+    }
+    continue;
+  }
+
   // The count line is a RAISE NOTICE, so it arrives on stderr — on the success
   // path as well as the failure one. Reading stdout alone loses the verdict of
   // every suite that passes, which is the wrong half to lose.
